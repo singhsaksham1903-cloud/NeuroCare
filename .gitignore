@@ -8,3 +8,4 @@ dist/
 backend/.env
 **/__pycache__/
 *.pyc
+dev-dist/
