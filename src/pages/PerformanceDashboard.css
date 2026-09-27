@@ -343,3 +343,131 @@
 .performance-summary h2 {
   margin-top: 0;
 }
+
+/* ===== Analytics UI Polish ===== */
+
+.accuracy-change-section {
+  margin: 28px 0;
+}
+
+.accuracy-change-section h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.accuracy-change-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,
+      minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.accuracy-change-item {
+  min-height: 90px;
+  padding: 18px;
+  background: #f7faf8;
+  border: 2px solid #d8e6da;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.accuracy-change-item strong {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.accuracy-change-item span {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.performance-weekly {
+  margin-top: 28px;
+  margin-bottom: 28px;
+}
+
+.performance-weekly h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.performance-weekly-grid {
+  display: grid;
+  grid-template-columns: repeat(7,
+      minmax(90px, 1fr));
+  gap: 12px;
+}
+
+.performance-weekly-card {
+  min-height: 120px;
+  padding: 16px 10px;
+  background: #f2f8f3;
+  border: 2px solid #d8e6da;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.performance-weekly-card strong {
+  font-size: 1.8rem;
+  margin-bottom: 6px;
+}
+
+.performance-weekly-card span {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.performance-weekly-card small {
+  margin-top: 4px;
+  font-size: 0.9rem;
+}
+
+.performance-game-card {
+  min-height: 200px;
+}
+
+.performance-stat {
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .performance-weekly-grid {
+    grid-template-columns: repeat(4,
+        minmax(100px, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+
+  .accuracy-change-list,
+  .performance-weekly-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .performance-weekly-card {
+    min-height: 100px;
+  }
+
+  .accuracy-change-item {
+    min-height: 85px;
+  }
+}
+
+@media (max-width: 420px) {
+
+  .accuracy-change-list,
+  .performance-weekly-grid {
+    grid-template-columns: 1fr;
+  }
+}

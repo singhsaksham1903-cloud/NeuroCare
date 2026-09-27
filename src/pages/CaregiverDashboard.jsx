@@ -222,6 +222,39 @@ function CaregiverDashboard({
           0,
         ) / sessions.length,
       )
+  const averageMistakes =
+    sessions.length === 0
+      ? '—'
+      : (
+        sessions.reduce(
+          (total, session) =>
+            total +
+            Number(session.mistakes || 0),
+          0,
+        ) / sessions.length
+      ).toFixed(1)
+
+  const averageCompletionTime =
+    sessions.length === 0
+      ? 0
+      : Math.round(
+        sessions.reduce(
+          (total, session) =>
+            total +
+            Number(session.time || 0),
+          0,
+        ) / sessions.length,
+      )
+
+  const personalBestAccuracy =
+    sessions.length === 0
+      ? 0
+      : Math.max(
+        ...sessions.map(
+          (session) =>
+            Number(session.accuracy || 0),
+        ),
+      )
 
 
   const gameTypes = new Set(
@@ -564,6 +597,33 @@ function CaregiverDashboard({
 
                 <span>
                   {text.activeReminders}
+                </span>
+              </div>
+
+              <div className="caregiver-stat">
+                <strong>
+                  {averageMistakes}
+                </strong>
+                <span>
+                  {text.averageMistakes}
+                </span>
+              </div>
+
+              <div className="caregiver-stat">
+                <strong>
+                  {formatTime(averageCompletionTime)}
+                </strong>
+                <span>
+                  {text.averageCompletionTime}
+                </span>
+              </div>
+
+              <div className="caregiver-stat">
+                <strong>
+                  {personalBestAccuracy}%
+                </strong>
+                <span>
+                  {text.personalBestAccuracy}
                 </span>
               </div>
 

@@ -85,15 +85,55 @@ function PerformanceDashboard({
           ) / olderSessions.length
 
         if (recentAverage > olderAverage) {
-          return 'Improving'
+          return text.trendImproving
         }
 
         if (recentAverage < olderAverage) {
-          return 'Needs Practice'
+          return text.trendNeedsPractice
         }
 
-        return 'Stable'
+        return text.trendStable
       })()
+  const accuracyChangeOverTime =
+    sessions
+      .slice(0, 8)
+      .reverse()
+      .map((session, index, list) => {
+        const accuracy =
+          Number(session.accuracy || 0)
+
+        const previousAccuracy =
+          index === 0
+            ? null
+            : Number(
+              list[index - 1].accuracy || 0,
+            )
+
+        return {
+          id: session.id,
+          date:
+            session.created_at ||
+            session.date ||
+            null,
+          accuracy,
+          change:
+            previousAccuracy === null
+              ? null
+              : accuracy - previousAccuracy,
+        }
+      })
+
+  const personalBestAccuracy =
+    sessions.length === 0
+      ? 0
+      : Math.max(
+        ...sessions.map(
+          (session) =>
+            Number(session.accuracy || 0),
+        ),
+      )
+
+
   const gameWiseAnalytics =
     Object.values(
       sessions.reduce(
@@ -107,6 +147,8 @@ function PerformanceDashboard({
               sessions: 0,
               totalAccuracy: 0,
               totalMistakes: 0,
+              totalTime: 0,
+              difficulties: [],
             }
           }
 
@@ -114,6 +156,20 @@ function PerformanceDashboard({
 
           groups[gameName].totalAccuracy +=
             Number(session.accuracy || 0)
+
+          groups[gameName].totalTime +=
+            Number(session.time || 0)
+
+          if (
+            session.difficulty &&
+            !groups[gameName].difficulties.includes(
+              session.difficulty,
+            )
+          ) {
+            groups[gameName].difficulties.push(
+              session.difficulty,
+            )
+          }
 
           groups[gameName].totalMistakes +=
             Number(session.mistakes || 0)
@@ -131,7 +187,25 @@ function PerformanceDashboard({
       averageMistakes: (
         game.totalMistakes / game.sessions
       ).toFixed(1),
+
+      averageTime: Math.round(
+        game.totalTime / game.sessions,
+      ),
+
+      difficulty:
+        game.difficulties.join(', '),
     }))
+
+  const bestPerformanceByGame =
+    gameWiseAnalytics.length === 0
+      ? '—'
+      : gameWiseAnalytics.reduce(
+        (bestGame, currentGame) =>
+          currentGame.averageAccuracy >
+            bestGame.averageAccuracy
+            ? currentGame
+            : bestGame,
+      ).game
 
   const accuracyDistribution = {
     excellent: sessions.filter(
@@ -237,6 +311,58 @@ function PerformanceDashboard({
       ),
     }))
 
+  const weeklyActivity = Array.from(
+    { length: 7 },
+    (_, index) => {
+      const date = new Date()
+
+      date.setHours(0, 0, 0, 0)
+      date.setDate(
+        date.getDate() - (6 - index),
+      )
+
+      const dateKey =
+        `${date.getFullYear()}-` +
+        `${String(
+          date.getMonth() + 1,
+        ).padStart(2, '0')}-` +
+        `${String(
+          date.getDate(),
+        ).padStart(2, '0')}`
+
+      const sessionCount =
+        sessions.filter((session) => {
+          if (!session.created_at) {
+            return false
+          }
+
+          const sessionDate =
+            new Date(session.created_at)
+
+          const sessionKey =
+            `${sessionDate.getFullYear()}-` +
+            `${String(
+              sessionDate.getMonth() + 1,
+            ).padStart(2, '0')}-` +
+            `${String(
+              sessionDate.getDate(),
+            ).padStart(2, '0')}`
+
+          return sessionKey === dateKey
+        }).length
+
+      return {
+        date: dateKey,
+        label: date.toLocaleDateString(
+          undefined,
+          {
+            weekday: 'short',
+          },
+        ),
+        sessions: sessionCount,
+      }
+    },
+  )
 
 
 
@@ -272,17 +398,34 @@ function PerformanceDashboard({
         (a, b) => b[1] - a[1],
       )[0][0]
 
+
+
   const analyticsSummary =
     sessions.length === 0
       ? {
         sessions: 0,
-        message:
-          'No performance data is available yet.',
+        message: text.analyticsSummaryNoData,
       }
       : {
         sessions: sessions.length,
         message:
-          `You have completed ${sessions.length} sessions with an average accuracy of ${averageAccuracy}%. Your recent performance trend is ${recentAccuracyTrend}. Your most played game is ${mostPlayedGame}.`,
+          text.analyticsSummaryMessage
+            .replace(
+              '{sessions}',
+              sessions.length,
+            )
+            .replace(
+              '{accuracy}',
+              averageAccuracy,
+            )
+            .replace(
+              '{trend}',
+              recentAccuracyTrend,
+            )
+            .replace(
+              '{game}',
+              mostPlayedGame,
+            ),
       }
 
 
@@ -360,7 +503,7 @@ function PerformanceDashboard({
         </h1>
 
         <VoiceReadAloud
-          text={`${text.performanceDashboard}. ${text.performancePageDescription}`}
+          text={`${text.performanceDashboard}. ${text.performancePageDescription}. ${text.totalSessions}: ${sessions.length}. ${text.averageAccuracy}: ${averageAccuracy}%. ${text.averageMistakes}: ${averageMistakes}. ${text.personalBestAccuracy}: ${personalBestAccuracy}%. ${text.weeklyActivity}.`}
           language={language}
           label={readAloudLabel}
           stopLabel={stopReadingLabel}
@@ -452,7 +595,55 @@ function PerformanceDashboard({
               </strong>
 
               <span>
-                Performance Trend
+                {text.performanceTrend}
+              </span>
+            </div>
+
+            <section className="accuracy-change-section">
+              <h2>{text.accuracyChangeOverTime}</h2>
+
+              {accuracyChangeOverTime.length === 0 ? (
+                <p>{text.noAccuracyHistory}</p>
+              ) : (
+                <div className="accuracy-change-list">
+                  {accuracyChangeOverTime.map((item) => (
+                    <div
+                      className="accuracy-change-item"
+                      key={item.id}
+                    >
+                      <strong>
+                        {item.accuracy}%
+                      </strong>
+
+                      <span>
+                        {item.change === null
+                          ? text.startingSession
+                          : item.change > 0
+                            ? `+${item.change}%`
+                            : `${item.change}%`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <div className="performance-stat">
+              <strong>
+                {personalBestAccuracy}%
+              </strong>
+
+              <span>
+                {text.personalBestAccuracy}
+              </span>
+            </div>
+            <div className="performance-stat">
+              <strong>
+                {bestPerformanceByGame}
+              </strong>
+
+              <span>
+                {text.bestPerformanceByGame}
               </span>
             </div>
 
@@ -475,7 +666,7 @@ function PerformanceDashboard({
                 No game performance data available yet.
               </p>
             )}
-            <h2>Game-wise Performance</h2>
+            <h2>{text.gameWisePerformance}</h2>
 
             <div className="performance-game-grid">
               {gameWiseAnalytics.map((game) => (
@@ -501,37 +692,50 @@ function PerformanceDashboard({
                     Average Mistakes:{' '}
                     <strong>{game.averageMistakes}</strong>
                   </p>
+                  <p>
+                    Average Time:{' '}
+                    <strong>
+                      {formatTime(game.averageTime)}
+                    </strong>
+                  </p>
+
+                  <p>
+                    Difficulty:{' '}
+                    <strong>
+                      {game.difficulty || '—'}
+                    </strong>
+                  </p>
                 </article>
               ))}
             </div>
           </section>
           <section className="performance-distribution">
-            <h2>Accuracy Distribution</h2>
+            <h2>{text.accuracyDistribution}</h2>
 
             <div className="performance-distribution-grid">
               <div className="performance-stat">
                 <strong>{accuracyDistribution.excellent}</strong>
-                <span>90–100% Accuracy</span>
+                <span>{text.excellentAccuracy}</span>
               </div>
 
               <div className="performance-stat">
                 <strong>{accuracyDistribution.good}</strong>
-                <span>70–89% Accuracy</span>
+                <span>{text.goodAccuracy}</span>
               </div>
 
               <div className="performance-stat">
                 <strong>{accuracyDistribution.average}</strong>
-                <span>50–69% Accuracy</span>
+                <span>{text.averageAccuracyRange}</span>
               </div>
 
               <div className="performance-stat">
                 <strong>{accuracyDistribution.needsPractice}</strong>
-                <span>Below 50% Accuracy</span>
+                <span>{text.below50Accuracy}</span>
               </div>
             </div>
           </section>
           <section className="performance-difficulty-summary">
-            <h2>Difficulty-wise Performance</h2>
+            <h2>{text.difficultyWisePerformance}</h2>
 
             <div className="performance-difficulty-grid">
               {difficultyWiseAnalytics.map((item) => (
@@ -555,7 +759,7 @@ function PerformanceDashboard({
             </div>
           </section>
           <section className="performance-time-summary">
-            <h2>Time-wise Performance</h2>
+            <h2>{text.timeWisePerformance}</h2>
 
             <div className="performance-time-grid">
               {timeWiseAnalytics.map((item) => (
@@ -580,7 +784,7 @@ function PerformanceDashboard({
           </section>
 
           <section className="performance-summary">
-            <h2>Analytics Summary</h2>
+            <h2>{text.analyticsSummary}</h2>
 
             <div className="performance-summary-card">
               <strong>
@@ -590,6 +794,33 @@ function PerformanceDashboard({
               <p>
                 {analyticsSummary.message}
               </p>
+            </div>
+          </section>
+
+          <section className="performance-weekly">
+            <h2>{text.weeklyActivity}</h2>
+
+            <div className="performance-weekly-grid">
+              {weeklyActivity.map((day) => (
+                <article
+                  className="performance-weekly-card"
+                  key={day.date}
+                >
+                  <strong>
+                    {day.sessions}
+                  </strong>
+
+                  <span>
+                    {day.label}
+                  </span>
+
+                  <small>
+                    {day.sessions === 1
+                      ? 'session'
+                      : 'sessions'}
+                  </small>
+                </article>
+              ))}
             </div>
           </section>
 

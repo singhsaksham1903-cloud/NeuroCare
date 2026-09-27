@@ -292,3 +292,87 @@
     text-align: left;
   }
 }
+
+/* ===== Caregiver Analytics UI Polish ===== */
+
+.caregiver-summary {
+  gap: 16px;
+}
+
+.caregiver-stat {
+  min-height: 110px;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.caregiver-stat strong {
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+
+.caregiver-stat span {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.caregiver-game-card {
+  min-height: 220px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.caregiver-game-card h3 {
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+.caregiver-game-card strong {
+  font-size: 1.8rem;
+}
+
+.caregiver-game-meta {
+  line-height: 1.6;
+}
+
+.caregiver-table-wrapper {
+  overflow-x: auto;
+}
+
+.caregiver-table {
+  min-width: 760px;
+}
+
+@media (max-width: 900px) {
+  .caregiver-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .caregiver-game-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+
+  .caregiver-summary,
+  .caregiver-game-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .caregiver-stat,
+  .caregiver-game-card {
+    width: 100%;
+  }
+
+  .caregiver-stat {
+    min-height: 100px;
+  }
+
+  .caregiver-game-card {
+    min-height: 200px;
+  }
+}
