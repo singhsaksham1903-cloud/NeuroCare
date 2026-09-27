@@ -72,7 +72,7 @@ def create_game_session(
 
         raise HTTPException(
             status_code=500,
-            detail=f"Could not save game session: {error}",
+            detail="Could not save game session.",
         )
 
 

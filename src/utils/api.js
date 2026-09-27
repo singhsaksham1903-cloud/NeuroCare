@@ -31,6 +31,9 @@ export async function apiRequest(
 
   if (response.status === 401) {
     logout()
+    window.dispatchEvent(
+      new Event('cognicare-auth-expired'),
+    )
 
     throw new Error(
       'Your session has expired. Please log in again.',

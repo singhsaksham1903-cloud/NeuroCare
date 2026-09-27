@@ -139,7 +139,7 @@ def update_memory(
 
         raise HTTPException(
             status_code=500,
-            detail=f"Could not update memory: {error}",
+            detail="Could not save memory.",
         )
 
     return {
@@ -185,7 +185,7 @@ def delete_memory(
 
         raise HTTPException(
             status_code=500,
-            detail=f"Could not delete memory: {error}",
+            detail="Could not delete memory.",
         )
 
     return {

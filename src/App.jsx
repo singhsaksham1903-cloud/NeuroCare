@@ -305,6 +305,24 @@ function App() {
 
     restoreUserSession()
   }, [])
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      setCurrentUser(null)
+      setPage('dashboard')
+    }
+
+    window.addEventListener(
+      'cognicare-auth-expired',
+      handleAuthExpired,
+    )
+
+    return () => {
+      window.removeEventListener(
+        'cognicare-auth-expired',
+        handleAuthExpired,
+      )
+    }
+  }, [])
 
 
   // ==========================================

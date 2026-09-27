@@ -60,7 +60,7 @@ def create_reminder(
 
         raise HTTPException(
             status_code=500,
-            detail=f"Could not save reminder: {error}",
+            detail="Could not save reminder.",
         )
 
 
@@ -147,7 +147,7 @@ def update_reminder(
 
         raise HTTPException(
             status_code=500,
-            detail=f"Could not update reminder: {error}",
+            detail="Could not update reminder.",
         )
 
     return {
@@ -194,7 +194,7 @@ def delete_reminder(
 
         raise HTTPException(
             status_code=500,
-            detail=f"Could not delete reminder: {error}",
+            detail="Could not delete reminder.",
         )
 
     return {
