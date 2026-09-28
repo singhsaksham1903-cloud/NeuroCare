@@ -15,7 +15,7 @@ function CaregiverDashboard({
   stopReadingLabel = 'Stop Reading',
 }) {
   const [sessions, setSessions] = useState([])
-  const [memories, setMemories] = useState([])
+  const [memoryCount, setMemoryCount] = useState(0)
   const [reminders, setReminders] = useState([])
 
   const [linkedElderly, setLinkedElderly] =
@@ -36,7 +36,7 @@ function CaregiverDashboard({
 
       if (user?.role !== 'caregiver') {
         setSessions([])
-        setMemories([])
+        setMemoryCount(0)
         setReminders([])
         setLinkedElderly(null)
 
@@ -106,18 +106,14 @@ function CaregiverDashboard({
         linkedData.sessions || [],
       )
 
-      setMemories(
-        linkedData.memories || [],
+      setMemoryCount(
+        linkedData.memory_count || 0,
       )
 
       setReminders(
         linkedData.reminders || [],
       )
     } catch (err) {
-      console.error(
-        'Could not load caregiver dashboard data:',
-        err,
-      )
 
       setError(
         err.message ||
@@ -576,7 +572,7 @@ function CaregiverDashboard({
 
               <div className="caregiver-stat">
                 <strong>
-                  {memories.length}
+                  {memoryCount}
                 </strong>
 
                 <span>

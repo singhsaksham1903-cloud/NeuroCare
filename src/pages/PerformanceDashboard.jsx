@@ -29,10 +29,6 @@ function PerformanceDashboard({
 
         setSessions(data.sessions || [])
       } catch (err) {
-        console.error(
-          'Could not load performance data:',
-          err,
-        )
 
         setError(
           err.message ||

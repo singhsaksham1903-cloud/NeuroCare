@@ -24,6 +24,16 @@ function getCurrentUserId() {
 
   return user?.id || null
 }
+function getPerformanceHistoryKey() {
+  const userId =
+    getCurrentUserId()
+
+  if (!userId) {
+    return null
+  }
+
+  return `${PERFORMANCE_KEY}-${userId}`
+}
 
 
 // ============================================================
@@ -47,9 +57,15 @@ function getPendingQueueKey() {
 // ============================================================
 
 export function getPerformanceHistory() {
+  const historyKey =
+    getPerformanceHistoryKey()
+
+  if (!historyKey) {
+    return []
+  }
   const savedData =
     localStorage.getItem(
-      PERFORMANCE_KEY,
+      historyKey,
     )
 
   if (!savedData) {
@@ -76,8 +92,15 @@ export function getPerformanceHistory() {
 function savePerformanceHistory(
   history,
 ) {
+  const historyKey =
+    getPerformanceHistoryKey()
+
+  if (!historyKey) {
+    return
+  }
+
   localStorage.setItem(
-    PERFORMANCE_KEY,
+    historyKey,
     JSON.stringify(history),
   )
 }
@@ -395,10 +418,6 @@ export async function savePerformanceResult(
         result,
       )
 
-    console.log(
-      'Game result saved to PostgreSQL:',
-      backendResult,
-    )
 
     window.dispatchEvent(
       new CustomEvent(
@@ -468,10 +487,7 @@ export async function savePerformanceResult(
     // Keep the local copy and report the error.
     // --------------------------------------------------------
 
-    console.error(
-      'Could not save game result:',
-      error,
-    )
+
 
     window.dispatchEvent(
       new CustomEvent(
@@ -493,8 +509,15 @@ export async function savePerformanceResult(
 // ============================================================
 
 export function clearPerformanceHistory() {
+  const historyKey =
+    getPerformanceHistoryKey()
+
+  if (!historyKey) {
+    return
+  }
+
   localStorage.removeItem(
-    PERFORMANCE_KEY,
+    historyKey,
   )
 }
 

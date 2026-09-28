@@ -59,10 +59,6 @@ function Memories({
         data.memories || [],
       )
     } catch (err) {
-      console.error(
-        'Could not load memories:',
-        err,
-      )
 
       setError(
         err.message ||
@@ -154,10 +150,7 @@ function Memories({
 
       await loadMemories()
     } catch (err) {
-      console.error(
-        'Could not save memory:',
-        err,
-      )
+
 
       setError(
         err.message ||
@@ -231,10 +224,7 @@ function Memories({
 
       await loadMemories()
     } catch (err) {
-      console.error(
-        'Could not delete memory:',
-        err,
-      )
+
 
       setError(
         err.message ||

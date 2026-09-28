@@ -34,10 +34,6 @@ function RecommendationCard({
 
         setRecommendation(data)
       } catch (err) {
-        console.error(
-          'Could not load recommendation:',
-          err,
-        )
 
         setError(
           err.message ||

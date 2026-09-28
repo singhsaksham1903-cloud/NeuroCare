@@ -48,10 +48,7 @@ function Reminders({
 
       setReminders(data.reminders || [])
     } catch (err) {
-      console.error(
-        'Could not load reminders:',
-        err,
-      )
+
 
       setError(
         err.message ||
@@ -149,10 +146,7 @@ function Reminders({
 
       await loadReminders()
     } catch (err) {
-      console.error(
-        'Could not save reminder:',
-        err,
-      )
+
 
       setError(
         err.message ||
@@ -242,10 +236,6 @@ function Reminders({
 
       await loadReminders()
     } catch (err) {
-      console.error(
-        'Could not update reminder:',
-        err,
-      )
 
       setError(
         err.message ||
@@ -285,10 +275,7 @@ function Reminders({
 
       await loadReminders()
     } catch (err) {
-      console.error(
-        'Could not delete reminder:',
-        err,
-      )
+
 
       setError(
         err.message ||

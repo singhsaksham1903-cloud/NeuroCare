@@ -93,21 +93,15 @@ def get_game_sessions(
     return {
         "count": len(sessions),
         "sessions": [
-            {
-                "id": item.id,
-                "game": item.game,
-                "difficulty": item.difficulty,
-                "accuracy": item.accuracy,
-                "mistakes": item.mistakes,
-                "time": item.time,
-                "completed": item.completed,
-                "matches": item.matches,
-                "sequenceLength": item.sequence_length,
-                "targetCount": item.target_count,
-                "correct": item.correct,
-                "wrong": item.wrong,
-                "created_at": item.created_at,
-            }
-            for item in sessions
+    {
+        "id": item.id,
+        "game": item.game,
+        "difficulty": item.difficulty,
+        "accuracy": item.accuracy,
+        "mistakes": item.mistakes,
+        "time": item.time,
+        "created_at": item.created_at,
+    }
+    for item in sessions
         ],
     }

@@ -359,62 +359,33 @@ def get_linked_elderly_data(
     )
 
     session_data = [
-        {
-            "id": session.id,
-            "game": session.game,
-            "difficulty": session.difficulty,
-            "accuracy": session.accuracy,
-            "mistakes": session.mistakes,
-            "time": session.time,
-            "completed": session.completed,
-            "matches": session.matches,
-            "sequenceLength": session.sequence_length,
-            "targetCount": session.target_count,
-            "correct": session.correct,
-            "wrong": session.wrong,
-            "created_at": (
-                session.created_at.isoformat()
-                if session.created_at
-                else None
-            ),
-        }
-        for session in sessions
-    ]
+    {
+        "id": session.id,
+        "game": session.game,
+        "difficulty": session.difficulty,
+        "accuracy": session.accuracy,
+        "mistakes": session.mistakes,
+        "time": session.time,
+        "created_at": (
+            session.created_at.isoformat()
+            if session.created_at
+            else None
+        ),
+    }
+    for session in sessions
+]
 
     # --------------------------------------------------------
     # Memories
     # --------------------------------------------------------
 
-    memories = (
-        db.query(Memory)
-        .filter(
-            Memory.user_id == elderly_user.id
-        )
-        .order_by(
-            Memory.created_at.desc()
-        )
-        .all()
+    memory_count = (
+    db.query(Memory)
+    .filter(
+        Memory.user_id == elderly_user.id
     )
-
-    memory_data = [
-        {
-            "id": memory.id,
-            "title": memory.title,
-            "description": memory.description,
-            "category": memory.category,
-            "memoryDate": (
-                memory.memory_date.isoformat()
-                if memory.memory_date
-                else None
-            ),
-            "created_at": (
-                memory.created_at.isoformat()
-                if memory.created_at
-                else None
-            ),
-        }
-        for memory in memories
-    ]
+    .count()
+)
 
     # --------------------------------------------------------
     # Reminders
@@ -443,11 +414,7 @@ def get_linked_elderly_data(
                 else None
             ),
             "completed": reminder.completed,
-            "created_at": (
-                reminder.created_at.isoformat()
-                if reminder.created_at
-                else None
-            ),
+
         }
         for reminder in reminders
     ]
@@ -464,10 +431,9 @@ def get_linked_elderly_data(
         "elderly_user": {
             "id": elderly_user.id,
             "full_name": elderly_user.full_name,
-            "email": elderly_user.email,
         },
         "sessions": session_data,
-        "memories": memory_data,
+        "memories": memory_count,
         "reminders": reminder_data,
     }
 

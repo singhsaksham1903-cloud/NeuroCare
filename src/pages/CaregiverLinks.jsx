@@ -58,10 +58,7 @@ function CaregiverLinks({
           : [],
       )
     } catch (err) {
-      console.error(
-        'Could not load caregiver links:',
-        err,
-      )
+
 
       setError(
         err.message ||
@@ -115,10 +112,7 @@ function CaregiverLinks({
 
       await loadLinks()
     } catch (err) {
-      console.error(
-        'Could not send caregiver request:',
-        err,
-      )
+
 
       setError(
         err.message ||
@@ -154,10 +148,7 @@ function CaregiverLinks({
 
       await loadLinks()
     } catch (err) {
-      console.error(
-        'Could not update caregiver link:',
-        err,
-      )
+
 
       setError(
         err.message ||
@@ -187,10 +178,7 @@ function CaregiverLinks({
 
       await loadLinks()
     } catch (err) {
-      console.error(
-        'Could not remove caregiver link:',
-        err,
-      )
+
 
       setError(
         err.message ||
