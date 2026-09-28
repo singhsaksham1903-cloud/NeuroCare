@@ -1,0 +1,308 @@
+<svg
+  width="600"
+  height="420"
+  viewBox="0 0 600 420"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="600" y2="420">
+      <stop offset="0%" stop-color="#FFF8E9"/>
+      <stop offset="100%" stop-color="#FFF0D5"/>
+    </linearGradient>
+
+    <linearGradient id="shirtLeft" x1="120" y1="300" x2="300" y2="380">
+      <stop offset="0%" stop-color="#4F8FE8"/>
+      <stop offset="100%" stop-color="#6D62D9"/>
+    </linearGradient>
+
+    <linearGradient id="shirtRight" x1="300" y1="300" x2="500" y2="380">
+      <stop offset="0%" stop-color="#9B6AF6"/>
+      <stop offset="100%" stop-color="#6D62D9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect
+    width="600"
+    height="420"
+    rx="50"
+    fill="url(#bg)"
+  />
+
+  <!-- Decorative circles -->
+  <circle
+    cx="92"
+    cy="92"
+    r="28"
+    fill="#FFE3A8"
+  />
+
+  <circle
+    cx="505"
+    cy="92"
+    r="24"
+    fill="#E8D8FF"
+  />
+
+  <circle
+    cx="505"
+    cy="330"
+    r="30"
+    fill="#D9F2E5"
+  />
+
+  <!-- Left person: caregiver -->
+
+  <!-- Hair -->
+  <path
+    d="M120 153
+       C112 100 144 60 193 57
+       C244 53 278 88 280 137
+       C280 173 259 204 226 219
+       L143 208
+       C128 194 121 177 120 153Z"
+    fill="#4D4A63"
+  />
+
+  <!-- Face -->
+  <ellipse
+    cx="198"
+    cy="158"
+    rx="62"
+    ry="70"
+    fill="#F4C5A4"
+  />
+
+  <!-- Hair front -->
+  <path
+    d="M138 130
+       C151 84 231 73 265 127
+       C248 119 235 112 216 116
+       C190 122 167 111 138 130Z"
+    fill="#4D4A63"
+  />
+
+  <!-- Glasses -->
+  <circle
+    cx="173"
+    cy="157"
+    r="20"
+    stroke="#334D72"
+    stroke-width="6"
+    fill="white"
+  />
+
+  <circle
+    cx="224"
+    cy="157"
+    r="20"
+    stroke="#334D72"
+    stroke-width="6"
+    fill="white"
+  />
+
+  <path
+    d="M193 157H204"
+    stroke="#334D72"
+    stroke-width="6"
+    stroke-linecap="round"
+  />
+
+  <!-- Eyes -->
+  <circle
+    cx="173"
+    cy="157"
+    r="4"
+    fill="#27384D"
+  />
+
+  <circle
+    cx="224"
+    cy="157"
+    r="4"
+    fill="#27384D"
+  />
+
+  <!-- Smile -->
+  <path
+    d="M180 190
+       C191 199 207 199 218 190"
+    stroke="#A15F62"
+    stroke-width="5"
+    stroke-linecap="round"
+  />
+
+  <!-- Left body -->
+  <path
+    d="M104 360
+       C111 292 143 239 198 239
+       C253 239 286 292 293 360Z"
+    fill="url(#shirtLeft)"
+  />
+
+  <!-- Right person: elderly -->
+
+  <!-- Hair -->
+  <path
+    d="M324 145
+       C321 97 352 61 402 60
+       C451 59 481 95 480 145
+       C479 176 464 203 438 217
+       L354 207
+       C335 190 325 168 324 145Z"
+    fill="#B6B3BA"
+  />
+
+  <!-- Face -->
+  <ellipse
+    cx="402"
+    cy="160"
+    rx="59"
+    ry="68"
+    fill="#F3C4A2"
+  />
+
+  <!-- Hair fringe -->
+  <path
+    d="M343 128
+       C357 91 428 79 465 121
+       C446 113 434 112 417 117
+       C394 122 374 111 343 128Z"
+    fill="#B6B3BA"
+  />
+
+  <!-- Glasses -->
+  <circle
+    cx="378"
+    cy="157"
+    r="19"
+    stroke="#334D72"
+    stroke-width="6"
+    fill="white"
+  />
+
+  <circle
+    cx="427"
+    cy="157"
+    r="19"
+    stroke="#334D72"
+    stroke-width="6"
+    fill="white"
+  />
+
+  <path
+    d="M397 157H408"
+    stroke="#334D72"
+    stroke-width="6"
+    stroke-linecap="round"
+  />
+
+  <!-- Eyes -->
+  <circle
+    cx="378"
+    cy="157"
+    r="4"
+    fill="#27384D"
+  />
+
+  <circle
+    cx="427"
+    cy="157"
+    r="4"
+    fill="#27384D"
+  />
+
+  <!-- Smile -->
+  <path
+    d="M384 190
+       C395 199 411 199 422 190"
+    stroke="#A15F62"
+    stroke-width="5"
+    stroke-linecap="round"
+  />
+
+  <!-- Right body -->
+  <path
+    d="M308 360
+       C316 294 348 240 402 240
+       C456 240 488 294 496 360Z"
+    fill="url(#shirtRight)"
+  />
+
+  <!-- Caring hands -->
+  <path
+    d="M274 286
+       C305 274 329 278 351 293"
+    stroke="#F0BB95"
+    stroke-width="18"
+    stroke-linecap="round"
+  />
+
+  <path
+    d="M351 293
+       C369 281 388 280 408 287"
+    stroke="#F4C5A4"
+    stroke-width="18"
+    stroke-linecap="round"
+  />
+
+  <!-- Heart -->
+  <path
+    d="M301 112
+       C286 94 255 105 255 130
+       C255 149 272 163 301 184
+       C330 163 347 149 347 130
+       C347 105 316 94 301 112Z"
+    fill="#F28A86"
+  />
+
+  <path
+    d="M300 126
+       C291 117 276 123 276 135
+       C276 145 286 153 300 163
+       C314 153 324 145 324 135
+       C324 123 309 117 300 126Z"
+    fill="#FFFFFF"
+  />
+
+  <!-- Small leaves -->
+  <path
+    d="M85 277
+       C66 255 66 229 84 215
+       C103 236 103 258 85 277Z"
+    fill="#59B890"
+  />
+
+  <path
+    d="M515 276
+       C536 256 539 232 522 216
+       C503 235 501 258 515 276Z"
+    fill="#59B890"
+  />
+
+  <!-- Sparkles -->
+  <path
+    d="M103 150
+       L110 165
+       L125 172
+       L110 179
+       L103 194
+       L96 179
+       L81 172
+       L96 165Z"
+    fill="#F6B64B"
+  />
+
+  <path
+    d="M504 145
+       L510 157
+       L522 163
+       L510 169
+       L504 181
+       L498 169
+       L486 163
+       L498 157Z"
+    fill="#49B995"
+  />
+</svg>

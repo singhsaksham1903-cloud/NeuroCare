@@ -34,10 +34,9 @@ function RecommendationCard({
 
         setRecommendation(data)
       } catch (err) {
-
         setError(
           err.message ||
-            text.unavailable,
+          text.unavailable,
         )
       } finally {
         setLoading(false)
@@ -68,24 +67,58 @@ function RecommendationCard({
   }, [])
 
 
+  const recommendationIcon = (
+    <span
+      className="recommendation-icon"
+      aria-hidden="true"
+    >
+      <svg
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M32 9L35.7 19.3L46 23L35.7 26.7L32 37L28.3 26.7L18 23L28.3 19.3L32 9Z"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M49 35L51 40.5L56.5 42.5L51 44.5L49 50L47 44.5L41.5 42.5L47 40.5L49 35Z"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+        />
+        <circle
+          cx="19"
+          cy="42"
+          r="5"
+          stroke="currentColor"
+          strokeWidth="2.5"
+        />
+      </svg>
+    </span>
+  )
+
+
   if (loading) {
     return (
-      <article className="recommendation-card">
+      <article className="recommendation-card recommendation-card--loading">
+        {recommendationIcon}
 
-        <div className="recommendation-icon">
-          ✨
-        </div>
-
-        <div>
-          <h2>
+        <div className="recommendation-content">
+          <span className="recommendation-label">
             {text.title}
+          </span>
+
+          <h2>
+            {text.analyzing}
           </h2>
 
-          <p>
+          <p className="recommendation-loading-text">
             {text.analyzing}
           </p>
         </div>
-
       </article>
     )
   }
@@ -96,15 +129,16 @@ function RecommendationCard({
     !recommendation?.recommendation
   ) {
     return (
-      <article className="recommendation-card">
+      <article className="recommendation-card recommendation-card--empty">
+        {recommendationIcon}
 
-        <div className="recommendation-icon">
-          ✨
-        </div>
-
-        <div>
-          <h2>
+        <div className="recommendation-content">
+          <span className="recommendation-label">
             {text.title}
+          </span>
+
+          <h2>
+            {text.noRecommendation}
           </h2>
 
           <p>
@@ -112,7 +146,6 @@ function RecommendationCard({
               text.noRecommendation}
           </p>
         </div>
-
       </article>
     )
   }
@@ -173,15 +206,19 @@ function RecommendationCard({
   return (
     <article className="recommendation-card">
 
-      <div className="recommendation-icon">
-        ✨
+      <div className="recommendation-visual">
+        {recommendationIcon}
+
+        <span className="recommendation-visual-label">
+          {text.title}
+        </span>
       </div>
 
 
       <div className="recommendation-content">
 
         <span className="recommendation-label">
-          {text.title}
+          {text.suggestedDifficulty}
         </span>
 
 
@@ -191,19 +228,22 @@ function RecommendationCard({
 
 
         <div className="recommendation-difficulty">
-          {text.suggestedDifficulty}{' '}
+          <span>
+            {text.suggestedDifficulty}
+          </span>
+
           <strong>
             {difficulty}
           </strong>
         </div>
 
 
-        <p>
+        <p className="recommendation-reason">
           {reason}
         </p>
 
 
-        <small>
+        <small className="recommendation-meta">
           {text.basedOn}{' '}
           {recommendation.based_on_sessions}{' '}
           {recommendation.based_on_sessions === 1
@@ -213,34 +253,38 @@ function RecommendationCard({
         </small>
 
 
-        <button
-          type="button"
-          className="recommendation-start-button"
-          onClick={() =>
-            onStart(
-              game,
-              difficulty,
-            )
-          }
-        >
-          {text.startRecommendedGame}
-        </button>
+        <div className="recommendation-actions">
+
+          <button
+            type="button"
+            className="recommendation-start-button"
+            onClick={() =>
+              onStart(
+                game,
+                difficulty,
+              )
+            }
+          >
+            {text.startRecommendedGame}
+          </button>
 
 
-        <button
-          type="button"
-          className="recommendation-details-button"
-          onClick={() =>
-            setShowDetails(
-              (current) => !current,
-            )
-          }
-          aria-expanded={showDetails}
-        >
-          {showDetails
-            ? text.hideDetails
-            : text.whyRecommendation}
-        </button>
+          <button
+            type="button"
+            className="recommendation-details-button"
+            onClick={() =>
+              setShowDetails(
+                (current) => !current,
+              )
+            }
+            aria-expanded={showDetails}
+          >
+            {showDetails
+              ? text.hideDetails
+              : text.whyRecommendation}
+          </button>
+
+        </div>
 
 
         {showDetails &&

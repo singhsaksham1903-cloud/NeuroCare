@@ -8,6 +8,7 @@ import CaregiverLinks from './pages/CaregiverLinks'
 import RecommendationCard from './pages/RecommendationCard'
 import Memories from './pages/Memories'
 import Reminders from './pages/Reminders'
+
 import UserBar from './pages/UserBar'
 import OfflineStatus from './Components/OfflineStatus'
 import VoiceReadAloud from './Components/VoiceReadAloud'
@@ -15,126 +16,11 @@ import LanguageSelector from './Components/LanguageSelector'
 
 import {
   getCurrentUser,
-  logout,
 } from './utils/auth'
 
 import translations from './data/translations'
 
 import './App.css'
-
-
-// ============================================
-// UI Text — original game-page/static strings
-// Dashboard translations are handled below
-// ============================================
-
-const TEXT = {
-  appName: 'Cognicare',
-  appNameHighlight: 'NER',
-
-  userName: 'Mrs. Das',
-
-  greetingMorning: 'Good morning',
-  greetingAfternoon: 'Good afternoon',
-  greetingEvening: 'Good evening',
-
-  cards: {
-    games: {
-      icon: '🧠',
-      title: 'Cognitive Games',
-      description:
-        'Exercise your mind with fun puzzles and games.',
-      button: 'Play Now',
-    },
-
-    memories: {
-      icon: '📸',
-      title: 'My Memories',
-      description:
-        'View your photos and cherished moments.',
-      button: 'View Memories',
-    },
-
-    reminders: {
-      icon: '📋',
-      title: "Today's Reminders",
-      description:
-        'Your tasks and reminders for today.',
-      button: 'See All Reminders',
-    },
-
-    caregiver: {
-      icon: '🆘',
-      title: 'Caregiver Help',
-      description:
-        'Contact your caregiver or get help anytime.',
-      button: 'Get Help',
-    },
-  },
-
-  footer:
-    'Cognicare NER — SIH 2025 Prototype',
-
-  gamesPage: {
-    icon: '🧠',
-    title: 'Cognitive Games',
-    subtitle:
-      'Choose a game to exercise your mind, Mrs. Das.',
-    backButton: 'Back to Dashboard',
-
-    games: [
-      {
-        id: 'memory-match',
-        icon: '🃏',
-        title: 'Memory Match',
-        description:
-          'Flip cards and find matching pairs to train your memory.',
-        button: 'Coming Soon',
-      },
-
-      {
-        id: 'sequence-memory',
-        icon: '🔢',
-        title: 'Sequence Memory',
-        description:
-          'Remember and repeat the sequence of numbers or colors.',
-        button: 'Coming Soon',
-      },
-
-      {
-        id: 'object-recall',
-        icon: '👁️',
-        title: 'Object Recall',
-        description:
-          'Look at objects, then recall what you saw.',
-        button: 'Coming Soon',
-      },
-    ],
-  },
-}
-
-
-// ============================================
-// Mock Data — static for the prototype
-// ============================================
-
-const MOCK_REMINDERS = [
-  {
-    id: 1,
-    time: '8:00 AM',
-    label: 'Morning medicine 💊',
-  },
-  {
-    id: 2,
-    time: '10:00 AM',
-    label: 'Walk in the garden 🌿',
-  },
-  {
-    id: 3,
-    time: '1:00 PM',
-    label: 'Lunch with family 🍽️',
-  },
-]
 
 
 // ============================================
@@ -174,7 +60,7 @@ function getFormattedDate() {
 
 
 // ============================================
-// Dashboard Card Component
+// Dashboard Card
 // ============================================
 
 function DashboardCard({
@@ -190,45 +76,51 @@ function DashboardCard({
   return (
     <article
       className={`card${variant === 'danger'
-        ? ' card--danger'
-        : ''
+          ? ' card--danger'
+          : ''
         }`}
     >
-      <span
-        className="card-icon"
-        role="img"
-        aria-hidden="true"
-      >
-        {icon}
-      </span>
+
+      <div className="card-visual">
+        <img
+          src={icon}
+          alt=""
+          className="card-illustration"
+        />
+      </div>
+
 
       <h2 className="card-title">
         {title}
       </h2>
 
+
       <p className="card-description">
         {description}
       </p>
 
+
       {children}
+
 
       <button
         type="button"
         className={`card-button${buttonStyle
-          ? ` card-button--${buttonStyle}`
-          : ''
+            ? ` card-button--${buttonStyle}`
+            : ''
           }`}
         onClick={onClick}
       >
         {buttonLabel}
       </button>
+
     </article>
   )
 }
 
 
 // ============================================
-// App — Main Dashboard
+// App
 // ============================================
 
 function App() {
@@ -247,10 +139,6 @@ function App() {
       )
     })
 
-  const currentText =
-    translations[language] ||
-    translations.en
-
   const [authLoading, setAuthLoading] =
     useState(true)
 
@@ -263,8 +151,13 @@ function App() {
   ] = useState(null)
 
 
+  const currentText =
+    translations[language] ||
+    translations.en
+
+
   // ==========================================
-  // Save selected language
+  // Language
   // ==========================================
 
   useEffect(() => {
@@ -274,6 +167,7 @@ function App() {
     )
   }, [language])
 
+
   useEffect(() => {
     const languageMap = {
       en: 'en-IN',
@@ -282,7 +176,8 @@ function App() {
     }
 
     document.documentElement.lang =
-      languageMap[language] || 'en-IN'
+      languageMap[language] ||
+      'en-IN'
   }, [language])
 
 
@@ -305,10 +200,18 @@ function App() {
 
     restoreUserSession()
   }, [])
+
+
+  // ==========================================
+  // Handle expired authentication
+  // ==========================================
+
   useEffect(() => {
     const handleAuthExpired = () => {
       setCurrentUser(null)
       setPage('dashboard')
+      setRecommendedGame(null)
+      setRecommendedDifficulty(null)
     }
 
     window.addEventListener(
@@ -326,7 +229,7 @@ function App() {
 
 
   // ==========================================
-  // Open cognitive games
+  // Open Cognitive Games
   // ==========================================
 
   const openGames = (
@@ -337,15 +240,32 @@ function App() {
     setRecommendedDifficulty(
       difficulty,
     )
+
     setPage('games')
   }
 
+
+  // ==========================================
+  // Dashboard information
+  // ==========================================
 
   const greeting =
     getGreeting(currentText)
 
   const todayDate =
     getFormattedDate()
+
+  const userName =
+    currentUser?.full_name ||
+    currentText.elderlyUser
+
+
+  const languageCode =
+    language === 'hi'
+      ? 'hi-IN'
+      : language === 'as'
+        ? 'as-IN'
+        : 'en-IN'
 
 
   // ==========================================
@@ -360,7 +280,11 @@ function App() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          padding: '24px',
+          boxSizing: 'border-box',
           fontSize: '1.2rem',
+          color: '#5f6670',
+          textAlign: 'center',
         }}
       >
         Loading Cognicare...
@@ -379,6 +303,8 @@ function App() {
         onAuthenticated={(user) => {
           setCurrentUser(user)
           setPage('dashboard')
+          setRecommendedGame(null)
+          setRecommendedDifficulty(null)
         }}
       />
     )
@@ -399,18 +325,19 @@ function App() {
         sequenceMemoryText={
           currentText.sequenceMemoryPage
         }
-
-        objectRecallText={currentText.objectRecallPage}
-        language={
-          language === 'hi'
-            ? 'hi-IN'
-            : language === 'as'
-              ? 'as-IN'
-              : 'en-IN'
+        objectRecallText={
+          currentText.objectRecallPage
         }
-        readAloudLabel={currentText.readAloud}
-        stopReadingLabel={currentText.stopReading}
-        initialGame={recommendedGame}
+        language={languageCode}
+        readAloudLabel={
+          currentText.readAloud
+        }
+        stopReadingLabel={
+          currentText.stopReading
+        }
+        initialGame={
+          recommendedGame
+        }
         initialDifficulty={
           recommendedDifficulty
         }
@@ -434,16 +361,16 @@ function App() {
     return (
       <PerformanceDashboard
         text={currentText.performancePage}
-        language={
-          language === 'hi'
-            ? 'hi-IN'
-            : language === 'as'
-              ? 'as-IN'
-              : 'en-IN'
+        language={languageCode}
+        readAloudLabel={
+          currentText.readAloud
         }
-        readAloudLabel={currentText.readAloud}
-        stopReadingLabel={currentText.stopReading}
-        onBack={() => setPage('dashboard')}
+        stopReadingLabel={
+          currentText.stopReading
+        }
+        onBack={() =>
+          setPage('dashboard')
+        }
       />
     )
   }
@@ -458,38 +385,42 @@ function App() {
       <CaregiverDashboard
         user={currentUser}
         text={currentText.caregiverPage}
-        language={
-          language === 'hi'
-            ? 'hi-IN'
-            : language === 'as'
-              ? 'as-IN'
-              : 'en-IN'
+        language={languageCode}
+        readAloudLabel={
+          currentText.readAloud
         }
-        readAloudLabel={currentText.readAloud}
-        stopReadingLabel={currentText.stopReading}
-        onBack={() => setPage('dashboard')}
+        stopReadingLabel={
+          currentText.stopReading
+        }
+        onBack={() =>
+          setPage('dashboard')
+        }
       />
     )
   }
 
+
   // ==========================================
   // Caregiver Connections
   // ==========================================
+
   if (page === 'caregiver-links') {
     return (
       <CaregiverLinks
         user={currentUser}
-        text={currentText.caregiverLinksPage}
-        language={
-          language === 'hi'
-            ? 'hi-IN'
-            : language === 'as'
-              ? 'as-IN'
-              : 'en-IN'
+        text={
+          currentText.caregiverLinksPage
         }
-        readAloudLabel={currentText.readAloud}
-        stopReadingLabel={currentText.stopReading}
-        onBack={() => setPage('dashboard')}
+        language={languageCode}
+        readAloudLabel={
+          currentText.readAloud
+        }
+        stopReadingLabel={
+          currentText.stopReading
+        }
+        onBack={() =>
+          setPage('dashboard')
+        }
       />
     )
   }
@@ -503,21 +434,20 @@ function App() {
     return (
       <Memories
         text={currentText.memoriesPage}
-        language={
-          language === 'hi'
-            ? 'hi-IN'
-            : language === 'as'
-              ? 'as-IN'
-              : 'en-IN'
+        language={languageCode}
+        readAloudLabel={
+          currentText.readAloud
         }
-        readAloudLabel={currentText.readAloud}
-        stopReadingLabel={currentText.stopReading}
+        stopReadingLabel={
+          currentText.stopReading
+        }
         onBack={() =>
           setPage('dashboard')
         }
       />
     )
   }
+
 
   // ==========================================
   // Reminders
@@ -527,15 +457,13 @@ function App() {
     return (
       <Reminders
         text={currentText.remindersPage}
-        language={
-          language === 'hi'
-            ? 'hi-IN'
-            : language === 'as'
-              ? 'as-IN'
-              : 'en-IN'
+        language={languageCode}
+        readAloudLabel={
+          currentText.readAloud
         }
-        readAloudLabel={currentText.readAloud}
-        stopReadingLabel={currentText.stopReading}
+        stopReadingLabel={
+          currentText.stopReading
+        }
         onBack={() =>
           setPage('dashboard')
         }
@@ -550,30 +478,43 @@ function App() {
 
   return (
     <>
-      {/* ======================================
-          Header
-          ====================================== */}
-      <a className="skip-link" href="#main-content">
+      {/* ----------------------------------------
+          Skip Link
+          ---------------------------------------- */}
+
+      <a
+        className="skip-link"
+        href="#main-content"
+      >
         Skip to main content
       </a>
+
+
+      {/* ----------------------------------------
+          Header
+          ---------------------------------------- */}
 
       <header className="app-header">
 
         <div className="app-logo">
-          {TEXT.appName}{' '}
+          Cognicare{' '}
+
           <span className="app-logo-highlight">
-            {TEXT.appNameHighlight}
+            NER
           </span>
         </div>
 
+
         <h1 className="greeting">
           {greeting},{' '}
-          {TEXT.userName}
+          {userName}
         </h1>
+
 
         <p className="date-display">
           {todayDate}
         </p>
+
 
         <LanguageSelector
           language={language}
@@ -584,49 +525,67 @@ function App() {
       </header>
 
 
-      {/* ======================================
+      {/* ----------------------------------------
           User Bar
-          ====================================== */}
+          ---------------------------------------- */}
 
       <UserBar
         user={currentUser}
         text={{
-          caregiver: currentText.caregiver,
-          elderlyUser: currentText.elderlyUser,
-          logout: currentText.logout,
+          caregiver:
+            currentText.caregiver,
+
+          elderlyUser:
+            currentText.elderlyUser,
+
+          logout:
+            currentText.logout,
         }}
         onLogout={() => {
-          logout()
           setCurrentUser(null)
           setPage('dashboard')
+          setRecommendedGame(null)
+          setRecommendedDifficulty(null)
         }}
       />
+
+
+      {/* ----------------------------------------
+          Online / Offline Status
+          ---------------------------------------- */}
 
       <OfflineStatus
         text={{
-          online: currentText.online,
-          offline: currentText.offline,
+          online:
+            currentText.online,
+
+          offline:
+            currentText.offline,
         }}
       />
+
+
+      {/* ----------------------------------------
+          Dashboard Read Aloud
+          ---------------------------------------- */}
+
       <VoiceReadAloud
-        text={`${greeting}, ${currentUser?.name || currentText.elderlyUser
-          }. ${currentText.cognitiveGames}. ${currentText.cognitiveGamesDescription
-          }`}
-        language={
-          language === 'hi'
-            ? 'hi-IN'
-            : language === 'as'
-              ? 'as-IN'
-              : 'en-IN'
+        text={
+          `${greeting}, ${userName}. ` +
+          `${currentText.cognitiveGames}. ` +
+          `${currentText.cognitiveGamesDescription}`
         }
+        language={languageCode}
         label={currentText.readAloud}
-        stopLabel={currentText.stopReading}
+        stopLabel={
+          currentText.stopReading
+        }
       />
 
 
-      {/* ======================================
+      {/* ----------------------------------------
           Dashboard
-          ====================================== */}
+          ---------------------------------------- */}
 
       <main
         id="main-content"
@@ -636,7 +595,9 @@ function App() {
         {/* Recommendation */}
 
         <RecommendationCard
-          text={currentText.recommendationPage}
+          text={
+            currentText.recommendationPage
+          }
           onStart={(
             game,
             difficulty,
@@ -663,9 +624,7 @@ function App() {
         {/* Cognitive Games */}
 
         <DashboardCard
-          icon={
-            TEXT.cards.games.icon
-          }
+          icon="/illustrations/cognitive-games.svg"
           title={
             currentText.cognitiveGames
           }
@@ -684,7 +643,7 @@ function App() {
         {/* Performance */}
 
         <DashboardCard
-          icon="📊"
+          icon="/illustrations/performance.svg"
           title={
             currentText.performance
           }
@@ -703,7 +662,7 @@ function App() {
         {/* Caregiver Dashboard */}
 
         <DashboardCard
-          icon="👤"
+          icon="/illustrations/caregiver.svg"
           title={
             currentText.caregiverDashboard
           }
@@ -722,7 +681,7 @@ function App() {
         {/* Caregiver Connections */}
 
         <DashboardCard
-          icon="🤝"
+          icon="/illustrations/connections.svg"
           title={
             currentUser.role ===
               'caregiver'
@@ -752,7 +711,7 @@ function App() {
         {/* Memories */}
 
         <DashboardCard
-          icon="📝"
+          icon="/illustrations/memories.svg"
           title={
             currentText.memories
           }
@@ -771,7 +730,7 @@ function App() {
         {/* Reminders */}
 
         <DashboardCard
-          icon="⏰"
+          icon="/illustrations/reminders.svg"
           title={
             currentText.reminders
           }
@@ -786,94 +745,17 @@ function App() {
           }
         />
 
-
-        {/* Existing Memory Card */}
-
-        <DashboardCard
-          icon={
-            TEXT.cards.memories.icon
-          }
-          title={
-            currentText.myMemories
-          }
-          description={
-            currentText.myMemoriesDescription
-          }
-          buttonLabel={
-            currentText.viewMemories
-          }
-          buttonStyle="green"
-        />
-
-
-        {/* Mock Reminders Card */}
-
-        <DashboardCard
-          icon={
-            TEXT.cards.reminders.icon
-          }
-          title={
-            currentText.todaysReminders
-          }
-          description={
-            currentText.todaysRemindersDescription
-          }
-          buttonLabel={
-            currentText.seeAllReminders
-          }
-        >
-          <ul className="reminders-list">
-
-            {MOCK_REMINDERS.map(
-              (r) => (
-                <li
-                  key={r.id}
-                  className="reminder-item"
-                >
-                  <span className="reminder-time">
-                    {r.time}
-                  </span>
-
-                  <span>
-                    {r.label}
-                  </span>
-                </li>
-              ),
-            )}
-
-          </ul>
-        </DashboardCard>
-
-
-        {/* Caregiver Help */}
-
-        <DashboardCard
-          icon={
-            TEXT.cards.caregiver.icon
-          }
-          title={
-            currentText.caregiverHelp
-          }
-          description={
-            currentText.caregiverHelpDescription
-          }
-          buttonLabel={
-            currentText.getHelp
-          }
-          buttonStyle="danger"
-          variant="danger"
-        />
-
       </main>
 
 
-      {/* ======================================
+      {/* ----------------------------------------
           Footer
-          ====================================== */}
+          ---------------------------------------- */}
 
       <footer className="app-footer">
         {currentText.footer}
       </footer>
+
     </>
   )
 }

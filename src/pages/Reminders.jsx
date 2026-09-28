@@ -20,6 +20,126 @@ const EMPTY_FORM = {
 }
 
 
+/* --------------------------------------------
+   Reminder Icon
+   -------------------------------------------- */
+
+function ReminderIcon({ type = 'calendar' }) {
+  if (type === 'check') {
+    return (
+      <svg
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <circle
+          cx="32"
+          cy="32"
+          r="23"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+
+        <path
+          d="M21 32.5L28 39L43 24"
+          stroke="currentColor"
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )
+  }
+
+  if (type === 'overdue') {
+    return (
+      <svg
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <circle
+          cx="32"
+          cy="32"
+          r="23"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+
+        <path
+          d="M32 20V34"
+          stroke="currentColor"
+          strokeWidth="5"
+          strokeLinecap="round"
+        />
+
+        <circle
+          cx="32"
+          cy="43"
+          r="2.8"
+          fill="currentColor"
+        />
+      </svg>
+    )
+  }
+
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <rect
+        x="12"
+        y="15"
+        width="40"
+        height="37"
+        rx="8"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+
+      <path
+        d="M21 11V20"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+
+      <path
+        d="M43 11V20"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+
+      <path
+        d="M12 25H52"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+
+      <path
+        d="M22 34H32"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+
+      <path
+        d="M22 43H39"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+
 function Reminders({
   text,
   language = 'en-IN',
@@ -39,6 +159,10 @@ function Reminders({
   const [message, setMessage] = useState('')
 
 
+  /* --------------------------------------------
+     Load reminders
+     -------------------------------------------- */
+
   const loadReminders = async () => {
     try {
       setLoading(true)
@@ -48,8 +172,6 @@ function Reminders({
 
       setReminders(data.reminders || [])
     } catch (err) {
-
-
       setError(
         err.message ||
         text.loadError,
@@ -64,6 +186,10 @@ function Reminders({
     loadReminders()
   }, [])
 
+
+  /* --------------------------------------------
+     Form handling
+     -------------------------------------------- */
 
   const handleChange = (event) => {
     const {
@@ -88,6 +214,10 @@ function Reminders({
     setEditingId(null)
   }
 
+
+  /* --------------------------------------------
+     Save / Update reminder
+     -------------------------------------------- */
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -146,8 +276,6 @@ function Reminders({
 
       await loadReminders()
     } catch (err) {
-
-
       setError(
         err.message ||
         text.saveError,
@@ -157,6 +285,10 @@ function Reminders({
     }
   }
 
+
+  /* --------------------------------------------
+     Edit reminder
+     -------------------------------------------- */
 
   const handleEdit = (reminder) => {
     let localDateTime = ''
@@ -214,6 +346,10 @@ function Reminders({
   }
 
 
+  /* --------------------------------------------
+     Complete / activate reminder
+     -------------------------------------------- */
+
   const handleToggleComplete = async (
     reminder,
   ) => {
@@ -236,7 +372,6 @@ function Reminders({
 
       await loadReminders()
     } catch (err) {
-
       setError(
         err.message ||
         text.updateError,
@@ -244,6 +379,10 @@ function Reminders({
     }
   }
 
+
+  /* --------------------------------------------
+     Delete reminder
+     -------------------------------------------- */
 
   const handleDelete = async (
     reminderId,
@@ -275,8 +414,6 @@ function Reminders({
 
       await loadReminders()
     } catch (err) {
-
-
       setError(
         err.message ||
         text.deleteError,
@@ -284,6 +421,10 @@ function Reminders({
     }
   }
 
+
+  /* --------------------------------------------
+     Date helpers
+     -------------------------------------------- */
 
   const formatDateTime = (value) => {
     if (!value) {
@@ -319,6 +460,10 @@ function Reminders({
   }
 
 
+  /* --------------------------------------------
+     Page
+     -------------------------------------------- */
+
   return (
     <div className="reminders-page">
 
@@ -329,29 +474,50 @@ function Reminders({
           className="reminders-back-button"
           onClick={onBack}
         >
-          ← {text.backToDashboard}
+          <span
+            className="reminders-back-icon"
+            aria-hidden="true"
+          >
+            ←
+          </span>
+
+          {text.backToDashboard}
         </button>
 
 
-        <h1>
-          {text.remindersTitle}
-        </h1>
+        <div className="reminders-heading">
 
+          <div
+            className="reminders-heading-icon"
+            aria-hidden="true"
+          >
+            <ReminderIcon />
+          </div>
 
+          <div>
+            <span className="reminders-eyebrow">
+              Cognicare NER
+            </span>
 
+            <h1>
+              {text.remindersTitle}
+            </h1>
 
-        <p>
-          {text.remindersDescription}
-        </p>
+            <p>
+              {text.remindersDescription}
+            </p>
+          </div>
+
+        </div>
+
+        <VoiceReadAloud
+          text={`${text.remindersTitle}. ${text.remindersDescription}`}
+          language={language}
+          label={readAloudLabel}
+          stopLabel={stopReadingLabel}
+        />
 
       </header>
-      <VoiceReadAloud
-        text={`${text.remindersTitle}. ${text.remindersDescription}`}
-        language={language}
-        label={readAloudLabel}
-        stopLabel={stopReadingLabel}
-      />
-
 
 
       {error && (
@@ -370,14 +536,36 @@ function Reminders({
 
       <main className="reminders-content">
 
-        {/* Add / Edit Form */}
+        {/* ----------------------------------------
+            Add / Edit Form
+            ---------------------------------------- */}
+
         <section className="reminder-form-card">
 
-          <h2>
-            {editingId !== null
-              ? text.editReminder
-              : text.addReminder}
-          </h2>
+          <div className="reminder-form-heading">
+
+            <div
+              className="reminder-form-icon"
+              aria-hidden="true"
+            >
+              <ReminderIcon />
+            </div>
+
+            <div>
+              <span>
+                {editingId !== null
+                  ? text.editReminder
+                  : text.addReminder}
+              </span>
+
+              <h2>
+                {editingId !== null
+                  ? text.editReminder
+                  : text.addReminder}
+              </h2>
+            </div>
+
+          </div>
 
 
           <form
@@ -385,20 +573,63 @@ function Reminders({
             onSubmit={handleSubmit}
           >
 
-            <label>
-              {text.title}
+            <div className="reminder-form-row">
 
-              <input
-                type="text"
-                name="title"
-                value={form.title}
-                onChange={handleChange}
-                placeholder={
-                  text.titlePlaceholder
-                }
-                maxLength={200}
-              />
-            </label>
+              <label>
+                {text.title}
+
+                <input
+                  type="text"
+                  name="title"
+                  value={form.title}
+                  onChange={handleChange}
+                  placeholder={
+                    text.titlePlaceholder
+                  }
+                  maxLength={200}
+                />
+              </label>
+
+
+              <label>
+                {text.category}
+
+                <select
+                  name="category"
+                  value={form.category}
+                  onChange={handleChange}
+                >
+                  <option value="General">
+                    {text.categories.General}
+                  </option>
+
+                  <option value="Family">
+                    {text.categories.Family}
+                  </option>
+
+                  <option value="Appointment">
+                    {text.categories.Appointment}
+                  </option>
+
+                  <option value="Medication">
+                    {text.categories.Medication}
+                  </option>
+
+                  <option value="Activity">
+                    {text.categories.Activity}
+                  </option>
+
+                  <option value="Personal">
+                    {text.categories.Personal}
+                  </option>
+
+                  <option value="Other">
+                    {text.categories.Other}
+                  </option>
+                </select>
+              </label>
+
+            </div>
 
 
             <label>
@@ -406,9 +637,7 @@ function Reminders({
 
               <textarea
                 name="description"
-                value={
-                  form.description
-                }
+                value={form.description}
                 onChange={handleChange}
                 placeholder={
                   text.descriptionPlaceholder
@@ -419,77 +648,44 @@ function Reminders({
             </label>
 
 
-            <label>
-              {text.category}
+            <div className="reminder-form-row">
 
-              <select
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-              >
-                <option value="General">
-                  {text.categories.General}
-                </option>
-
-                <option value="Family">
-                  {text.categories.Family}
-                </option>
-
-                <option value="Appointment">
-                  {text.categories.Appointment}
-                </option>
-
-                <option value="Medication">
-                  {text.categories.Medication}
-                </option>
-
-                <option value="Activity">
-                  {text.categories.Activity}
-                </option>
-
-                <option value="Personal">
-                  {text.categories.Personal}
-                </option>
-
-                <option value="Other">
-                  {text.categories.Other}
-                </option>
-              </select>
-            </label>
-
-
-            <label>
-              {text.dueDateTime}
-
-              <input
-                type="datetime-local"
-                name="dueDatetime"
-                value={
-                  form.dueDatetime
-                }
-                onChange={handleChange}
-              />
-            </label>
-
-
-            {editingId !== null && (
-              <label className="reminder-checkbox-label">
+              <label>
+                {text.dueDateTime}
 
                 <input
-                  type="checkbox"
-                  name="completed"
-                  checked={
-                    form.completed
+                  type="datetime-local"
+                  name="dueDatetime"
+                  value={
+                    form.dueDatetime
                   }
-                  onChange={
-                    handleChange
-                  }
+                  onChange={handleChange}
                 />
-
-                {text.markCompleted}
-
               </label>
-            )}
+
+
+              {editingId !== null && (
+                <label className="reminder-checkbox-label">
+
+                  <input
+                    type="checkbox"
+                    name="completed"
+                    checked={
+                      form.completed
+                    }
+                    onChange={
+                      handleChange
+                    }
+                  />
+
+                  <span>
+                    {text.markCompleted}
+                  </span>
+
+                </label>
+              )}
+
+            </div>
 
 
             <div className="reminder-form-actions">
@@ -524,12 +720,19 @@ function Reminders({
         </section>
 
 
-        {/* Reminder List */}
+        {/* ----------------------------------------
+            Saved Reminders
+            ---------------------------------------- */}
+
         <section className="reminder-list-section">
 
           <div className="reminder-list-header">
 
             <div>
+
+              <span className="reminders-section-label">
+                Your schedule
+              </span>
 
               <h2>
                 {text.savedReminders}
@@ -556,13 +759,40 @@ function Reminders({
           {loading ? (
 
             <div className="reminder-empty">
-              {text.loadingReminders}
+
+              <div
+                className="reminder-empty-icon"
+                aria-hidden="true"
+              >
+                <ReminderIcon />
+              </div>
+
+              <h3>
+                {text.loadingReminders}
+              </h3>
+
             </div>
 
           ) : reminders.length === 0 ? (
 
             <div className="reminder-empty">
-              {text.noReminders}
+
+              <div
+                className="reminder-empty-icon"
+                aria-hidden="true"
+              >
+                <ReminderIcon />
+              </div>
+
+              <h3>
+                {text.noReminders}
+              </h3>
+
+              <p>
+                Add a reminder above to keep
+                important activities easy to remember.
+              </p>
+
             </div>
 
           ) : (
@@ -574,6 +804,13 @@ function Reminders({
 
                   const overdue =
                     isOverdue(reminder)
+
+                  const visualType =
+                    reminder.completed
+                      ? 'check'
+                      : overdue
+                        ? 'overdue'
+                        : 'calendar'
 
                   return (
                     <article
@@ -587,98 +824,116 @@ function Reminders({
                       key={reminder.id}
                     >
 
-                      <div className="reminder-card-header">
-
-                        <div>
-
-                          <h3>
-                            {reminder.title}
-                          </h3>
-
-
-                          <span className="reminder-category">
-                            {
-                              text.categories[
-                              reminder.category
-                              ] ||
-                              reminder.category
-                            }
-                          </span>
+                      <div
+                        className="reminder-card-visual"
+                        aria-hidden="true"
+                      >
+                        <ReminderIcon
+                          type={visualType}
+                        />
+                      </div>
 
 
-                          {reminder.completed && (
-                            <span className="reminder-status reminder-status--completed">
-                              {text.completed}
-                            </span>
-                          )}
+                      <div className="reminder-card-body">
+
+                        <div className="reminder-card-header">
+
+                          <div className="reminder-card-main">
+
+                            <h3>
+                              {reminder.title}
+                            </h3>
 
 
-                          {overdue && (
-                            <span className="reminder-status reminder-status--overdue">
-                              {text.overdue}
-                            </span>
-                          )}
+                            <div className="reminder-meta">
+
+                              <span className="reminder-category">
+                                {
+                                  text.categories[
+                                  reminder.category
+                                  ] ||
+                                  reminder.category
+                                }
+                              </span>
+
+
+                              {reminder.completed && (
+                                <span className="reminder-status reminder-status--completed">
+                                  {text.completed}
+                                </span>
+                              )}
+
+
+                              {overdue && (
+                                <span className="reminder-status reminder-status--overdue">
+                                  {text.overdue}
+                                </span>
+                              )}
+
+                            </div>
+
+                          </div>
+
+
+                          <time>
+                            {formatDateTime(
+                              reminder.dueDatetime,
+                            )}
+                          </time>
 
                         </div>
 
 
-                        <time>
-                          {formatDateTime(
-                            reminder.dueDatetime,
-                          )}
-                        </time>
-
-                      </div>
-
-
-                      <p>
-                        {
-                          reminder.description
-                        }
-                      </p>
-
-
-                      <div className="reminder-card-actions">
-
-                        <button
-                          type="button"
-                          className="reminder-secondary-button"
-                          onClick={() =>
-                            handleToggleComplete(
-                              reminder,
-                            )
+                        <p className="reminder-description">
+                          {
+                            reminder.description
                           }
-                        >
-                          {reminder.completed
-                            ? text.markActive
-                            : text.markComplete}
-                        </button>
+                        </p>
 
 
-                        <button
-                          type="button"
-                          className="reminder-secondary-button"
-                          onClick={() =>
-                            handleEdit(
-                              reminder,
-                            )
-                          }
-                        >
-                          {text.edit}
-                        </button>
+                        <div className="reminder-card-actions">
+
+                          <button
+                            type="button"
+                            className="reminder-secondary-button"
+                            onClick={() =>
+                              handleToggleComplete(
+                                reminder,
+                              )
+                            }
+                          >
+                            {reminder.completed
+                              ? text.markActive
+                              : text.markComplete}
+                          </button>
 
 
-                        <button
-                          type="button"
-                          className="reminder-delete-button"
-                          onClick={() =>
-                            handleDelete(
-                              reminder.id,
-                            )
-                          }
-                        >
-                          {text.delete}
-                        </button>
+                          <button
+                            type="button"
+                            className="reminder-secondary-button"
+                            onClick={() =>
+                              handleEdit(
+                                reminder,
+                              )
+                            }
+                          >
+                            {text.edit}
+                          </button>
+
+
+                          <button
+                            type="button"
+                            className="reminder-delete-button"
+                            onClick={() =>
+                              handleDelete(
+                                reminder.id,
+                              )
+                            }
+                          >
+                            {text.delete}
+                          </button>
+
+                        </div>
 
                       </div>
 

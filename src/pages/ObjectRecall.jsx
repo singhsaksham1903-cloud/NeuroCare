@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 import './ObjectRecall.css'
 import VoiceReadAloud from '../Components/VoiceReadAloud'
 
-import { savePerformanceResult } from '../utils/performanceStorage'
+import {
+  savePerformanceResult,
+} from '../utils/performanceStorage'
 
 
 const OBJECTS = [
@@ -36,6 +38,226 @@ const HISTORY_KEY =
 function shuffleItems(items) {
   return [...items].sort(
     () => Math.random() - 0.5,
+  )
+}
+
+
+/* --------------------------------------------
+   Object Recall Icons
+   -------------------------------------------- */
+
+function ObjectRecallIcon({
+  type = 'recall',
+}) {
+  if (type === 'success') {
+    return (
+      <svg
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <circle
+          cx="32"
+          cy="32"
+          r="23"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+
+        <path
+          d="M21 32.5L28 39L43 24"
+          stroke="currentColor"
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )
+  }
+
+
+  if (type === 'history') {
+    return (
+      <svg
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <rect
+          x="11"
+          y="12"
+          width="42"
+          height="40"
+          rx="8"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+
+        <circle
+          cx="23"
+          cy="25"
+          r="5"
+          stroke="currentColor"
+          strokeWidth="3.5"
+        />
+
+        <path
+          d="M16 42C18 36 22 34 27 34C32 34 36 36 38 42"
+          stroke="currentColor"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M40 22H46"
+          stroke="currentColor"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M40 30H46"
+          stroke="currentColor"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+        />
+      </svg>
+    )
+  }
+
+
+  if (type === 'objects') {
+    return (
+      <svg
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <rect
+          x="12"
+          y="12"
+          width="17"
+          height="17"
+          rx="4"
+          stroke="currentColor"
+          strokeWidth="3.5"
+        />
+
+        <rect
+          x="35"
+          y="12"
+          width="17"
+          height="17"
+          rx="4"
+          stroke="currentColor"
+          strokeWidth="3.5"
+        />
+
+        <rect
+          x="12"
+          y="35"
+          width="17"
+          height="17"
+          rx="4"
+          stroke="currentColor"
+          strokeWidth="3.5"
+        />
+
+        <rect
+          x="35"
+          y="35"
+          width="17"
+          height="17"
+          rx="4"
+          stroke="currentColor"
+          strokeWidth="3.5"
+        />
+
+        <path
+          d="M20 20H21"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M43 20H44"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M20 43H21"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M43 43H44"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+      </svg>
+    )
+  }
+
+
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M22 17C22 13 25 10 29 10C32 10 34 11 36 13C38 11 40 10 43 10C47 10 50 13 50 17C54 18 56 21 56 25C56 29 54 32 51 34C52 36 52 38 51 41C50 45 47 48 43 48C41 48 39 47 37 46C35 49 32 51 28 51C24 51 21 49 19 46C15 47 11 44 10 40C9 36 11 33 14 31C12 29 11 27 11 24C11 20 15 17 19 17H22Z"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      <path
+        d="M22 24C24 22 27 22 29 24"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+
+      <path
+        d="M36 24C39 22 42 22 44 24"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+
+      <circle
+        cx="24"
+        cy="31"
+        r="2"
+        fill="currentColor"
+      />
+
+      <circle
+        cx="41"
+        cy="31"
+        r="2"
+        fill="currentColor"
+      />
+
+      <path
+        d="M26 39C29 41 34 41 38 39"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+    </svg>
   )
 }
 
@@ -291,9 +513,6 @@ function ObjectRecall({
       )
 
 
-      // Complete when all target
-      // objects are found
-
       if (
         correctSelections + 1 ===
         targetObjects.length
@@ -476,18 +695,46 @@ function ObjectRecall({
           className="object-recall-back-button"
           onClick={onBack}
         >
-          ← {text.backToGames}
+          <span
+            className="object-recall-back-icon"
+            aria-hidden="true"
+          >
+            ←
+          </span>
+
+          {text.backToGames}
         </button>
 
 
-        <h1>
-          👀 {text.title}
-        </h1>
+        <div className="object-recall-heading">
+
+          <div
+            className="object-recall-heading-icon"
+            aria-hidden="true"
+          >
+            <ObjectRecallIcon />
+          </div>
 
 
-        <p>
-          {text.description}
-        </p>
+          <div>
+
+            <span className="object-recall-eyebrow">
+              Cognitive Game
+            </span>
+
+            <h1>
+              {text.title}
+            </h1>
+
+            <p>
+              {text.description}
+            </p>
+
+          </div>
+
+        </div>
+
+
         <VoiceReadAloud
           text={`${text.title}. ${text.description}`}
           language={language}
@@ -504,9 +751,31 @@ function ObjectRecall({
 
       <section className="object-recall-controls">
 
-        <h2>
-          {text.selectDifficulty}
-        </h2>
+        <div className="object-recall-controls-heading">
+
+          <div
+            className="object-recall-controls-icon"
+            aria-hidden="true"
+          >
+            <ObjectRecallIcon
+              type="objects"
+            />
+          </div>
+
+
+          <div>
+
+            <span className="object-recall-section-label">
+              {text.selectDifficulty}
+            </span>
+
+            <h2>
+              {text.selectDifficulty}
+            </h2>
+
+          </div>
+
+        </div>
 
 
         <div className="object-difficulty-buttons">
@@ -517,9 +786,9 @@ function ObjectRecall({
                 key={level}
                 type="button"
                 className={`object-difficulty-button ${difficulty === level
-                  ? 'object-difficulty-button--active'
-                  : ''
-                  }`}
+                    ? 'object-difficulty-button--active'
+                    : ''
+                  } object-difficulty-button--${level.toLowerCase()}`}
                 onClick={() =>
                   setDifficulty(level)
                 }
@@ -549,6 +818,13 @@ function ObjectRecall({
             phase === 'answering'
           }
         >
+          <span
+            className="object-start-icon"
+            aria-hidden="true"
+          >
+            ▶
+          </span>
+
           {phase === 'complete'
             ? text.playAgain
             : text.startGame}
@@ -563,7 +839,7 @@ function ObjectRecall({
 
       <section className="object-recall-stats">
 
-        <div className="object-recall-stat">
+        <div className="object-recall-stat object-recall-stat--objects">
 
           <strong>
             {targetCount}
@@ -576,7 +852,7 @@ function ObjectRecall({
         </div>
 
 
-        <div className="object-recall-stat">
+        <div className="object-recall-stat object-recall-stat--correct">
 
           <strong>
             {correctSelections}
@@ -589,7 +865,7 @@ function ObjectRecall({
         </div>
 
 
-        <div className="object-recall-stat">
+        <div className="object-recall-stat object-recall-stat--wrong">
 
           <strong>
             {wrongSelections}
@@ -602,7 +878,7 @@ function ObjectRecall({
         </div>
 
 
-        <div className="object-recall-stat">
+        <div className="object-recall-stat object-recall-stat--time">
 
           <strong>
             {formatTime(
@@ -617,7 +893,7 @@ function ObjectRecall({
         </div>
 
 
-        <div className="object-recall-stat">
+        <div className="object-recall-stat object-recall-stat--accuracy">
 
           <strong>
             {accuracy}%
@@ -636,9 +912,17 @@ function ObjectRecall({
           Current Message
           ====================================== */}
 
-      <p className="object-recall-message">
-        {message}
-      </p>
+      <div className="object-recall-message-wrap">
+
+        <span className="object-recall-message-label">
+          {text.description}
+        </span>
+
+        <p className="object-recall-message">
+          {message}
+        </p>
+
+      </div>
 
 
       {/* ======================================
@@ -653,16 +937,35 @@ function ObjectRecall({
           }
         >
 
-          {targetObjects.map(
-            (object, index) => (
-              <div
-                className="object-target"
-                key={`${object}-${index}`}
-              >
-                {object}
-              </div>
-            ),
-          )}
+          <div className="object-target-heading">
+
+            <span>
+              {text.objectsToRemember}
+            </span>
+
+            <strong>
+              {targetCount}
+            </strong>
+
+          </div>
+
+
+          <div className="object-target-grid">
+
+            {targetObjects.map(
+              (object, index) => (
+                <div
+                  className={`object-target object-target--${(
+                    index % 5
+                  ) + 1}`}
+                  key={`${object}-${index}`}
+                >
+                  {object}
+                </div>
+              ),
+            )}
+
+          </div>
 
         </section>
       )}
@@ -673,46 +976,88 @@ function ObjectRecall({
           ====================================== */}
 
       {phase === 'answering' && (
-        <section className="object-options">
+        <section
+          className="object-options"
+          aria-label={
+            text.whichObjects
+          }
+        >
 
-          {options.map(
-            (object) => {
+          <div className="object-options-heading">
 
-              const selected =
-                selectedObjects.includes(
-                  object,
+            <div>
+
+              <span>
+                {text.whichObjects}
+              </span>
+
+            </div>
+
+            <strong>
+              {correctSelections} / {targetCount}
+            </strong>
+
+          </div>
+
+
+          <div className="object-options-grid">
+
+            {options.map(
+              (object, index) => {
+
+                const selected =
+                  selectedObjects.includes(
+                    object,
+                  )
+
+                const correct =
+                  targetObjects.includes(
+                    object,
+                  )
+
+                return (
+                  <button
+                    key={object}
+                    type="button"
+                    className={`object-option object-option--${(
+                      index % 5
+                    ) + 1} ${selected
+                        ? correct
+                          ? 'object-option--correct'
+                          : 'object-option--wrong'
+                        : ''
+                      }`}
+                    onClick={() =>
+                      handleObjectClick(
+                        object,
+                      )
+                    }
+                    disabled={selected}
+                    aria-label={
+                      `${text.objectChoice} ${object}`
+                    }
+                  >
+                    <span>
+                      {object}
+                    </span>
+
+                    {selected && (
+                      <span
+                        className="object-selection-mark"
+                        aria-hidden="true"
+                      >
+                        {correct
+                          ? '✓'
+                          : '×'}
+                      </span>
+                    )}
+
+                  </button>
                 )
+              },
+            )}
 
-              const correct =
-                targetObjects.includes(
-                  object,
-                )
-
-              return (
-                <button
-                  key={object}
-                  type="button"
-                  className={`object-option ${selected
-                    ? correct
-                      ? 'object-option--correct'
-                      : 'object-option--wrong'
-                    : ''
-                    }`}
-                  onClick={() =>
-                    handleObjectClick(
-                      object,
-                    )
-                  }
-                  disabled={selected}
-                  aria-label={
-                    text.objectChoice
-                  }
-                >
-                  {object}
-                </button>
-              )
-            },
-          )}
+          </div>
 
         </section>
       )}
@@ -725,62 +1070,95 @@ function ObjectRecall({
       {gameCompleted && (
         <section className="object-recall-complete">
 
+          <div
+            className="object-recall-complete-icon"
+            aria-hidden="true"
+          >
+            <ObjectRecallIcon
+              type="success"
+            />
+          </div>
+
+
+          <span className="object-recall-complete-eyebrow">
+            {text.wellDone}
+          </span>
+
           <h2>
-            🎉 {text.wellDone}
+            {text.wellDone}
           </h2>
 
 
-          <p>
+          <p className="object-recall-complete-description">
             {text.completedMessage(
               targetCount,
             )}
           </p>
 
 
-          <p>
-            <strong>
-              {text.difficulty}:
-            </strong>{' '}
-            {
-              text.difficulties[
-              difficulty
-              ]
-            }
-          </p>
+          <div className="object-completion-grid">
+
+            <div>
+              <span>
+                {text.difficulty}
+              </span>
+
+              <strong>
+                {
+                  text.difficulties[
+                  difficulty
+                  ]
+                }
+              </strong>
+            </div>
 
 
-          <p>
-            <strong>
-              {text.correct}:
-            </strong>{' '}
-            {correctSelections}
-          </p>
+            <div>
+              <span>
+                {text.correct}
+              </span>
+
+              <strong>
+                {correctSelections}
+              </strong>
+            </div>
 
 
-          <p>
-            <strong>
-              {text.wrong}:
-            </strong>{' '}
-            {wrongSelections}
-          </p>
+            <div>
+              <span>
+                {text.wrong}
+              </span>
+
+              <strong>
+                {wrongSelections}
+              </strong>
+            </div>
 
 
-          <p>
-            <strong>
-              {text.time}:
-            </strong>{' '}
-            {formatTime(
-              timeElapsed,
-            )}
-          </p>
+            <div>
+              <span>
+                {text.time}
+              </span>
+
+              <strong>
+                {formatTime(
+                  timeElapsed,
+                )}
+              </strong>
+            </div>
 
 
-          <p>
-            <strong>
-              {text.accuracy}:
-            </strong>{' '}
-            {accuracy}%
-          </p>
+            <div>
+              <span>
+                {text.accuracy}
+              </span>
+
+              <strong>
+                {accuracy}%
+              </strong>
+            </div>
+
+          </div>
 
 
           <button
@@ -788,6 +1166,13 @@ function ObjectRecall({
             className="object-start-button"
             onClick={handleRestart}
           >
+            <span
+              className="object-start-icon"
+              aria-hidden="true"
+            >
+              ↻
+            </span>
+
             {text.playAgain}
           </button>
 
@@ -804,16 +1189,33 @@ function ObjectRecall({
 
           <div className="object-history-header">
 
-            <div>
+            <div className="object-history-heading">
 
-              <h2>
-                📊 {text.previousSessions}
-              </h2>
+              <div
+                className="object-history-icon"
+                aria-hidden="true"
+              >
+                <ObjectRecallIcon
+                  type="history"
+                />
+              </div>
 
 
-              <p>
-                {text.recentResults}
-              </p>
+              <div>
+
+                <span className="object-history-eyebrow">
+                  {text.previousSessions}
+                </span>
+
+                <h2>
+                  {text.previousSessions}
+                </h2>
+
+                <p>
+                  {text.recentResults}
+                </p>
+
+              </div>
 
             </div>
 
@@ -840,15 +1242,20 @@ function ObjectRecall({
                   key={result.id}
                 >
 
-                  <strong>
-                    {result.date}
-                  </strong>
+                  <div className="object-history-date">
+
+                    <strong>
+                      {result.date}
+                    </strong>
+
+                  </div>
 
 
-                  <div>
+                  <div className="object-history-metrics">
 
                     <span>
                       {text.difficulty}:{' '}
+
                       {
                         text.difficulties[
                         result.difficulty
@@ -860,6 +1267,7 @@ function ObjectRecall({
 
                     <span>
                       {text.objects}:{' '}
+
                       {
                         result.targetCount
                       }
@@ -868,24 +1276,28 @@ function ObjectRecall({
 
                     <span>
                       {text.correct}:{' '}
+
                       {result.correct}
                     </span>
 
 
                     <span>
                       {text.wrong}:{' '}
+
                       {result.wrong}
                     </span>
 
 
                     <span>
                       {text.accuracy}:{' '}
+
                       {result.accuracy}%
                     </span>
 
 
                     <span>
                       {text.time}:{' '}
+
                       {formatTime(
                         result.time,
                       )}

@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 import './SequenceMemory.css'
 import VoiceReadAloud from '../Components/VoiceReadAloud'
 
-import { savePerformanceResult } from '../utils/performanceStorage'
+import {
+  savePerformanceResult,
+} from '../utils/performanceStorage'
 
 
 const SYMBOLS = [
@@ -37,6 +39,138 @@ function getValidDifficulty(value) {
   return LEVELS[value]
     ? value
     : 'Easy'
+}
+
+
+/* --------------------------------------------
+   Sequence Memory Icons
+   -------------------------------------------- */
+
+function SequenceIcon({ type = 'sequence' }) {
+  if (type === 'success') {
+    return (
+      <svg
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <circle
+          cx="32"
+          cy="32"
+          r="23"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+
+        <path
+          d="M21 32.5L28 39L43 24"
+          stroke="currentColor"
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )
+  }
+
+  if (type === 'history') {
+    return (
+      <svg
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <rect
+          x="11"
+          y="12"
+          width="42"
+          height="40"
+          rx="8"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+
+        <path
+          d="M21 24H43"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M21 33H36"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M21 42H31"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+
+        <circle
+          cx="43"
+          cy="41"
+          r="4"
+          stroke="currentColor"
+          strokeWidth="3"
+        />
+      </svg>
+    )
+  }
+
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <rect
+        x="10"
+        y="10"
+        width="44"
+        height="44"
+        rx="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+
+      <circle
+        cx="21"
+        cy="22"
+        r="3.5"
+        fill="currentColor"
+      />
+
+      <circle
+        cx="32"
+        cy="32"
+        r="3.5"
+        fill="currentColor"
+      />
+
+      <circle
+        cx="43"
+        cy="42"
+        r="3.5"
+        fill="currentColor"
+      />
+
+      <path
+        d="M21 22L32 32L43 42"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
 }
 
 
@@ -442,18 +576,46 @@ function SequenceMemory({
           className="sequence-back-button"
           onClick={onBack}
         >
-          ← {text.backToGames}
+          <span
+            className="sequence-back-icon"
+            aria-hidden="true"
+          >
+            ←
+          </span>
+
+          {text.backToGames}
         </button>
 
 
-        <h1>
-          🔢 {text.title}
-        </h1>
+        <div className="sequence-heading">
+
+          <div
+            className="sequence-heading-icon"
+            aria-hidden="true"
+          >
+            <SequenceIcon />
+          </div>
 
 
-        <p>
-          {text.description}
-        </p>
+          <div>
+
+            <span className="sequence-eyebrow">
+              Cognitive Game
+            </span>
+
+            <h1>
+              {text.title}
+            </h1>
+
+            <p>
+              {text.description}
+            </p>
+
+          </div>
+
+        </div>
+
+
         <VoiceReadAloud
           text={`${text.title}. ${text.description}`}
           language={language}
@@ -465,14 +627,33 @@ function SequenceMemory({
 
 
       {/* ======================================
-          Difficulty
+          Difficulty & Start
           ====================================== */}
 
       <section className="sequence-controls">
 
-        <h2>
-          {text.selectDifficulty}
-        </h2>
+        <div className="sequence-controls-heading">
+
+          <div
+            className="sequence-controls-icon"
+            aria-hidden="true"
+          >
+            <SequenceIcon />
+          </div>
+
+          <div>
+
+            <span className="sequence-section-label">
+              Choose your level
+            </span>
+
+            <h2>
+              {text.selectDifficulty}
+            </h2>
+
+          </div>
+
+        </div>
 
 
         <div className="difficulty-buttons">
@@ -482,10 +663,11 @@ function SequenceMemory({
               <button
                 key={level}
                 type="button"
-                className={`difficulty-button ${difficulty === level
-                  ? 'difficulty-button--active'
-                  : ''
-                  }`}
+                className={`difficulty-button ${
+                  difficulty === level
+                    ? 'difficulty-button--active'
+                    : ''
+                } difficulty-button--${level.toLowerCase()}`}
                 onClick={() =>
                   setDifficulty(
                     level,
@@ -493,14 +675,14 @@ function SequenceMemory({
                 }
                 disabled={
                   phase ===
-                  'showing' ||
+                    'showing' ||
                   phase ===
-                  'answering'
+                    'answering'
                 }
               >
                 {
                   text.difficulties[
-                  level
+                    level
                   ]
                 }
               </button>
@@ -519,6 +701,13 @@ function SequenceMemory({
             phase === 'answering'
           }
         >
+          <span
+            className="start-sequence-icon"
+            aria-hidden="true"
+          >
+            ▶
+          </span>
+
           {phase === 'complete'
             ? text.playAgain
             : text.startGame}
@@ -533,7 +722,7 @@ function SequenceMemory({
 
       <section className="sequence-stats">
 
-        <div className="sequence-stat">
+        <div className="sequence-stat sequence-stat--items">
 
           <strong>
             {sequenceLength}
@@ -546,7 +735,7 @@ function SequenceMemory({
         </div>
 
 
-        <div className="sequence-stat">
+        <div className="sequence-stat sequence-stat--mistakes">
 
           <strong>
             {mistakes}
@@ -559,7 +748,7 @@ function SequenceMemory({
         </div>
 
 
-        <div className="sequence-stat">
+        <div className="sequence-stat sequence-stat--time">
 
           <strong>
             {formatTime(
@@ -574,7 +763,7 @@ function SequenceMemory({
         </div>
 
 
-        <div className="sequence-stat">
+        <div className="sequence-stat sequence-stat--accuracy">
 
           <strong>
             {safeAccuracy}%
@@ -593,9 +782,17 @@ function SequenceMemory({
           Current Message
           ====================================== */}
 
-      <p className="sequence-message">
-        {message}
-      </p>
+      <div className="sequence-message-wrap">
+
+        <span className="sequence-message-label">
+          Game status
+        </span>
+
+        <p className="sequence-message">
+          {message}
+        </p>
+
+      </div>
 
 
       {/* ======================================
@@ -610,16 +807,40 @@ function SequenceMemory({
           }
         >
 
-          {sequence.map(
-            (symbol, index) => (
-              <div
-                className="sequence-symbol sequence-symbol--large"
-                key={`${symbol}-${index}`}
-              >
-                {symbol}
-              </div>
-            ),
-          )}
+          <div className="sequence-display-heading">
+
+            <span>
+              Remember this order
+            </span>
+
+            <strong>
+              {sequenceLength} items
+            </strong>
+
+          </div>
+
+
+          <div className="sequence-display-items">
+
+            {sequence.map(
+              (symbol, index) => (
+                <div
+                  className={`sequence-symbol sequence-symbol--large sequence-symbol--color-${index + 1}`}
+                  key={`${symbol}-${index}`}
+                >
+                  <span className="sequence-symbol-number">
+                    {index + 1}
+                  </span>
+
+                  <span className="sequence-symbol-value">
+                    {symbol}
+                  </span>
+
+                </div>
+              ),
+            )}
+
+          </div>
 
         </section>
       )}
@@ -637,36 +858,63 @@ function SequenceMemory({
           }
         >
 
-          {options.map(
-            (symbol) => {
+          <div className="sequence-options-heading">
 
-              const alreadySelected =
-                userSequence.includes(
-                  symbol,
-                )
+            <span>
+              Your turn
+            </span>
 
-              return (
-                <button
-                  key={symbol}
-                  type="button"
-                  className={`sequence-symbol ${alreadySelected
-                    ? 'sequence-symbol--selected'
-                    : ''
+            <strong>
+              {userSequence.length} / {sequence.length}
+            </strong>
+
+          </div>
+
+
+          <div className="sequence-options-grid">
+
+            {options.map(
+              (symbol, index) => {
+
+                const alreadySelected =
+                  userSequence.includes(
+                    symbol,
+                  )
+
+                return (
+                  <button
+                    key={symbol}
+                    type="button"
+                    className={`sequence-symbol sequence-symbol--option sequence-symbol--color-${index + 1} ${
+                      alreadySelected
+                        ? 'sequence-symbol--selected'
+                        : ''
                     }`}
-                  onClick={() =>
-                    handleOptionClick(
-                      symbol,
-                    )
-                  }
-                  disabled={
-                    alreadySelected
-                  }
-                >
-                  {symbol}
-                </button>
-              )
-            },
-          )}
+                    onClick={() =>
+                      handleOptionClick(
+                        symbol,
+                      )
+                    }
+                    disabled={
+                      alreadySelected
+                    }
+                  >
+                    <span className="sequence-symbol-value">
+                      {symbol}
+                    </span>
+
+                    {alreadySelected && (
+                      <span className="sequence-selected-mark">
+                        ✓
+                      </span>
+                    )}
+
+                  </button>
+                )
+              },
+            )}
+
+          </div>
 
         </section>
       )}
@@ -679,52 +927,82 @@ function SequenceMemory({
       {gameCompleted && (
         <section className="sequence-complete">
 
+          <div
+            className="sequence-complete-icon"
+            aria-hidden="true"
+          >
+            <SequenceIcon
+              type="success"
+            />
+          </div>
+
+
+          <span className="sequence-complete-eyebrow">
+            Game completed
+          </span>
+
           <h2>
-            🎉 {text.wellDone}
+            {text.wellDone}
           </h2>
 
 
-          <p>
+          <p className="sequence-complete-description">
             {text.completeDescription}
           </p>
 
 
-          <p>
-            <strong>
-              {text.difficulty}:
-            </strong>{' '}
-            {
-              text.difficulties[
-              difficulty
-              ]
-            }
-          </p>
+          <div className="sequence-completion-grid">
+
+            <div>
+              <span>
+                {text.difficulty}
+              </span>
+
+              <strong>
+                {
+                  text.difficulties[
+                    difficulty
+                  ]
+                }
+              </strong>
+            </div>
 
 
-          <p>
-            <strong>
-              {text.time}:
-            </strong>{' '}
-            {formatTime(
-              timeElapsed,
-            )}
-          </p>
+            <div>
+              <span>
+                {text.time}
+              </span>
+
+              <strong>
+                {formatTime(
+                  timeElapsed,
+                )}
+              </strong>
+            </div>
 
 
-          <p>
-            <strong>
-              {text.mistakes}:
-            </strong>{' '}
-            {mistakes}
-          </p>
+            <div>
+              <span>
+                {text.mistakes}
+              </span>
+
+              <strong>
+                {mistakes}
+              </strong>
+            </div>
 
 
-          <p>
-            <strong>
-              {text.accuracy}:
-            </strong>{' '}
-            {safeAccuracy}%
-          </p>
+            <div>
+              <span>
+                {text.accuracy}
+              </span>
+
+              <strong>
+                {safeAccuracy}%
+              </strong>
+            </div>
+
+          </div>
 
         </section>
       )}
@@ -739,16 +1017,33 @@ function SequenceMemory({
 
           <div className="sequence-history-header">
 
-            <div>
+            <div className="sequence-history-heading">
 
-              <h2>
-                📊 {text.previousSessions}
-              </h2>
+              <div
+                className="sequence-history-icon"
+                aria-hidden="true"
+              >
+                <SequenceIcon
+                  type="history"
+                />
+              </div>
 
 
-              <p>
-                {text.recentResults}
-              </p>
+              <div>
+
+                <span className="sequence-history-eyebrow">
+                  Your progress
+                </span>
+
+                <h2>
+                  {text.previousSessions}
+                </h2>
+
+                <p>
+                  {text.recentResults}
+                </p>
+
+              </div>
 
             </div>
 
@@ -775,18 +1070,23 @@ function SequenceMemory({
                   key={result.id}
                 >
 
-                  <strong>
-                    {result.date}
-                  </strong>
+                  <div className="sequence-history-date">
+
+                    <strong>
+                      {result.date}
+                    </strong>
+
+                  </div>
 
 
-                  <div>
+                  <div className="sequence-history-metrics">
 
                     <span>
                       {text.difficulty}:{' '}
+
                       {
                         text.difficulties[
-                        result.difficulty
+                          result.difficulty
                         ] ||
                         result.difficulty
                       }
@@ -795,6 +1095,7 @@ function SequenceMemory({
 
                     <span>
                       {text.items}:{' '}
+
                       {
                         result.sequenceLength
                       }
@@ -803,18 +1104,21 @@ function SequenceMemory({
 
                     <span>
                       {text.accuracy}:{' '}
+
                       {result.accuracy}%
                     </span>
 
 
                     <span>
                       {text.mistakes}:{' '}
+
                       {result.mistakes}
                     </span>
 
 
                     <span>
                       {text.time}:{' '}
+
                       {formatTime(
                         result.time,
                       )}

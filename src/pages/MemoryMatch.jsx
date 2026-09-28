@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 import './MemoryMatch.css'
 import VoiceReadAloud from '../Components/VoiceReadAloud'
 
-import { savePerformanceResult } from '../utils/performanceStorage'
+import {
+  savePerformanceResult,
+} from '../utils/performanceStorage'
 
 
 const CARD_VALUES = [
@@ -17,32 +19,128 @@ const HISTORY_KEY =
   'cognicare-memory-match-history'
 
 
-function shuffleCards() {
-  const cards = [
-    ...CARD_VALUES,
-    ...CARD_VALUES,
-  ]
+/* --------------------------------------------
+   Memory Match Icons
+   -------------------------------------------- */
 
-  for (
-    let i = cards.length - 1;
-    i > 0;
-    i--
-  ) {
-    const j = Math.floor(
-      Math.random() * (i + 1),
+function MemoryMatchIcon({ type = 'brain' }) {
+  if (type === 'history') {
+    return (
+      <svg
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path
+          d="M13 15H51"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+
+        <path
+          d="M18 15V48H46V15"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinejoin="round"
+        />
+
+        <path
+          d="M25 25L30 21L35 26L42 20"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        <path
+          d="M25 37H39"
+          stroke="currentColor"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+        />
+      </svg>
     )
-
-      ;[cards[i], cards[j]] = [
-        cards[j],
-        cards[i],
-      ]
   }
 
-  return cards.map(
-    (value, index) => ({
-      id: index,
-      value,
-    }),
+  if (type === 'success') {
+    return (
+      <svg
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <circle
+          cx="32"
+          cy="32"
+          r="23"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
+
+        <path
+          d="M21 32.5L28 39L43 24"
+          stroke="currentColor"
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    )
+  }
+
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M22 18C17 18 13 22 13 27C13 30 14 32 16 34C13 36 12 39 13 42C14 47 19 50 24 48C26 52 31 54 35 51C38 54 44 53 46 48C51 48 55 44 54 39C54 36 52 34 50 32C52 30 53 27 52 24C51 19 46 16 42 17C39 12 33 11 29 14C27 16 25 18 22 18Z"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      <path
+        d="M29 24C26 25 25 28 26 31"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+
+      <path
+        d="M38 22C41 23 42 26 41 29"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+
+      <path
+        d="M31 38C34 40 38 39 40 36"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+
+      <circle
+        cx="24"
+        cy="34"
+        r="2"
+        fill="currentColor"
+      />
+
+      <circle
+        cx="44"
+        cy="34"
+        r="2"
+        fill="currentColor"
+      />
+    </svg>
   )
 }
 
@@ -69,7 +167,6 @@ function MemoryMatch({
   const [busy, setBusy] =
     useState(false)
 
-
   // Performance tracking
 
   const [timeElapsed, setTimeElapsed] =
@@ -78,12 +175,10 @@ function MemoryMatch({
   const [timerStarted, setTimerStarted] =
     useState(false)
 
-
   // Local history
 
   const [history, setHistory] =
     useState([])
-
 
   // Prevent the same completed
   // game from being saved twice
@@ -341,6 +436,10 @@ function MemoryMatch({
   return (
     <div className="memory-match-page">
 
+      {/* ----------------------------------------
+          Header
+          ---------------------------------------- */}
+
       <header className="memory-match-header">
 
         <button
@@ -348,18 +447,46 @@ function MemoryMatch({
           className="memory-back-button"
           onClick={onBack}
         >
-          ← {text.backToGames}
+          <span
+            className="memory-back-icon"
+            aria-hidden="true"
+          >
+            ←
+          </span>
+
+          {text.backToGames}
         </button>
 
 
-        <h1>
-          🧠 {text.title}
-        </h1>
+        <div className="memory-match-heading">
+
+          <div
+            className="memory-match-heading-icon"
+            aria-hidden="true"
+          >
+            <MemoryMatchIcon />
+          </div>
 
 
-        <p>
-          {text.description}
-        </p>
+          <div>
+
+            <span className="memory-match-eyebrow">
+              Cognitive Game
+            </span>
+
+            <h1>
+              {text.title}
+            </h1>
+
+            <p>
+              {text.description}
+            </p>
+
+          </div>
+
+        </div>
+
+
         <VoiceReadAloud
           text={`${text.title}. ${text.description}`}
           language={language}
@@ -370,7 +497,9 @@ function MemoryMatch({
       </header>
 
 
-      {/* Current Game Statistics */}
+      {/* ----------------------------------------
+          Current Game Statistics
+          ---------------------------------------- */}
 
       <section
         className="memory-stats"
@@ -379,7 +508,7 @@ function MemoryMatch({
         }
       >
 
-        <div className="memory-stat">
+        <div className="memory-stat memory-stat--moves">
 
           <strong>
             {moves}
@@ -392,7 +521,7 @@ function MemoryMatch({
         </div>
 
 
-        <div className="memory-stat">
+        <div className="memory-stat memory-stat--matches">
 
           <strong>
             {matchedPairs}
@@ -405,7 +534,7 @@ function MemoryMatch({
         </div>
 
 
-        <div className="memory-stat">
+        <div className="memory-stat memory-stat--mistakes">
 
           <strong>
             {mistakes}
@@ -418,7 +547,7 @@ function MemoryMatch({
         </div>
 
 
-        <div className="memory-stat">
+        <div className="memory-stat memory-stat--time">
 
           <strong>
             {formatTime(
@@ -433,7 +562,7 @@ function MemoryMatch({
         </div>
 
 
-        <div className="memory-stat">
+        <div className="memory-stat memory-stat--accuracy">
 
           <strong>
             {accuracy}%
@@ -448,7 +577,9 @@ function MemoryMatch({
       </section>
 
 
-      {/* Game Board */}
+      {/* ----------------------------------------
+          Game Board
+          ---------------------------------------- */}
 
       <main
         className="memory-board"
@@ -508,13 +639,29 @@ function MemoryMatch({
       </main>
 
 
-      {/* Completion Summary */}
+      {/* ----------------------------------------
+          Completion Summary
+          ---------------------------------------- */}
 
       {gameCompleted && (
         <section className="memory-complete">
 
+          <div
+            className="memory-complete-icon"
+            aria-hidden="true"
+          >
+            <MemoryMatchIcon
+              type="success"
+            />
+          </div>
+
+
+          <span className="memory-complete-eyebrow">
+            Game completed
+          </span>
+
           <h2>
-            🎉 {text.wellDone}
+            {text.wellDone}
           </h2>
 
 
@@ -531,6 +678,7 @@ function MemoryMatch({
               <strong>
                 {text.time}:
               </strong>{' '}
+
               {formatTime(
                 timeElapsed,
               )}
@@ -541,6 +689,7 @@ function MemoryMatch({
               <strong>
                 {text.accuracy}:
               </strong>{' '}
+
               {accuracy}%
             </p>
 
@@ -549,6 +698,7 @@ function MemoryMatch({
               <strong>
                 {text.mistakes}:
               </strong>{' '}
+
               {mistakes}
             </p>
 
@@ -578,22 +728,42 @@ function MemoryMatch({
       )}
 
 
-      {/* Previous Game History */}
+      {/* ----------------------------------------
+          Previous Game History
+          ---------------------------------------- */}
 
       {history.length > 0 && (
         <section className="memory-history">
 
           <div className="memory-history-header">
 
-            <div>
+            <div className="memory-history-heading">
 
-              <h2>
-                📊 {text.previousSessions}
-              </h2>
+              <div
+                className="memory-history-icon"
+                aria-hidden="true"
+              >
+                <MemoryMatchIcon
+                  type="history"
+                />
+              </div>
 
-              <p>
-                {text.recentResults}
-              </p>
+
+              <div>
+
+                <span className="memory-history-eyebrow">
+                  Your progress
+                </span>
+
+                <h2>
+                  {text.previousSessions}
+                </h2>
+
+                <p>
+                  {text.recentResults}
+                </p>
+
+              </div>
 
             </div>
 
@@ -620,14 +790,16 @@ function MemoryMatch({
                   key={result.id}
                 >
 
-                  <div>
+                  <div className="memory-history-date">
+
                     <strong>
                       {result.date}
                     </strong>
+
                   </div>
 
 
-                  <div>
+                  <div className="memory-history-metrics">
 
                     <span>
                       {text.moves}:{' '}
@@ -673,3 +845,37 @@ function MemoryMatch({
 
 
 export default MemoryMatch
+
+
+/* --------------------------------------------
+   Card shuffle helper
+   -------------------------------------------- */
+
+function shuffleCards() {
+  const cards = [
+    ...CARD_VALUES,
+    ...CARD_VALUES,
+  ]
+
+  for (
+    let i = cards.length - 1;
+    i > 0;
+    i--
+  ) {
+    const j = Math.floor(
+      Math.random() * (i + 1),
+    )
+
+      ;[cards[i], cards[j]] = [
+        cards[j],
+        cards[i],
+      ]
+  }
+
+  return cards.map(
+    (value, index) => ({
+      id: index,
+      value,
+    }),
+  )
+}

@@ -19,6 +19,62 @@ const EMPTY_FORM = {
 }
 
 
+// ============================================
+// Memory Icon
+// ============================================
+
+function MemoryIcon() {
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <rect
+        x="10"
+        y="12"
+        width="44"
+        height="40"
+        rx="9"
+        stroke="currentColor"
+        strokeWidth="3"
+      />
+
+      <rect
+        x="17"
+        y="20"
+        width="30"
+        height="22"
+        rx="5"
+        stroke="currentColor"
+        strokeWidth="2.5"
+      />
+
+      <circle
+        cx="27"
+        cy="27"
+        r="4"
+        stroke="currentColor"
+        strokeWidth="2.5"
+      />
+
+      <path
+        d="M20 38L29 32L35 36L39 33L44 39"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+
+// ============================================
+// Memories Page
+// ============================================
+
 function Memories({
   text,
   language = 'en-IN',
@@ -26,7 +82,8 @@ function Memories({
   stopReadingLabel = 'Stop Reading',
   onBack,
 }) {
-  const [memories, setMemories] = useState([])
+  const [memories, setMemories] =
+    useState([])
 
   const [form, setForm] =
     useState(EMPTY_FORM)
@@ -47,6 +104,10 @@ function Memories({
     useState('')
 
 
+  // ==========================================
+  // Load Memories
+  // ==========================================
+
   const loadMemories = async () => {
     try {
       setLoading(true)
@@ -59,7 +120,6 @@ function Memories({
         data.memories || [],
       )
     } catch (err) {
-
       setError(
         err.message ||
         text.loadError,
@@ -75,7 +135,13 @@ function Memories({
   }, [])
 
 
-  const handleChange = (event) => {
+  // ==========================================
+  // Form
+  // ==========================================
+
+  const handleChange = (
+    event,
+  ) => {
     const {
       name,
       value,
@@ -93,6 +159,10 @@ function Memories({
     setEditingId(null)
   }
 
+
+  // ==========================================
+  // Save / Update
+  // ==========================================
 
   const handleSubmit = async (
     event,
@@ -118,12 +188,18 @@ function Memories({
         editingId !== null
 
       const payload = {
-        title: form.title.trim(),
+        title:
+          form.title.trim(),
+
         description:
           form.description.trim(),
-        category: form.category,
+
+        category:
+          form.category,
+
         memoryDate:
-          form.memoryDate || null,
+          form.memoryDate ||
+          null,
       }
 
       if (isEditing) {
@@ -149,9 +225,8 @@ function Memories({
       resetForm()
 
       await loadMemories()
+
     } catch (err) {
-
-
       setError(
         err.message ||
         text.saveError,
@@ -161,6 +236,10 @@ function Memories({
     }
   }
 
+
+  // ==========================================
+  // Edit
+  // ==========================================
 
   const handleEdit = (
     memory,
@@ -191,6 +270,10 @@ function Memories({
     })
   }
 
+
+  // ==========================================
+  // Delete
+  // ==========================================
 
   const handleDelete = async (
     memoryId,
@@ -223,9 +306,8 @@ function Memories({
       )
 
       await loadMemories()
+
     } catch (err) {
-
-
       setError(
         err.message ||
         text.deleteError,
@@ -233,6 +315,10 @@ function Memories({
     }
   }
 
+
+  // ==========================================
+  // Date
+  // ==========================================
 
   const formatDate = (
     value,
@@ -259,6 +345,10 @@ function Memories({
   return (
     <div className="memories-page">
 
+      {/* ======================================
+                Header
+                ====================================== */}
+
       <header className="memories-header">
 
         <button
@@ -266,27 +356,55 @@ function Memories({
           className="memories-back-button"
           onClick={onBack}
         >
-          ← {text.backToDashboard}
+          <span aria-hidden="true">
+            ←
+          </span>
+
+          {text.backToDashboard}
         </button>
 
 
-        <h1>
-          {text.memoriesTitle}
-        </h1>
+        <div className="memories-heading">
+
+          <div
+            className="memories-heading-icon"
+            aria-hidden="true"
+          >
+            <MemoryIcon />
+          </div>
+
+          <div>
+
+            <span className="memories-eyebrow">
+              {text.savedMemories}
+            </span>
+
+            <h1>
+              {text.memoriesTitle}
+            </h1>
+
+            <p>
+              {text.memoriesDescription}
+            </p>
+
+          </div>
+
+        </div>
 
 
-        <p>
-          {text.memoriesDescription}
-        </p>
+        <VoiceReadAloud
+          text={`${text.memoriesTitle}. ${text.memoriesDescription}`}
+          language={language}
+          label={readAloudLabel}
+          stopLabel={stopReadingLabel}
+        />
 
       </header>
-      <VoiceReadAloud
-        text={`${text.memoriesTitle}. ${text.memoriesDescription}`}
-        language={language}
-        label={readAloudLabel}
-        stopLabel={stopReadingLabel}
-      />
 
+
+      {/* ======================================
+                Messages
+                ====================================== */}
 
       {error && (
         <div className="memories-message memories-message--error">
@@ -304,19 +422,42 @@ function Memories({
 
       <main className="memories-content">
 
-        {/* Add / Edit Form */}
+        {/* ==================================
+                    Add / Edit Form
+                    ================================== */}
+
         <section className="memory-form-card">
 
-          <h2>
-            {editingId !== null
-              ? text.editMemory
-              : text.addMemory}
-          </h2>
+          <div className="memory-form-heading">
+
+            <div className="memory-form-icon">
+              <MemoryIcon />
+            </div>
+
+            <div>
+
+              <span>
+                {editingId !== null
+                  ? text.editMemory
+                  : text.addMemory}
+              </span>
+
+              <h2>
+                {editingId !== null
+                  ? text.editMemory
+                  : text.addMemory}
+              </h2>
+
+            </div>
+
+          </div>
 
 
           <form
             className="memory-form"
-            onSubmit={handleSubmit}
+            onSubmit={
+              handleSubmit
+            }
           >
 
             <label>
@@ -325,8 +466,12 @@ function Memories({
               <input
                 type="text"
                 name="title"
-                value={form.title}
-                onChange={handleChange}
+                value={
+                  form.title
+                }
+                onChange={
+                  handleChange
+                }
                 placeholder={
                   text.titlePlaceholder
                 }
@@ -343,7 +488,9 @@ function Memories({
                 value={
                   form.description
                 }
-                onChange={handleChange}
+                onChange={
+                  handleChange
+                }
                 placeholder={
                   text.descriptionPlaceholder
                 }
@@ -353,57 +500,89 @@ function Memories({
             </label>
 
 
-            <label>
-              {text.category}
+            <div className="memory-form-row">
 
-              <select
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-              >
-                <option value="General">
-                  {text.categories.General}
-                </option>
+              <label>
+                {text.category}
 
-                <option value="Family">
-                  {text.categories.Family}
-                </option>
+                <select
+                  name="category"
+                  value={
+                    form.category
+                  }
+                  onChange={
+                    handleChange
+                  }
+                >
+                  <option value="General">
+                    {
+                      text.categories
+                        .General
+                    }
+                  </option>
 
-                <option value="Friends">
-                  {text.categories.Friends}
-                </option>
+                  <option value="Family">
+                    {
+                      text.categories
+                        .Family
+                    }
+                  </option>
 
-                <option value="Travel">
-                  {text.categories.Travel}
-                </option>
+                  <option value="Friends">
+                    {
+                      text.categories
+                        .Friends
+                    }
+                  </option>
 
-                <option value="Celebration">
-                  {text.categories.Celebration}
-                </option>
+                  <option value="Travel">
+                    {
+                      text.categories
+                        .Travel
+                    }
+                  </option>
 
-                <option value="Childhood">
-                  {text.categories.Childhood}
-                </option>
+                  <option value="Celebration">
+                    {
+                      text.categories
+                        .Celebration
+                    }
+                  </option>
 
-                <option value="Other">
-                  {text.categories.Other}
-                </option>
-              </select>
-            </label>
+                  <option value="Childhood">
+                    {
+                      text.categories
+                        .Childhood
+                    }
+                  </option>
+
+                  <option value="Other">
+                    {
+                      text.categories
+                        .Other
+                    }
+                  </option>
+
+                </select>
+              </label>
 
 
-            <label>
-              {text.memoryDate}
+              <label>
+                {text.memoryDate}
 
-              <input
-                type="date"
-                name="memoryDate"
-                value={
-                  form.memoryDate
-                }
-                onChange={handleChange}
-              />
-            </label>
+                <input
+                  type="date"
+                  name="memoryDate"
+                  value={
+                    form.memoryDate
+                  }
+                  onChange={
+                    handleChange
+                  }
+                />
+              </label>
+
+            </div>
 
 
             <div className="memory-form-actions">
@@ -425,7 +604,9 @@ function Memories({
                 <button
                   type="button"
                   className="memory-secondary-button"
-                  onClick={resetForm}
+                  onClick={
+                    resetForm
+                  }
                 >
                   {text.cancelEdit}
                 </button>
@@ -438,19 +619,28 @@ function Memories({
         </section>
 
 
-        {/* Memory List */}
+        {/* ==================================
+                    Saved Memories
+                    ================================== */}
+
         <section className="memory-list-section">
 
           <div className="memory-list-header">
 
             <div>
 
+              <span className="memories-section-label">
+                {text.savedMemories}
+              </span>
+
               <h2>
                 {text.savedMemories}
               </h2>
 
               <p>
-                {text.savedMemoriesDescription}
+                {
+                  text.savedMemoriesDescription
+                }
               </p>
 
             </div>
@@ -476,7 +666,24 @@ function Memories({
           ) : memories.length === 0 ? (
 
             <div className="memory-empty">
-              {text.noMemories}
+
+              <div
+                className="memory-empty-icon"
+                aria-hidden="true"
+              >
+                <MemoryIcon />
+              </div>
+
+              <h3>
+                {text.noMemories}
+              </h3>
+
+              <p>
+                {
+                  text.savedMemoriesDescription
+                }
+              </p>
+
             </div>
 
           ) : (
@@ -490,67 +697,79 @@ function Memories({
                     key={memory.id}
                   >
 
-                    <div className="memory-card-header">
-
-                      <div>
-
-                        <h3>
-                          {memory.title}
-                        </h3>
+                    <div className="memory-card-visual">
+                      <MemoryIcon />
+                    </div>
 
 
-                        <span className="memory-category">
-                          {
-                            text.categories[
-                            memory.category
-                            ] ||
-                            memory.category
-                          }
-                        </span>
+                    <div className="memory-card-body">
+
+                      <div className="memory-card-header">
+
+                        <div>
+
+                          <h3>
+                            {
+                              memory.title
+                            }
+                          </h3>
+
+                          <span className="memory-category">
+                            {
+                              text.categories[
+                              memory.category
+                              ] ||
+                              memory.category
+                            }
+                          </span>
+
+                        </div>
+
+
+                        <time>
+                          {formatDate(
+                            memory.memoryDate,
+                          )}
+                        </time>
 
                       </div>
 
 
-                      <time>
-                        {formatDate(
-                          memory.memoryDate,
-                        )}
-                      </time>
-
-                    </div>
-
-
-                    <p>
-                      {memory.description}
-                    </p>
-
-
-                    <div className="memory-card-actions">
-
-                      <button
-                        type="button"
-                        className="memory-secondary-button"
-                        onClick={() =>
-                          handleEdit(
-                            memory,
-                          )
+                      <p>
+                        {
+                          memory.description
                         }
-                      >
-                        {text.edit}
-                      </button>
+                      </p>
 
 
-                      <button
-                        type="button"
-                        className="memory-delete-button"
-                        onClick={() =>
-                          handleDelete(
-                            memory.id,
-                          )
-                        }
-                      >
-                        {text.delete}
-                      </button>
+                      <div className="memory-card-actions">
+
+                        <button
+                          type="button"
+                          className="memory-secondary-button"
+                          onClick={() =>
+                            handleEdit(
+                              memory,
+                            )
+                          }
+                        >
+                          {text.edit}
+                        </button>
+
+
+                        <button
+                          type="button"
+                          className="memory-delete-button"
+                          onClick={() =>
+                            handleDelete(
+                              memory.id,
+                            )
+                          }
+                        >
+                          {text.delete}
+                        </button>
+
+                      </div>
 
                     </div>
 
