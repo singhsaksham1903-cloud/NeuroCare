@@ -1,0 +1,508 @@
+/* ============================================
+   Cognicare NER
+   Time-based animated scenery
+   ============================================ */
+
+.time-scenery {
+  --sky-top: #dceeff;
+  --sky-bottom: #fff1d6;
+  --horizon: #cbe0d8;
+  --mountain-back: #7597a5;
+  --mountain-front: #496f68;
+  --water-top: #8ebfc4;
+  --water-bottom: #477f87;
+  --sun-color: #ffd36b;
+  --sun-glow: rgba(255, 215, 120, 0.55);
+
+  position: absolute;
+  inset: 0;
+
+  z-index: -3;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      180deg,
+      var(--sky-top) 0%,
+      var(--sky-bottom) 48%,
+      var(--horizon) 67%,
+      var(--water-top) 67%,
+      var(--water-bottom) 100%
+    );
+
+  transition:
+    background 2s ease,
+    filter 2s ease;
+}
+
+
+/* ============================================
+   Stars
+   ============================================ */
+
+.time-scenery__stars {
+  position: absolute;
+  inset: 0;
+
+  opacity: 0;
+
+  background-image:
+    radial-gradient(circle at 10% 18%, #ffffff 0 1px, transparent 2px),
+    radial-gradient(circle at 20% 30%, #ffffff 0 1px, transparent 2px),
+    radial-gradient(circle at 35% 15%, #ffffff 0 1px, transparent 2px),
+    radial-gradient(circle at 48% 25%, #ffffff 0 1px, transparent 2px),
+    radial-gradient(circle at 63% 12%, #ffffff 0 1px, transparent 2px),
+    radial-gradient(circle at 78% 28%, #ffffff 0 1px, transparent 2px),
+    radial-gradient(circle at 91% 16%, #ffffff 0 1px, transparent 2px),
+    radial-gradient(circle at 84% 40%, #ffffff 0 1px, transparent 2px);
+
+  animation: starsTwinkle 4s ease-in-out infinite;
+}
+
+
+/* ============================================
+   Sun / Moon
+   ============================================ */
+
+.time-scenery__sun {
+  position: absolute;
+
+  width: 100px;
+  height: 100px;
+
+  left: 72%;
+  top: 17%;
+
+  border-radius: 50%;
+
+  background: var(--sun-color);
+
+  box-shadow:
+    0 0 35px 18px var(--sun-glow);
+
+  animation: sunFloat 8s ease-in-out infinite;
+}
+
+
+/* ============================================
+   Clouds
+   ============================================ */
+
+.time-scenery__cloud {
+  position: absolute;
+
+  width: 180px;
+  height: 50px;
+
+  border-radius: 999px;
+
+  background:
+    rgba(255, 255, 255, 0.38);
+
+  filter: blur(1px);
+
+  animation: cloudDrift 24s linear infinite;
+}
+
+.time-scenery__cloud::before,
+.time-scenery__cloud::after {
+  content: "";
+
+  position: absolute;
+
+  background: inherit;
+
+  border-radius: 50%;
+}
+
+.time-scenery__cloud::before {
+  width: 65px;
+  height: 65px;
+
+  left: 30px;
+  bottom: 8px;
+}
+
+.time-scenery__cloud::after {
+  width: 82px;
+  height: 82px;
+
+  right: 28px;
+  bottom: 4px;
+}
+
+.time-scenery__cloud--one {
+  top: 18%;
+  left: -190px;
+}
+
+.time-scenery__cloud--two {
+  top: 31%;
+  left: -250px;
+
+  transform: scale(0.7);
+
+  animation-duration: 31s;
+  animation-delay: -8s;
+}
+
+
+/* ============================================
+   Mountains
+   ============================================ */
+
+.time-scenery__mountains {
+  position: absolute;
+
+  left: -5%;
+
+  width: 110%;
+
+  bottom: 24%;
+
+  clip-path:
+    polygon(
+      0% 100%,
+      0% 61%,
+      8% 49%,
+      15% 60%,
+      25% 31%,
+      35% 56%,
+      44% 37%,
+      54% 62%,
+      64% 29%,
+      74% 53%,
+      84% 35%,
+      94% 55%,
+      100% 42%,
+      100% 100%
+    );
+}
+
+.time-scenery__mountains--back {
+  height: 43%;
+
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(
+        in srgb,
+        var(--mountain-back) 84%,
+        white
+      ),
+      var(--mountain-back)
+    );
+
+  opacity: 0.65;
+}
+
+.time-scenery__mountains--front {
+  height: 35%;
+
+  bottom: 21%;
+
+  background: var(--mountain-front);
+
+  opacity: 0.82;
+
+  clip-path:
+    polygon(
+      0% 100%,
+      0% 66%,
+      12% 51%,
+      20% 65%,
+      32% 41%,
+      43% 62%,
+      53% 44%,
+      64% 67%,
+      77% 42%,
+      88% 63%,
+      100% 47%,
+      100% 100%
+    );
+}
+
+
+/* ============================================
+   Water
+   ============================================ */
+
+.time-scenery__water {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 28%;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(187, 229, 228, 0.8),
+      rgba(66, 117, 125, 0.95)
+    );
+}
+
+.time-scenery__reflection {
+  position: absolute;
+
+  width: 40%;
+  height: 90px;
+
+  left: 50%;
+  top: 14%;
+
+  transform: translateX(-50%);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 238, 182, 0.55),
+      transparent
+    );
+
+  filter: blur(12px);
+
+  animation: waterShimmer 3.5s ease-in-out infinite;
+}
+
+
+/* ============================================
+   Shore / foreground
+   ============================================ */
+
+.time-scenery__shore {
+  position: absolute;
+
+  left: -5%;
+  right: -5%;
+  bottom: 21%;
+
+  height: 11%;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(48, 83, 70, 0.5),
+      rgba(32, 62, 54, 0.8)
+    );
+
+  clip-path:
+    polygon(
+      0% 60%,
+      8% 45%,
+      15% 59%,
+      23% 42%,
+      31% 57%,
+      42% 38%,
+      55% 61%,
+      68% 43%,
+      81% 59%,
+      91% 45%,
+      100% 58%,
+      100% 100%,
+      0% 100%
+    );
+}
+
+
+/* ============================================
+   TIME THEMES
+   ============================================ */
+
+
+/* ---------- Early Morning ---------- */
+
+.time-scenery--dawn {
+  --sky-top: #9dcaf0;
+  --sky-bottom: #ffd9b3;
+  --horizon: #f5c9a4;
+  --mountain-back: #7c8798;
+  --mountain-front: #526e70;
+  --water-top: #8ab8c2;
+  --water-bottom: #466f7a;
+  --sun-color: #ffd36b;
+  --sun-glow: rgba(255, 193, 102, 0.45);
+}
+
+.time-scenery--dawn .time-scenery__sun {
+  left: 62%;
+  top: 35%;
+  width: 84px;
+  height: 84px;
+}
+
+
+/* ---------- Morning ---------- */
+
+.time-scenery--morning {
+  --sky-top: #90cef7;
+  --sky-bottom: #f9e7bb;
+  --horizon: #b8d6c8;
+  --mountain-back: #6c95a4;
+  --mountain-front: #46736e;
+  --water-top: #91cbd0;
+  --water-bottom: #4f8b91;
+  --sun-color: #ffd86e;
+  --sun-glow: rgba(255, 216, 110, 0.5);
+}
+
+.time-scenery--morning .time-scenery__sun {
+  left: 68%;
+  top: 18%;
+}
+
+
+/* ---------- Afternoon ---------- */
+
+.time-scenery--afternoon {
+  --sky-top: #76c4f6;
+  --sky-bottom: #c9edff;
+  --horizon: #b9dfcb;
+  --mountain-back: #628ea0;
+  --mountain-front: #3f7268;
+  --water-top: #7fc3cb;
+  --water-bottom: #408089;
+  --sun-color: #ffe08a;
+  --sun-glow: rgba(255, 231, 147, 0.5);
+}
+
+.time-scenery--afternoon .time-scenery__sun {
+  left: 76%;
+  top: 14%;
+
+  width: 92px;
+  height: 92px;
+}
+
+
+/* ---------- Evening ---------- */
+
+.time-scenery--evening {
+  --sky-top: #6a84b7;
+  --sky-bottom: #f3b27e;
+  --horizon: #e6ae86;
+  --mountain-back: #5c667f;
+  --mountain-front: #394e56;
+  --water-top: #6e8f99;
+  --water-bottom: #304e60;
+  --sun-color: #ffca73;
+  --sun-glow: rgba(255, 174, 90, 0.5);
+}
+
+.time-scenery--evening .time-scenery__sun {
+  left: 55%;
+  top: 37%;
+
+  width: 88px;
+  height: 88px;
+}
+
+
+/* ---------- Night ---------- */
+
+.time-scenery--night {
+  --sky-top: #10264f;
+  --sky-bottom: #355d82;
+  --horizon: #375c6d;
+  --mountain-back: #40536c;
+  --mountain-front: #1f3343;
+  --water-top: #345c70;
+  --water-bottom: #142d40;
+  --sun-color: #f1f4dc;
+  --sun-glow: rgba(240, 244, 216, 0.22);
+}
+
+.time-scenery--night .time-scenery__sun {
+  left: 78%;
+  top: 14%;
+
+  width: 76px;
+  height: 76px;
+
+  box-shadow:
+    0 0 24px 10px rgba(239, 245, 215, 0.18);
+}
+
+.time-scenery--night .time-scenery__stars {
+  opacity: 1;
+}
+
+.time-scenery--night .time-scenery__cloud {
+  opacity: 0.12;
+}
+
+.time-scenery--night .time-scenery__shore {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15, 35, 37, 0.75),
+      rgba(8, 22, 28, 0.95)
+    );
+}
+
+
+/* ============================================
+   Animations
+   ============================================ */
+
+@keyframes sunFloat {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-8px) scale(1.03);
+  }
+}
+
+@keyframes cloudDrift {
+  from {
+    margin-left: 0;
+  }
+
+  to {
+    margin-left: calc(100vw + 520px);
+  }
+}
+
+@keyframes waterShimmer {
+  0%,
+  100% {
+    transform: translateX(-50%) scaleX(0.92);
+    opacity: 0.55;
+  }
+
+  50% {
+    transform: translateX(-50%) scaleX(1.08);
+    opacity: 0.9;
+  }
+}
+
+@keyframes starsTwinkle {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 0.95;
+  }
+}
+
+
+/* ============================================
+   Reduced motion
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .time-scenery *,
+  .time-scenery {
+    animation: none !important;
+    transition: none !important;
+  }
+}

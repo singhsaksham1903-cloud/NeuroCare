@@ -13,6 +13,7 @@ import UserBar from './pages/UserBar'
 import OfflineStatus from './Components/OfflineStatus'
 import VoiceReadAloud from './Components/VoiceReadAloud'
 import LanguageSelector from './Components/LanguageSelector'
+import TimeScenery from './Components/TimeScenery'
 
 import {
   getCurrentUser,
@@ -27,8 +28,11 @@ import './App.css'
 // Helper — get time-appropriate greeting
 // ============================================
 
-function getGreeting(text) {
-  const hour = new Date().getHours()
+function getGreeting(
+  text,
+  date = new Date(),
+) {
+  const hour = date.getHours()
 
   if (hour < 12) {
     return text.greetingMorning
@@ -46,8 +50,10 @@ function getGreeting(text) {
 // Helper — format today's date
 // ============================================
 
-function getFormattedDate() {
-  return new Date().toLocaleDateString(
+function getFormattedDate(
+  date = new Date(),
+) {
+  return date.toLocaleDateString(
     'en-IN',
     {
       weekday: 'long',
@@ -56,6 +62,35 @@ function getFormattedDate() {
       year: 'numeric',
     },
   )
+}
+
+
+// ============================================
+// Helper — determine scenery time
+// ============================================
+
+function getTimeOfDay(
+  date = new Date(),
+) {
+  const hour = date.getHours()
+
+  if (hour >= 5 && hour < 8) {
+    return 'dawn'
+  }
+
+  if (hour >= 8 && hour < 12) {
+    return 'morning'
+  }
+
+  if (hour >= 12 && hour < 17) {
+    return 'afternoon'
+  }
+
+  if (hour >= 17 && hour < 20) {
+    return 'evening'
+  }
+
+  return 'night'
 }
 
 
@@ -75,10 +110,11 @@ function DashboardCard({
 }) {
   return (
     <article
-      className={`card${variant === 'danger'
+      className={`card${
+        variant === 'danger'
           ? ' card--danger'
           : ''
-        }`}
+      }`}
     >
 
       <div className="card-visual">
@@ -105,10 +141,11 @@ function DashboardCard({
 
       <button
         type="button"
-        className={`card-button${buttonStyle
+        className={`card-button${
+          buttonStyle
             ? ` card-button--${buttonStyle}`
             : ''
-          }`}
+        }`}
         onClick={onClick}
       >
         {buttonLabel}
@@ -150,6 +187,13 @@ function App() {
     setRecommendedDifficulty,
   ] = useState(null)
 
+  // ==========================================
+  // Current date/time
+  // ==========================================
+
+  const [now, setNow] =
+    useState(() => new Date())
+
 
   const currentText =
     translations[language] ||
@@ -179,6 +223,21 @@ function App() {
       languageMap[language] ||
       'en-IN'
   }, [language])
+
+
+  // ==========================================
+  // Update clock every minute
+  // ==========================================
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date())
+    }, 60000)
+
+    return () => {
+      clearInterval(timer)
+    }
+  }, [])
 
 
   // ==========================================
@@ -250,10 +309,25 @@ function App() {
   // ==========================================
 
   const greeting =
-    getGreeting(currentText)
+    getGreeting(
+      currentText,
+      now,
+    )
 
   const todayDate =
-    getFormattedDate()
+    getFormattedDate(now)
+
+  const timeOfDay =
+    getTimeOfDay(now)
+
+  const currentTime =
+    now.toLocaleTimeString(
+      'en-IN',
+      {
+        hour: 'numeric',
+        minute: '2-digit',
+      },
+    )
 
   const userName =
     currentUser?.full_name ||
@@ -477,7 +551,19 @@ function App() {
   // ==========================================
 
   return (
-    <>
+    <div
+      className={`dashboard-app dashboard-app--${timeOfDay}`}
+    >
+
+      {/* ----------------------------------------
+          Time-based scenery
+          ---------------------------------------- */}
+
+      <TimeScenery
+        timeOfDay={timeOfDay}
+      />
+
+
       {/* ----------------------------------------
           Skip Link
           ---------------------------------------- */}
@@ -513,6 +599,11 @@ function App() {
 
         <p className="date-display">
           {todayDate}
+        </p>
+
+
+        <p className="time-display">
+          {currentTime}
         </p>
 
 
@@ -756,7 +847,7 @@ function App() {
         {currentText.footer}
       </footer>
 
-    </>
+    </div>
   )
 }
 
