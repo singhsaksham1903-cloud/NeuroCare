@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import './Reminders.css'
 import VoiceReadAloud from '../Components/VoiceReadAloud'
+import ReminderNotificationManager from '../Components/ReminderNotificationManager'
 
 import {
   apiDelete,
@@ -157,6 +158,8 @@ function Reminders({
 
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [currentTime, setCurrentTime] =
+    useState(() => Date.now())
 
 
   /* --------------------------------------------
@@ -185,7 +188,15 @@ function Reminders({
   useEffect(() => {
     loadReminders()
   }, [])
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setCurrentTime(Date.now())
+    }, 10000)
 
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [])
 
   /* --------------------------------------------
      Form handling
@@ -455,7 +466,7 @@ function Reminders({
 
     return (
       !Number.isNaN(dueDate.getTime()) &&
-      dueDate.getTime() < Date.now()
+      dueDate.getTime() < currentTime
     )
   }
 
@@ -526,13 +537,17 @@ function Reminders({
         </div>
       )}
 
-
       {message && (
         <div className="reminders-message reminders-message--success">
           {message}
         </div>
       )}
 
+      <ReminderNotificationManager
+        reminders={reminders}
+        language={language}
+        text={text}
+      />
 
       <main className="reminders-content">
 

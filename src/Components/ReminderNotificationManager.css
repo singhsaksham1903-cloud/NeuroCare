@@ -1,0 +1,414 @@
+/* =========================================================
+   Cognicare NER
+   Smart Reminder Notifications
+   ========================================================= */
+
+.reminder-notification-tools {
+  width: min(1100px, 100%);
+
+  margin:
+    0 auto 18px;
+
+  padding:
+    15px 18px;
+
+  box-sizing:
+    border-box;
+
+  border:
+    1px solid #dbe5ec;
+
+  border-radius:
+    16px;
+
+  background:
+    #ffffff;
+
+  box-shadow:
+    0 5px 14px rgba(60, 72, 88, 0.05);
+}
+
+
+.reminder-notification-row {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    13px;
+}
+
+
+.reminder-notification-icon {
+  width:
+    46px;
+
+  height:
+    46px;
+
+  flex:
+    0 0 46px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  border-radius:
+    13px;
+
+  background:
+    #fff4dc;
+
+  border:
+    1px solid #ecd9ae;
+
+  font-size:
+    1.35rem;
+}
+
+
+.reminder-notification-content {
+  min-width:
+    0;
+
+  flex:
+    1;
+}
+
+
+.reminder-notification-content strong {
+  display:
+    block;
+
+  margin-bottom:
+    3px;
+
+  color:
+    #44515a;
+
+  font-size:
+    0.96rem;
+
+  font-weight:
+    800;
+}
+
+
+.reminder-notification-content p {
+  margin:
+    0;
+
+  color:
+    #727c82;
+
+  font-size:
+    0.82rem;
+
+  line-height:
+    1.5;
+}
+
+
+.reminder-notification-button {
+  flex-shrink:
+    0;
+
+  min-height:
+    44px;
+
+  padding:
+    9px 15px;
+
+  border:
+    2px solid #c18a32;
+
+  border-radius:
+    12px;
+
+  background:
+    #fff9ec;
+
+  color:
+    #805d25;
+
+  font-size:
+    0.86rem;
+
+  font-weight:
+    800;
+
+  cursor:
+    pointer;
+}
+
+
+.reminder-notification-button:hover {
+  background:
+    #fff3d8;
+}
+
+
+.reminder-notification-status {
+  margin:
+    10px 0 0;
+
+  padding:
+    9px 12px;
+
+  border-radius:
+    10px;
+
+  background:
+    #f5f8fa;
+
+  color:
+    #66747b;
+
+  font-size:
+    0.8rem;
+
+  line-height:
+    1.45;
+
+  text-align:
+    center;
+}
+
+
+/* =========================================================
+   Active reminder banner
+   ========================================================= */
+
+.reminder-alert-banner {
+  width:
+    min(1100px, 100%);
+
+  box-sizing:
+    border-box;
+
+  margin:
+    0 auto 18px;
+
+  padding:
+    18px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    14px;
+
+  border:
+    2px solid #d9b36a;
+
+  border-radius:
+    18px;
+
+  background:
+    #fffaf0;
+
+  box-shadow:
+    0 8px 22px
+      rgba(60, 72, 88, 0.09);
+}
+
+
+.reminder-alert-icon {
+  width:
+    50px;
+
+  height:
+    50px;
+
+  flex:
+    0 0 50px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  border-radius:
+    15px;
+
+  background:
+    #fff0c9;
+
+  border:
+    1px solid #ecd29a;
+
+  font-size:
+    1.45rem;
+}
+
+
+.reminder-alert-content {
+  min-width:
+    0;
+
+  flex:
+    1;
+}
+
+
+.reminder-alert-content > span {
+  display:
+    block;
+
+  margin-bottom:
+    3px;
+
+  color:
+    #9c742f;
+
+  font-size:
+    0.73rem;
+
+  font-weight:
+    800;
+
+  letter-spacing:
+    0.07em;
+
+  text-transform:
+    uppercase;
+}
+
+
+.reminder-alert-content h3 {
+  margin:
+    0 0 5px;
+
+  color:
+    #4b4e52;
+
+  font-size:
+    1.12rem;
+
+  font-weight:
+    800;
+}
+
+
+.reminder-alert-content p {
+  margin:
+    0;
+
+  color:
+    #6b6f72;
+
+  font-size:
+    0.88rem;
+
+  line-height:
+    1.5;
+
+  white-space:
+    pre-wrap;
+}
+
+
+.reminder-alert-dismiss {
+  flex-shrink:
+    0;
+
+  min-height:
+    44px;
+
+  padding:
+    9px 14px;
+
+  border:
+    2px solid #d8c7a7;
+
+  border-radius:
+    11px;
+
+  background:
+    #ffffff;
+
+  color:
+    #715b36;
+
+  font-size:
+    0.84rem;
+
+  font-weight:
+    800;
+
+  cursor:
+    pointer;
+}
+
+
+.reminder-alert-dismiss:hover {
+  background:
+    #fff6e4;
+}
+
+
+/* =========================================================
+   Mobile
+   ========================================================= */
+
+@media (max-width: 650px) {
+
+  .reminder-notification-row {
+    align-items:
+      flex-start;
+
+    flex-wrap:
+      wrap;
+  }
+
+
+  .reminder-notification-content {
+    flex-basis:
+      calc(
+        100% - 60px
+      );
+  }
+
+
+  .reminder-notification-button {
+    width:
+      100%;
+  }
+
+
+  .reminder-alert-banner {
+    align-items:
+      flex-start;
+
+    flex-wrap:
+      wrap;
+  }
+
+
+  .reminder-alert-content {
+    flex-basis:
+      calc(
+        100% - 64px
+      );
+  }
+
+
+  .reminder-alert-dismiss {
+    width:
+      100%;
+  }
+}

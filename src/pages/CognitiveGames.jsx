@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import './CognitiveGames.css'
 import VoiceReadAloud from '../Components/VoiceReadAloud'
@@ -6,6 +6,10 @@ import VoiceReadAloud from '../Components/VoiceReadAloud'
 import MemoryMatch from './MemoryMatch'
 import SequenceMemory from './SequenceMemory'
 import ObjectRecall from './ObjectRecall'
+import PersonalMemoryRecall from './PersonalMemoryRecall'
+import {
+    getAdaptiveDifficulty,
+} from '../utils/adaptiveDifficulty'
 
 
 // ============================================
@@ -13,6 +17,59 @@ import ObjectRecall from './ObjectRecall'
 // ============================================
 
 function GameVisual({ gameId }) {
+    if (gameId === 'personal-memory') {
+        return (
+            <svg
+                viewBox="0 0 120 100"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+            >
+                <circle
+                    cx="60"
+                    cy="48"
+                    r="28"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                />
+
+                <path
+                    d="M48 47C48 40 53 35 60 35C67 35 72 40 72 47V52C72 59 67 64 60 64C53 64 48 59 48 52V47Z"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                />
+
+                <circle
+                    cx="54"
+                    cy="47"
+                    r="2"
+                    fill="currentColor"
+                />
+
+                <circle
+                    cx="66"
+                    cy="47"
+                    r="2"
+                    fill="currentColor"
+                />
+
+                <path
+                    d="M54 56C57 59 63 59 66 56"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+
+                <path
+                    d="M82 20L85 27L92 30L85 33L82 40L79 33L72 30L79 27L82 20Z"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinejoin="round"
+                />
+            </svg>
+        )
+    }
+
     if (gameId === 'memory-match') {
         return (
             <svg
@@ -205,7 +262,9 @@ function GameCard({
                         ? '01'
                         : id === 'sequence-memory'
                             ? '02'
-                            : '03'}
+                            : id === 'object-recall'
+                                ? '03'
+                                : '04'}
                 </span>
 
                 <h2 className="game-card-title">
@@ -218,11 +277,10 @@ function GameCard({
 
                 <button
                     type="button"
-                    className={`game-card-button${
-                        isAvailable
-                            ? ''
-                            : ' game-card-button--disabled'
-                    }`}
+                    className={`game-card-button${isAvailable
+                        ? ''
+                        : ' game-card-button--disabled'
+                        }`}
                     disabled={!isAvailable}
                     onClick={onClick}
                     aria-label={`${title} — ${buttonLabel}`}
@@ -265,13 +323,33 @@ function CognitiveGames({
     const [selectedGame, setSelectedGame] =
         useState(initialGame)
 
-    useEffect(() => {
-        if (initialGame) {
-            setSelectedGame(initialGame)
-        }
-    }, [initialGame])
+    const [launchDifficulty, setLaunchDifficulty] =
+        useState(initialDifficulty)
 
 
+
+    // ==========================================
+    // Open Personal Memory Recall
+    // ==========================================
+
+    if (
+        selectedGame === 'personal-memory'
+    ) {
+        return (
+            <PersonalMemoryRecall
+                language={language}
+                readAloudLabel={
+                    readAloudLabel
+                }
+                stopReadingLabel={
+                    stopReadingLabel
+                }
+                onBack={() =>
+                    setSelectedGame(null)
+                }
+            />
+        )
+    }
     // ==========================================
     // Open Memory Match
     // ==========================================
@@ -305,7 +383,7 @@ function CognitiveGames({
                 readAloudLabel={readAloudLabel}
                 stopReadingLabel={stopReadingLabel}
                 initialDifficulty={
-                    initialDifficulty || 'Easy'
+                    launchDifficulty || 'Easy'
                 }
                 onBack={() =>
                     setSelectedGame(null)
@@ -329,7 +407,7 @@ function CognitiveGames({
                 readAloudLabel={readAloudLabel}
                 stopReadingLabel={stopReadingLabel}
                 initialDifficulty={
-                    initialDifficulty || 'Easy'
+                    launchDifficulty || 'Easy'
                 }
                 onBack={() =>
                     setSelectedGame(null)
@@ -342,13 +420,74 @@ function CognitiveGames({
     // ==========================================
     // Game Card Click Handler
     // ==========================================
-
     const handleGameClick = (
         gameId,
     ) => {
-        setSelectedGame(gameId)
-    }
 
+        // --------------------------------------------------------
+        // Direct launch:
+        // automatically determine difficulty from recent history.
+        // --------------------------------------------------------
+
+        if (
+            gameId ===
+            'sequence-memory'
+        ) {
+            const adaptive =
+                getAdaptiveDifficulty(
+                    'Sequence Memory',
+                )
+
+            setLaunchDifficulty(
+                adaptive.difficulty,
+            )
+        }
+
+
+        if (
+            gameId ===
+            'object-recall'
+        ) {
+            const adaptive =
+                getAdaptiveDifficulty(
+                    'Object Recall',
+                )
+
+            setLaunchDifficulty(
+                adaptive.difficulty,
+            )
+        }
+
+
+        // Memory Match has one fixed level.
+
+        if (
+            gameId ===
+            'memory-match'
+        ) {
+            setLaunchDifficulty(
+                'Standard',
+            )
+        }
+
+
+        // Personal Memory Recall
+        // has its own Personalized level.
+
+        if (
+            gameId ===
+            'personal-memory'
+        ) {
+            setLaunchDifficulty(
+                'Personalized',
+            )
+        }
+
+
+        setSelectedGame(
+            gameId,
+        )
+    }
 
     return (
         <div className="games-page">
@@ -475,6 +614,17 @@ function CognitiveGames({
                         />
                     ),
                 )}
+                <GameCard
+                    id="personal-memory"
+                    title="Personal Memory Recall"
+                    description="Use your own saved memories to practice recall and recognition."
+                    buttonLabel="Start Activity"
+                    onClick={() =>
+                        handleGameClick(
+                            'personal-memory',
+                        )
+                    }
+                />
 
             </main>
 

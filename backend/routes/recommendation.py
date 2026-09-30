@@ -1,4 +1,5 @@
 from collections import defaultdict
+from math import sqrt
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -28,7 +29,7 @@ def get_db():
 
 
 # ============================================================
-# Configuration
+# Supported cognitive games
 # ============================================================
 
 GAME_NAMES = [
@@ -37,6 +38,11 @@ GAME_NAMES = [
     "Object Recall",
 ]
 
+
+# ============================================================
+# Difficulty configuration
+# ============================================================
+
 DIFFICULTY_ORDER = {
     "Easy": 0,
     "Medium": 1,
@@ -44,241 +50,669 @@ DIFFICULTY_ORDER = {
 }
 
 
+GAME_DIFFICULTIES = {
+    "Memory Match": [
+        "Standard",
+    ],
+
+    "Sequence Memory": [
+        "Easy",
+        "Medium",
+        "Hard",
+    ],
+
+    "Object Recall": [
+        "Easy",
+        "Medium",
+        "Hard",
+    ],
+}
+
+
 # ============================================================
-# Difficulty Selection
+# Utility helpers
 # ============================================================
 
-def choose_difficulty(
-    game: str,
-    recent_accuracy: float,
-    trend: float,
-    last_difficulty: str | None,
+def clamp(
+    value: float,
+    minimum: float,
+    maximum: float,
+) -> float:
+    return max(
+        minimum,
+        min(
+            value,
+            maximum,
+        ),
+    )
+
+
+def average(
+    values,
+):
+    if not values:
+        return None
+
+    return sum(values) / len(values)
+
+
+# ============================================================
+# Performance status
+# ============================================================
+
+def determine_performance_status(
+    summary: dict,
 ) -> str:
 
-    # Memory Match currently has only one difficulty.
-    if game == "Memory Match":
-        return "Standard"
+    sessions = summary["sessions"]
+    trend = summary["trend"]
+    recent_accuracy = (
+        summary["recent_accuracy"]
+    )
 
-    # User is struggling.
-    if recent_accuracy < 60 or trend < -15:
-        return "Easy"
+    if sessions == 0:
+        return "New"
 
-    # Strong recent performance.
-    if recent_accuracy >= 85 and trend >= -5:
+    if sessions < 3:
+        return "Not enough data"
 
-        current_index = DIFFICULTY_ORDER.get(
-            last_difficulty or "Easy",
-            0,
-        )
+    if (
+        trend >= 7
+        and recent_accuracy >= 70
+    ):
+        return "Improving"
 
-        next_index = min(
-            current_index + 1,
-            len(DIFFICULTY_ORDER) - 1,
-        )
+    if trend <= -7:
+        return "Declining"
 
-        return list(DIFFICULTY_ORDER.keys())[
-            next_index
-        ]
-
-    # Keep current difficulty.
-    if last_difficulty in DIFFICULTY_ORDER:
-        return last_difficulty
-
-    return "Easy"
+    return "Stable"
 
 
 # ============================================================
-# Calculate Summary for One Game
+# Calculate game summary
 # ============================================================
 
-def calculate_game_summary(sessions):
-
+def calculate_game_summary(
+    sessions,
+):
     if not sessions:
         return None
 
-    # Sessions are ordered newest -> oldest.
+    # Sessions arrive newest -> oldest.
     recent_sessions = sessions[:3]
 
-    recent_accuracy = sum(
+    older_sessions = sessions[3:6]
+
+    # --------------------------------------------------------
+    # Accuracy
+    # --------------------------------------------------------
+
+    recent_accuracy_values = [
         float(session.accuracy)
         for session in recent_sessions
-    ) / len(recent_sessions)
+    ]
 
-    overall_accuracy = sum(
+    overall_accuracy_values = [
         float(session.accuracy)
         for session in sessions
-    ) / len(sessions)
+    ]
 
-    average_mistakes = sum(
+    recent_accuracy = (
+        average(
+            recent_accuracy_values,
+        )
+        or 0
+    )
+
+    overall_accuracy = (
+        average(
+            overall_accuracy_values,
+        )
+        or 0
+    )
+
+    # --------------------------------------------------------
+    # Mistakes
+    # --------------------------------------------------------
+
+    mistake_values = [
         int(session.mistakes)
         for session in recent_sessions
-    ) / len(recent_sessions)
+    ]
 
-    # Compare recent performance with older performance.
-    if len(sessions) >= 4:
+    average_mistakes = (
+        average(
+            mistake_values,
+        )
+        or 0
+    )
 
-        older_sessions = sessions[3:]
+    # --------------------------------------------------------
+    # Trend
+    #
+    # Recent 3 sessions are compared with the
+    # previous 3 sessions where enough data exists.
+    # --------------------------------------------------------
 
-        older_accuracy = sum(
+    if older_sessions:
+
+        older_accuracy_values = [
             float(session.accuracy)
             for session in older_sessions
-        ) / len(older_sessions)
+        ]
 
-        trend = recent_accuracy - older_accuracy
+        older_accuracy = (
+            average(
+                older_accuracy_values,
+            )
+            or recent_accuracy
+        )
+
+        trend = (
+            recent_accuracy -
+            older_accuracy
+        )
 
     else:
         trend = 0.0
 
+    # --------------------------------------------------------
+    # Time trend
+    #
+    # Time is compared only within the same game.
+    # We don't compare raw time between different games.
+    # --------------------------------------------------------
+
+    recent_times = [
+        float(session.time)
+        for session in recent_sessions
+        if session.time is not None
+        and float(session.time) > 0
+    ]
+
+    older_times = [
+        float(session.time)
+        for session in older_sessions
+        if session.time is not None
+        and float(session.time) > 0
+    ]
+
+    recent_time = (
+        average(
+            recent_times,
+        )
+        if recent_times
+        else None
+    )
+
+    older_time = (
+        average(
+            older_times,
+        )
+        if older_times
+        else None
+    )
+
+    if (
+        recent_time is not None
+        and older_time is not None
+        and older_time > 0
+    ):
+        time_change_percent = (
+            (
+                recent_time -
+                older_time
+            )
+            /
+            older_time
+        ) * 100
+    else:
+        time_change_percent = 0.0
+
+    # --------------------------------------------------------
+    # Accuracy consistency
+    #
+    # Standard deviation gives us an idea of how
+    # variable recent performance has been.
+    # --------------------------------------------------------
+
+    if len(recent_accuracy_values) >= 2:
+
+        mean_accuracy = (
+            recent_accuracy
+        )
+
+        variance = sum(
+            (
+                value -
+                mean_accuracy
+            ) ** 2
+            for value in recent_accuracy_values
+        ) / len(
+            recent_accuracy_values
+        )
+
+        consistency_std = sqrt(
+            variance
+        )
+
+    else:
+        consistency_std = 0.0
+
+    # --------------------------------------------------------
+    # Latest difficulty
+    # --------------------------------------------------------
+
     latest = sessions[0]
+
+    last_difficulty = (
+        latest.difficulty
+    )
 
     return {
         "sessions": len(sessions),
+
         "recent_accuracy": round(
             recent_accuracy,
             1,
         ),
+
         "overall_accuracy": round(
             overall_accuracy,
             1,
         ),
+
         "average_mistakes": round(
             average_mistakes,
             1,
         ),
+
         "trend": round(
             trend,
             1,
         ),
-        "last_difficulty": latest.difficulty,
+
+        "recent_time": (
+            round(
+                recent_time,
+                1,
+            )
+            if recent_time is not None
+            else None
+        ),
+
+        "time_change_percent": round(
+            time_change_percent,
+            1,
+        ),
+
+        "consistency_std": round(
+            consistency_std,
+            1,
+        ),
+
+        "last_difficulty":
+            last_difficulty,
     }
 
 
 # ============================================================
-# Calculate Need Score
-# Higher score = stronger reason to recommend
+# Calculate personalization priority
 # ============================================================
 
-def calculate_need_score(summary):
+def calculate_priority_score(
+    summary: dict,
+) -> float:
 
-    # Lower accuracy means more practice is needed.
-    accuracy_need = max(
+    sessions = summary["sessions"]
+
+    # --------------------------------------------------------
+    # 1. Accuracy need
+    #
+    # Lower recent accuracy = higher need for practice.
+    # --------------------------------------------------------
+
+    accuracy_need = clamp(
+        (
+            100 -
+            summary["recent_accuracy"]
+        ) / 100,
         0,
-        100 - summary["recent_accuracy"],
+        1,
     )
 
-    # More mistakes increase the need score.
-    mistake_need = min(
-        summary["average_mistakes"] * 5,
-        30,
-    )
+    # --------------------------------------------------------
+    # 2. Trend need
+    #
+    # Negative performance trend gets more weight.
+    # --------------------------------------------------------
 
-    # A declining trend increases the need score.
-    decline_need = max(
+    trend_need = clamp(
+        (
+            -summary["trend"]
+        ) / 20,
         0,
-        -summary["trend"],
+        1,
     )
 
-    return (
-        accuracy_need * 0.60
-        + mistake_need * 0.25
-        + decline_need * 0.15
+    # --------------------------------------------------------
+    # 3. Mistake need
+    # --------------------------------------------------------
+
+    mistake_need = clamp(
+        summary["average_mistakes"]
+        / 4,
+        0,
+        1,
+    )
+
+    # --------------------------------------------------------
+    # 4. Time slowdown need
+    #
+    # A large increase in completion time is treated
+    # as a secondary signal only.
+    # --------------------------------------------------------
+
+    time_need = clamp(
+        summary[
+            "time_change_percent"
+        ] / 50,
+        0,
+        1,
+    )
+
+    # --------------------------------------------------------
+    # 5. Experience-gap bonus
+    #
+    # Games with very little history receive a small
+    # exploration bonus so recommendations don't become
+    # permanently focused on only one game.
+    # --------------------------------------------------------
+
+    experience_gap = clamp(
+        (
+            5 -
+            sessions
+        ) / 5,
+        0,
+        1,
+    )
+
+    # --------------------------------------------------------
+    # Weighted priority score
+    # --------------------------------------------------------
+
+    score = (
+        accuracy_need * 0.45
+        +
+        trend_need * 0.25
+        +
+        mistake_need * 0.15
+        +
+        time_need * 0.05
+        +
+        experience_gap * 0.10
+    )
+
+    return round(
+        score * 100,
+        2,
     )
 
 
 # ============================================================
-# Determine Performance Status
+# Difficulty recommendation
 # ============================================================
 
-def determine_performance_status(summary):
+def choose_difficulty(
+    game: str,
+    summary: dict,
+) -> str:
 
-    if summary["trend"] > 10:
-        return "improving"
+    levels = (
+        GAME_DIFFICULTIES[
+            game
+        ]
+    )
 
-    if summary["trend"] < -10:
-        return "declining"
+    # Fixed difficulty game.
+    if len(levels) == 1:
+        return levels[0]
 
-    return "stable"
+    recent_accuracy = (
+        summary["recent_accuracy"]
+    )
+
+    trend = summary["trend"]
+
+    average_mistakes = (
+        summary["average_mistakes"]
+    )
+
+    last_difficulty = (
+        summary["last_difficulty"]
+    )
+
+    # --------------------------------------------------------
+    # New user
+    # --------------------------------------------------------
+
+    if (
+        summary["sessions"] == 0
+    ):
+        return "Easy"
+
+    # --------------------------------------------------------
+    # Get previous valid difficulty
+    # --------------------------------------------------------
+
+    if (
+        last_difficulty
+        not in levels
+    ):
+        current_level = "Easy"
+    else:
+        current_level = (
+            last_difficulty
+        )
+
+    current_index = (
+        DIFFICULTY_ORDER.get(
+            current_level,
+            0,
+        )
+    )
+
+    # --------------------------------------------------------
+    # Strong recent performance
+    # --------------------------------------------------------
+
+    strong_performance = (
+        recent_accuracy >= 85
+        and
+        trend >= -5
+        and
+        average_mistakes <= 1
+    )
+
+    # --------------------------------------------------------
+    # Clear performance difficulty
+    # --------------------------------------------------------
+
+    needs_support = (
+        recent_accuracy < 60
+        or
+        trend <= -10
+        or
+        (
+            summary[
+                "time_change_percent"
+            ] >= 25
+            and
+            recent_accuracy < 80
+        )
+    )
+
+    if needs_support:
+
+        return levels[
+            max(
+                0,
+                current_index - 1,
+            )
+        ]
+
+    if strong_performance:
+
+        return levels[
+            min(
+                len(levels) - 1,
+                current_index + 1,
+            )
+        ]
+
+    return current_level
 
 
 # ============================================================
-# Build Human-Friendly Explanation
+# Recommendation explanation
 # ============================================================
 
 def build_reason(
     game: str,
     difficulty: str,
     summary: dict,
-    performance_status: str,
 ) -> str:
 
-    if performance_status == "improving":
+    status = (
+        determine_performance_status(
+            summary,
+        )
+    )
+
+    accuracy = (
+        summary["recent_accuracy"]
+    )
+
+    trend = (
+        summary["trend"]
+    )
+
+    mistakes = (
+        summary["average_mistakes"]
+    )
+
+    if status == "New":
 
         return (
-            f"Your recent {game} accuracy is "
-            f"{summary['recent_accuracy']}% and your "
-            "performance is improving. "
-            f"Try it at {difficulty} difficulty."
+            f"{game} has not been played yet. "
+            "Starting with this activity will help "
+            "Cognicare build a performance history."
         )
 
-    if performance_status == "declining":
+    if status == "Not enough data":
 
         return (
             f"Your recent {game} accuracy is "
-            f"{summary['recent_accuracy']}% and your recent "
-            "performance has declined. "
-            f"Try it at {difficulty} difficulty."
+            f"{accuracy}%. More sessions will help "
+            "Cognicare personalize future activities."
+        )
+
+    if status == "Improving":
+
+        return (
+            f"Your recent {game} accuracy is "
+            f"{accuracy}% and your performance trend "
+            f"is improving. The recommended level is "
+            f"{difficulty}."
+        )
+
+    if status == "Declining":
+
+        return (
+            f"Your recent {game} accuracy is "
+            f"{accuracy}% with a recent trend of "
+            f"{trend:+.1f} percentage points. "
+            f"The recommended level is "
+            f"{difficulty} to provide a more comfortable challenge."
         )
 
     return (
         f"Your recent {game} accuracy is "
-        f"{summary['recent_accuracy']}% with about "
-        f"{summary['average_mistakes']} mistakes per session. "
-        f"Try it at {difficulty} difficulty."
+        f"{accuracy}% with about "
+        f"{mistakes} mistakes per session. "
+        f"The recommended level is "
+        f"{difficulty}."
     )
 
 
 # ============================================================
-# Recommendation Endpoint
+# Recommendation confidence
+# ============================================================
+
+def calculate_confidence(
+    summary: dict,
+) -> str:
+
+    sessions = (
+        summary["sessions"]
+    )
+
+    if sessions == 0:
+        return "low"
+
+    if sessions < 3:
+        return "low"
+
+    if sessions < 6:
+        return "moderate"
+
+    return "high"
+
+
+# ============================================================
+# Recommendation endpoint
 # ============================================================
 
 @router.get("")
 def get_recommendation(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        get_current_user
+    ),
+    db: Session = Depends(
+        get_db
+    ),
 ):
 
-    # Only analyze the currently authenticated user's sessions.
+    # --------------------------------------------------------
+    # Read only completed sessions belonging to
+    # the currently logged-in user.
+    #
+    # Personal Memory Recall is intentionally excluded
+    # from the three core-game recommendation pool.
+    # --------------------------------------------------------
+
     sessions = (
-        db.query(GameSession)
+        db.query(
+            GameSession
+        )
         .filter(
-            GameSession.user_id == current_user.id
+            GameSession.user_id ==
+            current_user.id,
+
+            GameSession.completed ==
+            True,
+
+            GameSession.game.in_(
+                GAME_NAMES
+            ),
         )
         .order_by(
             GameSession.created_at.desc()
         )
-        .limit(30)
+        .limit(60)
         .all()
     )
-
-    # --------------------------------------------------------
-    # No sessions yet
-    # --------------------------------------------------------
-
-    if not sessions:
-
-        return {
-            "recommendation": {
-                "game": "Memory Match",
-                "difficulty": "Standard",
-                "reason": (
-                    "Start with a Memory Match session "
-                    "to begin building your performance history."
-                ),
-                "performance_status": "new",
-            },
-            "based_on_sessions": 0,
-            "engine": "rule-based-v2",
-        }
 
     # --------------------------------------------------------
     # Group sessions by game
@@ -287,117 +721,188 @@ def get_recommendation(
     grouped = defaultdict(list)
 
     for session in sessions:
-        grouped[session.game].append(session)
-
-    # --------------------------------------------------------
-    # Recommend an unplayed game first
-    # --------------------------------------------------------
-
-    unplayed_games = [
-        game
-        for game in GAME_NAMES
-        if not grouped[game]
-    ]
-
-    if unplayed_games:
-
-        recommended_game = unplayed_games[0]
-
-        recommended_difficulty = (
-            "Standard"
-            if recommended_game == "Memory Match"
-            else "Easy"
+        grouped[
+            session.game
+        ].append(
+            session
         )
 
-        return {
-            "recommendation": {
-                "game": recommended_game,
-                "difficulty": recommended_difficulty,
-                "reason": (
-                    f"You have not played "
-                    f"{recommended_game} yet. "
-                    "Try it to build more performance history."
-                ),
-                "performance_status": "new",
-            },
-            "based_on_sessions": len(sessions),
-            "engine": "rule-based-v2",
-        }
-
     # --------------------------------------------------------
-    # Calculate summaries
+    # Calculate all game summaries.
+    #
+    # Even an unplayed game is included.
     # --------------------------------------------------------
 
     summaries = {}
 
     for game in GAME_NAMES:
 
-        summary = calculate_game_summary(
-            grouped[game]
+        summary = (
+            calculate_game_summary(
+                grouped[game]
+            )
         )
 
-        if summary is not None:
+        if summary is None:
 
-            summary["need_score"] = round(
-                calculate_need_score(summary),
-                2,
-            )
+            summary = {
+                "sessions": 0,
+                "recent_accuracy": 0,
+                "overall_accuracy": 0,
+                "average_mistakes": 0,
+                "trend": 0,
+                "recent_time": None,
+                "time_change_percent": 0,
+                "consistency_std": 0,
+                "last_difficulty": None,
+            }
 
-            summaries[game] = summary
+        summary[
+            "performance_status"
+        ] = determine_performance_status(
+            summary
+        )
+
+        summary[
+            "priority_score"
+        ] = calculate_priority_score(
+            summary
+        )
+
+        summary[
+            "confidence"
+        ] = calculate_confidence(
+            summary
+        )
+
+        summaries[
+            game
+        ] = summary
 
     # --------------------------------------------------------
-    # Select game with highest need score
+    # No game history
+    # --------------------------------------------------------
+
+    if not sessions:
+
+        recommended_game = (
+            "Memory Match"
+        )
+
+        recommended_difficulty = (
+            "Standard"
+        )
+
+        return {
+            "recommendation": {
+                "game":
+                    recommended_game,
+
+                "difficulty":
+                    recommended_difficulty,
+
+                "reason": (
+                    "Start with Memory Match "
+                    "to begin building your personalized "
+                    "performance history."
+                ),
+
+                "performance_status":
+                    "New",
+            },
+
+            "based_on_sessions":
+                0,
+
+            "engine":
+                "rule-based-v3",
+
+            "personalization":
+                "performance-based",
+
+            "confidence":
+                "low",
+
+            "game_summaries":
+                summaries,
+        }
+
+    # --------------------------------------------------------
+    # Select highest-priority activity
     # --------------------------------------------------------
 
     recommended_game = max(
-        summaries,
-        key=lambda game: summaries[game]["need_score"],
+        GAME_NAMES,
+        key=lambda game:
+            summaries[
+                game
+            ][
+                "priority_score"
+            ],
     )
 
-    selected = summaries[recommended_game]
+    selected = (
+        summaries[
+            recommended_game
+        ]
+    )
 
     # --------------------------------------------------------
     # Select difficulty
     # --------------------------------------------------------
 
-    recommended_difficulty = choose_difficulty(
-        recommended_game,
-        selected["recent_accuracy"],
-        selected["trend"],
-        selected["last_difficulty"],
+    recommended_difficulty = (
+        choose_difficulty(
+            recommended_game,
+            selected,
+        )
     )
 
     # --------------------------------------------------------
-    # Determine performance status
-    # --------------------------------------------------------
-
-    performance_status = determine_performance_status(
-        selected
-    )
-
-    # --------------------------------------------------------
-    # Build explanation
+    # Build reason
     # --------------------------------------------------------
 
     reason = build_reason(
         recommended_game,
         recommended_difficulty,
         selected,
-        performance_status,
     )
 
     # --------------------------------------------------------
-    # Final response
+    # Final recommendation
     # --------------------------------------------------------
 
     return {
         "recommendation": {
-            "game": recommended_game,
-            "difficulty": recommended_difficulty,
-            "reason": reason,
-            "performance_status": performance_status,
+            "game":
+                recommended_game,
+
+            "difficulty":
+                recommended_difficulty,
+
+            "reason":
+                reason,
+
+            "performance_status":
+                selected[
+                    "performance_status"
+                ],
         },
-        "based_on_sessions": len(sessions),
-        "engine": "rule-based-v2",
-        "game_summaries": summaries,
+
+        "based_on_sessions":
+            len(sessions),
+
+        "engine":
+            "rule-based-v3",
+
+        "personalization":
+            "performance-based",
+
+        "confidence":
+            selected[
+                "confidence"
+            ],
+
+        "game_summaries":
+            summaries,
     }
