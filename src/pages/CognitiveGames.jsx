@@ -7,6 +7,7 @@ import MemoryMatch from './MemoryMatch'
 import SequenceMemory from './SequenceMemory'
 import ObjectRecall from './ObjectRecall'
 import PersonalMemoryRecall from './PersonalMemoryRecall'
+import NERCulturalRecall from './NERCulturalRecall'
 import {
     getAdaptiveDifficulty,
 } from '../utils/adaptiveDifficulty'
@@ -17,6 +18,67 @@ import {
 // ============================================
 
 function GameVisual({ gameId }) {
+    if (gameId === 'ner-cultural-recall') {
+        return (
+            <svg
+                viewBox="0 0 120 100"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+            >
+                <circle
+                    cx="60"
+                    cy="48"
+                    r="30"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                />
+
+                <path
+                    d="M38 48H82"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+
+                <path
+                    d="M60 18C50 28 46 38 46 48C46 58 50 68 60 78"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+
+                <path
+                    d="M60 18C70 28 74 38 74 48C74 58 70 68 60 78"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+
+                <path
+                    d="M33 35C41 28 50 25 60 25C70 25 79 28 87 35"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+
+                <path
+                    d="M33 61C41 68 50 71 60 71C70 71 79 68 87 61"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+
+                <path
+                    d="M91 15L94 22L101 25L94 28L91 35L88 28L81 25L88 22L91 15Z"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinejoin="round"
+                />
+            </svg>
+        )
+    }
+
     if (gameId === 'personal-memory') {
         return (
             <svg
@@ -245,6 +307,7 @@ function GameCard({
     description,
     buttonLabel,
     onClick,
+    number,
 }) {
     const isAvailable = Boolean(onClick)
 
@@ -258,15 +321,8 @@ function GameCard({
             <div className="game-card-content">
 
                 <span className="game-card-number">
-                    {id === 'memory-match'
-                        ? '01'
-                        : id === 'sequence-memory'
-                            ? '02'
-                            : id === 'object-recall'
-                                ? '03'
-                                : '04'}
+                    {String(number).padStart(2, '0')}
                 </span>
-
                 <h2 className="game-card-title">
                     {title}
                 </h2>
@@ -313,6 +369,7 @@ function CognitiveGames({
     memoryMatchText,
     sequenceMemoryText,
     objectRecallText,
+    personalMemoryText,
     language = 'en-IN',
     readAloudLabel = 'Read Aloud',
     stopReadingLabel = 'Stop Reading',
@@ -337,6 +394,7 @@ function CognitiveGames({
     ) {
         return (
             <PersonalMemoryRecall
+                text={personalMemoryText}
                 language={language}
                 readAloudLabel={
                     readAloudLabel
@@ -408,6 +466,28 @@ function CognitiveGames({
                 stopReadingLabel={stopReadingLabel}
                 initialDifficulty={
                     launchDifficulty || 'Easy'
+                }
+                onBack={() =>
+                    setSelectedGame(null)
+                }
+            />
+        )
+    }
+    // ==========================================
+    // Open NER Cultural Recall
+    // ==========================================
+
+    if (
+        selectedGame === 'ner-cultural-recall'
+    ) {
+        return (
+            <NERCulturalRecall
+                language={language}
+                readAloudLabel={
+                    readAloudLabel
+                }
+                stopReadingLabel={
+                    stopReadingLabel
                 }
                 onBack={() =>
                     setSelectedGame(null)
@@ -595,10 +675,11 @@ function CognitiveGames({
             <main className="games-grid">
 
                 {text.games.map(
-                    (game) => (
+                    (game, index) => (
                         <GameCard
                             key={game.id}
                             id={game.id}
+                            number={index + 1}
                             title={game.title}
                             description={
                                 game.description
@@ -616,9 +697,19 @@ function CognitiveGames({
                 )}
                 <GameCard
                     id="personal-memory"
-                    title="Personal Memory Recall"
-                    description="Use your own saved memories to practice recall and recognition."
-                    buttonLabel="Start Activity"
+                    number={text.games.length + 1}
+                    title={
+                        personalMemoryText?.cardTitle ||
+                        'Personal Memory Recall'
+                    }
+                    description={
+                        personalMemoryText?.cardDescription ||
+                        'Use your own saved memories to practice recall and recognition.'
+                    }
+                    buttonLabel={
+                        personalMemoryText?.cardButton ||
+                        'Start Activity'
+                    }
                     onClick={() =>
                         handleGameClick(
                             'personal-memory',

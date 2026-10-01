@@ -240,6 +240,8 @@ function PerformanceDashboard({
 
 
   useEffect(() => {
+    let active = true
+
     const loadSessions = async () => {
       try {
         setLoading(true)
@@ -249,18 +251,45 @@ function PerformanceDashboard({
           '/game-sessions',
         )
 
+        if (!active) {
+          return
+        }
+
         setSessions(data.sessions || [])
       } catch (err) {
+        if (!active) {
+          return
+        }
+
         setError(
           err.message ||
           'Could not load performance data from the backend.',
         )
       } finally {
-        setLoading(false)
+        if (active) {
+          setLoading(false)
+        }
       }
     }
 
-    loadSessions()
+    const handlePerformanceUpdate = () => {
+      void loadSessions()
+    }
+
+    void loadSessions()
+
+    window.addEventListener(
+      'cognicare:performance-updated',
+      handlePerformanceUpdate,
+    )
+
+    return () => {
+      active = false
+      window.removeEventListener(
+        'cognicare:performance-updated',
+        handlePerformanceUpdate,
+      )
+    }
   }, [])
 
 

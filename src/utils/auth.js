@@ -87,30 +87,42 @@ export async function loginUser(email, password) {
 
 export async function getCurrentUser() {
   const token = getAccessToken()
+  const storedUser = getStoredUser()
 
   if (!token) {
     return null
   }
 
-  const response = await fetch(
-    `${API_URL}/auth/me`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
+  try {
+    const response = await fetch(
+      `${API_URL}/auth/me`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    },
-  )
+    )
 
-  if (!response.ok) {
-    logout()
-    return null
+    if (!response.ok) {
+      logout()
+      return null
+    }
+
+    const user = await response.json()
+
+    saveStoredUser(user)
+
+    return user
+  } catch (error) {
+    // A temporary backend/network outage should not force a
+    // previously authenticated user back to the login screen.
+    // The next successful online request refreshes the stored user.
+    if (error instanceof TypeError && storedUser) {
+      return storedUser
+    }
+
+    throw error
   }
-
-  const user = await response.json()
-
-  saveStoredUser(user)
-
-  return user
 }
 
 

@@ -6,6 +6,9 @@ import VoiceReadAloud from '../Components/VoiceReadAloud'
 import {
   savePerformanceResult,
 } from '../utils/performanceStorage'
+import {
+  getUserScopedStorageKey,
+} from '../utils/userStorage'
 
 
 const OBJECTS = [
@@ -31,8 +34,15 @@ const LEVELS = {
 }
 
 
-const HISTORY_KEY =
+const HISTORY_KEY_PREFIX =
   'cognicare-object-recall-history'
+
+
+function getHistoryKey() {
+  return getUserScopedStorageKey(
+    HISTORY_KEY_PREFIX,
+  )
+}
 
 
 function shuffleItems(items) {
@@ -306,7 +316,32 @@ function ObjectRecall({
 
 
   const [history, setHistory] =
-    useState([])
+    useState(() => {
+      const historyKey = getHistoryKey()
+
+      if (!historyKey) {
+        return []
+      }
+
+      const savedHistory =
+        localStorage.getItem(historyKey)
+
+      if (!savedHistory) {
+        return []
+      }
+
+      try {
+        const parsedHistory =
+          JSON.parse(savedHistory)
+
+        return Array.isArray(parsedHistory)
+          ? parsedHistory
+          : []
+      } catch {
+        localStorage.removeItem(historyKey)
+        return []
+      }
+    })
 
 
   const hasSavedResult =
@@ -315,41 +350,6 @@ function ObjectRecall({
 
   const targetCount =
     LEVELS[difficulty]
-
-
-  // ==========================================
-  // Load previous sessions
-  // ==========================================
-
-  useEffect(() => {
-    const savedHistory =
-      localStorage.getItem(
-        HISTORY_KEY,
-      )
-
-    if (!savedHistory) {
-      return
-    }
-
-    try {
-      const parsedHistory =
-        JSON.parse(savedHistory)
-
-      if (
-        Array.isArray(
-          parsedHistory,
-        )
-      ) {
-        setHistory(
-          parsedHistory,
-        )
-      }
-    } catch {
-      localStorage.removeItem(
-        HISTORY_KEY,
-      )
-    }
-  }, [])
 
 
   // ==========================================
@@ -619,7 +619,7 @@ function ObjectRecall({
 
 
     localStorage.setItem(
-      HISTORY_KEY,
+      getHistoryKey(),
       JSON.stringify(
         updatedHistory,
       ),
@@ -676,7 +676,7 @@ function ObjectRecall({
     setHistory([])
 
     localStorage.removeItem(
-      HISTORY_KEY,
+      getHistoryKey(),
     )
   }
 

@@ -1,0 +1,24 @@
+PHASE 7 — App.jsx change
+
+Add this import near the other utils imports:
+
+import { syncPendingOfflineData } from './utils/offlineData'
+import { syncPendingGameSessions } from './utils/performanceStorage'
+
+Then, inside App(), add this effect after the current-user restore effect (or anywhere after currentUser state exists):
+
+useEffect(() => {
+  if (!currentUser) {
+    return
+  }
+
+  if (
+    typeof navigator !== 'undefined' &&
+    navigator.onLine
+  ) {
+    void syncPendingOfflineData()
+    void syncPendingGameSessions()
+  }
+}, [currentUser])
+
+Do not replace App.jsx with an older copy. Add only this import + effect to your CURRENT App.jsx.

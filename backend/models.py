@@ -125,6 +125,14 @@ class CaregiverLink(Base):
 class GameSession(Base):
     __tablename__ = "game_sessions"
 
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id",
+            "client_session_id",
+            name="uq_game_sessions_user_client_id",
+        ),
+    )
+
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
@@ -193,6 +201,12 @@ class GameSession(Base):
         nullable=True,
     )
 
+    client_session_id: Mapped[str | None] = mapped_column(
+        String(120),
+        nullable=True,
+        index=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -206,6 +220,14 @@ class GameSession(Base):
 
 class Memory(Base):
     __tablename__ = "memories"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id",
+            "client_mutation_id",
+            name="uq_memories_user_client_mutation_id",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(
         Integer,
@@ -240,6 +262,12 @@ class Memory(Base):
         nullable=True,
     )
 
+    client_mutation_id: Mapped[str | None] = mapped_column(
+        String(120),
+        nullable=True,
+        index=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -253,6 +281,14 @@ class Memory(Base):
 
 class Reminder(Base):
     __tablename__ = "reminders"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id",
+            "client_mutation_id",
+            name="uq_reminders_user_client_mutation_id",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(
         Integer,
@@ -291,6 +327,12 @@ class Reminder(Base):
         Boolean,
         nullable=False,
         default=False,
+    )
+
+    client_mutation_id: Mapped[str | None] = mapped_column(
+        String(120),
+        nullable=True,
+        index=True,
     )
 
     created_at: Mapped[datetime] = mapped_column(

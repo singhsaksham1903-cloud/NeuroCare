@@ -1,4 +1,8 @@
-import { useEffect, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
 
 import './Reminders.css'
 import VoiceReadAloud from '../Components/VoiceReadAloud'
@@ -166,7 +170,7 @@ function Reminders({
      Load reminders
      -------------------------------------------- */
 
-  const loadReminders = async () => {
+  const loadReminders = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
@@ -182,12 +186,18 @@ function Reminders({
     } finally {
       setLoading(false)
     }
-  }
+  }, [text.loadError])
 
 
   useEffect(() => {
-    loadReminders()
-  }, [])
+    const timer = window.setTimeout(() => {
+      void loadReminders()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [loadReminders])
   useEffect(() => {
     const timer = window.setInterval(() => {
       setCurrentTime(Date.now())

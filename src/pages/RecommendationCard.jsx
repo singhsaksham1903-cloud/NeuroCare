@@ -64,7 +64,7 @@ function RecommendationCard({
         handlePerformanceUpdate,
       )
     }
-  }, [])
+  }, [text.unavailable])
 
 
   const recommendationIcon = (

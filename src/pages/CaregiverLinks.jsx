@@ -1,4 +1,8 @@
-import { useEffect, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
 
 import './CaregiverLinks.css'
 import VoiceReadAloud from '../Components/VoiceReadAloud'
@@ -243,7 +247,7 @@ function CaregiverLinks({
      Load connections
      -------------------------------------------- */
 
-  const loadLinks = async () => {
+  const loadLinks = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
@@ -265,12 +269,18 @@ function CaregiverLinks({
     } finally {
       setLoading(false)
     }
-  }
+  }, [text.loadError])
 
 
   useEffect(() => {
-    loadLinks()
-  }, [])
+    const timer = window.setTimeout(() => {
+      void loadLinks()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [loadLinks])
 
 
   /* --------------------------------------------

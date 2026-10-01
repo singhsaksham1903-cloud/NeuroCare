@@ -14,6 +14,8 @@ import OfflineStatus from './Components/OfflineStatus'
 import VoiceReadAloud from './Components/VoiceReadAloud'
 import LanguageSelector from './Components/LanguageSelector'
 import TimeScenery from './Components/TimeScenery'
+import { syncPendingOfflineData } from './utils/offlineData'
+import { syncPendingGameSessions } from './utils/performanceStorage'
 
 import {
   getCurrentUser,
@@ -22,6 +24,7 @@ import {
 import translations from './data/translations'
 
 import './App.css'
+import './phase12.css'
 
 
 // ============================================
@@ -110,11 +113,10 @@ function DashboardCard({
 }) {
   return (
     <article
-      className={`card${
-        variant === 'danger'
-          ? ' card--danger'
-          : ''
-      }`}
+      className={`card${variant === 'danger'
+        ? ' card--danger'
+        : ''
+        }`}
     >
 
       <div className="card-visual">
@@ -141,11 +143,10 @@ function DashboardCard({
 
       <button
         type="button"
-        className={`card-button${
-          buttonStyle
-            ? ` card-button--${buttonStyle}`
-            : ''
-        }`}
+        className={`card-button${buttonStyle
+          ? ` card-button--${buttonStyle}`
+          : ''
+          }`}
         onClick={onClick}
       >
         {buttonLabel}
@@ -259,6 +260,38 @@ function App() {
 
     restoreUserSession()
   }, [])
+  useEffect(() => {
+    if (!currentUser) {
+      return undefined
+    }
+
+    const syncAllPendingData = () => {
+      if (
+        typeof navigator === 'undefined' ||
+        !navigator.onLine
+      ) {
+        return
+      }
+
+      void syncPendingOfflineData()
+      void syncPendingGameSessions()
+    }
+
+    syncAllPendingData()
+
+    window.addEventListener(
+      'online',
+      syncAllPendingData,
+    )
+
+    return () => {
+      window.removeEventListener(
+        'online',
+        syncAllPendingData,
+      )
+    }
+  }, [currentUser])
+
 
 
   // ==========================================
@@ -401,6 +434,9 @@ function App() {
         }
         objectRecallText={
           currentText.objectRecallPage
+        }
+        personalMemoryText={
+          currentText.personalMemoryPage
         }
         language={languageCode}
         readAloudLabel={

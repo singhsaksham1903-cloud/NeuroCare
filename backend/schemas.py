@@ -10,6 +10,12 @@ from pydantic import BaseModel, EmailStr, Field
 # ============================================================
 
 class GameSessionCreate(BaseModel):
+    clientSessionId: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        max_length=120,
+    )
+
     game: str = Field(
         min_length=1,
         max_length=100,
@@ -70,6 +76,12 @@ class GameSessionCreate(BaseModel):
 # ============================================================
 
 class MemoryCreate(BaseModel):
+    clientMutationId: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        max_length=120,
+    )
+
     title: str = Field(
         min_length=1,
         max_length=200,
@@ -93,6 +105,12 @@ class MemoryCreate(BaseModel):
 # ============================================================
 
 class MemoryUpdate(BaseModel):
+    clientMutationId: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        max_length=120,
+    )
+
     title: Optional[str] = Field(
         default=None,
         min_length=1,
@@ -118,6 +136,12 @@ class MemoryUpdate(BaseModel):
 # ============================================================
 
 class ReminderCreate(BaseModel):
+    clientMutationId: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        max_length=120,
+    )
+
     title: str = Field(
         min_length=1,
         max_length=200,
@@ -143,6 +167,12 @@ class ReminderCreate(BaseModel):
 # ============================================================
 
 class ReminderUpdate(BaseModel):
+    clientMutationId: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        max_length=120,
+    )
+
     title: Optional[str] = Field(
         default=None,
         min_length=1,

@@ -1,3 +1,2865 @@
+COGNICARE NER — PHASE 12 FULL CODE PACKAGE
+===========================================
+
+The complete modified source files are included in this folder/ZIP.
+
+1) src/phase12.css
+--------------------------------------------
+/* =========================================================
+   Cognicare NER — Phase 12 UI/UX Polish
+   Visual layer only: preserves existing component logic.
+   Goals:
+   - Elder-friendly readability
+   - Calm, high-contrast palette
+   - Consistent cards and actions
+   - Clear hierarchy and spacing
+   - Responsive layouts
+   - Reduced-motion friendly interactions
+   ========================================================= */
+
+:root {
+  --p12-bg: #f4f7fb;
+  --p12-surface: #ffffff;
+  --p12-surface-soft: #f8fafc;
+  --p12-text: #233044;
+  --p12-text-muted: #5f6c7b;
+  --p12-border: #d7dfeb;
+  --p12-border-strong: #c4d0df;
+  --p12-purple: #5b4ba8;
+  --p12-purple-soft: #eeeaff;
+  --p12-blue: #2f6f9f;
+  --p12-blue-soft: #eaf4fb;
+  --p12-teal: #2d7666;
+  --p12-teal-soft: #eaf7f2;
+  --p12-peach: #b9644f;
+  --p12-peach-soft: #fff1ec;
+  --p12-amber: #9b6b20;
+  --p12-amber-soft: #fff7e7;
+  --p12-danger: #a34d4d;
+  --p12-danger-soft: #fff1f1;
+  --p12-radius-sm: 12px;
+  --p12-radius-md: 18px;
+  --p12-radius-lg: 24px;
+  --p12-shadow-sm: 0 6px 16px rgba(35, 48, 68, 0.06);
+  --p12-shadow-md: 0 12px 28px rgba(35, 48, 68, 0.09);
+  --p12-shadow-lg: 0 18px 40px rgba(35, 48, 68, 0.12);
+}
+
+/* -----------------------------
+   Global readability
+   ----------------------------- */
+
+body {
+  background:
+    radial-gradient(circle at 6% 4%, rgba(91, 75, 168, 0.06), transparent 24%),
+    radial-gradient(circle at 95% 7%, rgba(47, 111, 159, 0.06), transparent 24%),
+    radial-gradient(circle at 85% 92%, rgba(185, 100, 79, 0.045), transparent 24%),
+    var(--p12-bg);
+  color: var(--p12-text);
+}
+
+button,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font-weight: 700;
+}
+
+input,
+select,
+textarea {
+  border-color: var(--p12-border);
+  color: var(--p12-text);
+  background: var(--p12-surface);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #8a96a5;
+}
+
+/* -----------------------------
+   Shared dashboard controls
+   ----------------------------- */
+
+.dashboard-app .app-header {
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: var(--p12-shadow-md);
+}
+
+.dashboard-app .app-logo {
+  color: var(--p12-purple);
+  letter-spacing: -0.025em;
+}
+
+.dashboard-app .app-logo-highlight {
+  color: var(--p12-teal);
+}
+
+.dashboard-app .greeting {
+  color: var(--p12-text);
+}
+
+.dashboard-app .date-display,
+.dashboard-app .time-display {
+  color: var(--p12-text-muted);
+}
+
+.dashboard-app .time-display {
+  border-color: rgba(196, 208, 223, 0.84);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.dashboard-app .user-bar,
+.user-bar {
+  border-color: var(--p12-border);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--p12-shadow-sm);
+}
+
+.dashboard-app .offline-status,
+.offline-status {
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+.dashboard-app .voice-read-aloud,
+.voice-read-aloud {
+  border-color: var(--p12-border);
+  background: var(--p12-surface);
+  color: var(--p12-blue);
+  box-shadow: var(--p12-shadow-sm);
+}
+
+.dashboard-app .language-selector-select,
+.language-selector-select {
+  border-color: var(--p12-border);
+  background: var(--p12-surface);
+  color: var(--p12-text);
+}
+
+/* -----------------------------
+   Dashboard cards
+   ----------------------------- */
+
+.dashboard-app .dashboard {
+  gap: 20px;
+  padding-bottom: 34px;
+}
+
+.dashboard-app .card {
+  min-height: 330px;
+  padding: 22px 22px 24px;
+  border: 1px solid rgba(215, 223, 235, 0.96);
+  border-radius: var(--p12-radius-lg);
+  background: rgba(255, 255, 255, 0.91);
+  box-shadow: var(--p12-shadow-md);
+}
+
+.dashboard-app .card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--p12-shadow-lg);
+}
+
+.dashboard-app .dashboard > :first-child {
+  min-height: 300px;
+}
+
+.dashboard-app .card-visual {
+  max-width: 230px;
+  border-radius: 18px;
+  border: 1px solid rgba(215, 223, 235, 0.7);
+  background: var(--p12-surface-soft);
+}
+
+.dashboard-app .card-title {
+  color: var(--p12-text);
+  font-size: 1.34rem;
+  letter-spacing: -0.01em;
+}
+
+.dashboard-app .card-description {
+  color: var(--p12-text-muted);
+  font-size: 1rem;
+  line-height: 1.62;
+}
+
+.dashboard-app .card-button {
+  min-height: 54px;
+  min-width: 178px;
+  border-radius: 15px;
+  box-shadow: 0 8px 18px rgba(35, 48, 68, 0.10);
+}
+
+.dashboard-app .card-button:hover {
+  box-shadow: 0 12px 23px rgba(35, 48, 68, 0.15);
+}
+
+/* Stable semantic colors for dashboard cards */
+.dashboard-app .card:nth-child(2) .card-button {
+  background: linear-gradient(135deg, #5b4ba8, #4d3e92);
+}
+
+.dashboard-app .card:nth-child(3) .card-button {
+  background: linear-gradient(135deg, #2f6f9f, #285d87);
+}
+
+.dashboard-app .card:nth-child(4) .card-button {
+  background: linear-gradient(135deg, #2d7666, #256354);
+}
+
+.dashboard-app .card:nth-child(5) .card-button {
+  background: linear-gradient(135deg, #a85d70, #914d5f);
+}
+
+.dashboard-app .card:nth-child(6) .card-button {
+  background: linear-gradient(135deg, #b9644f, #a6533f);
+}
+
+.dashboard-app .card:nth-child(7) .card-button {
+  background: linear-gradient(135deg, #9b6b20, #815919);
+}
+
+/* -----------------------------
+   Recommendation panel
+   ----------------------------- */
+
+.dashboard-app .recommendation-card {
+  width: auto;
+  margin: 0 0 20px;
+  min-height: 300px;
+  padding: 22px;
+  gap: 20px;
+  border: 1px solid var(--p12-border);
+  border-radius: var(--p12-radius-lg);
+  background: linear-gradient(135deg, #ffffff 0%, #f8f6ff 48%, #f3faf9 100%);
+  box-shadow: var(--p12-shadow-md);
+}
+
+.dashboard-app .recommendation-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--p12-shadow-lg);
+}
+
+.dashboard-app .recommendation-visual {
+  width: 200px;
+  min-width: 200px;
+  border-radius: 20px;
+  border-color: #d8d2ed;
+  background: linear-gradient(145deg, #f0ecff, #eaf3fb 60%, #eaf7f2);
+}
+
+.dashboard-app .recommendation-content h2 {
+  color: var(--p12-text);
+  font-size: clamp(1.35rem, 2.4vw, 1.9rem);
+}
+
+.dashboard-app .recommendation-label,
+.dashboard-app .recommendation-meta {
+  color: var(--p12-text-muted);
+}
+
+.dashboard-app .recommendation-difficulty {
+  border-color: #ddd6ef;
+  background: var(--p12-purple-soft);
+  color: var(--p12-purple);
+}
+
+.dashboard-app .recommendation-reason {
+  color: var(--p12-text-muted);
+}
+
+.dashboard-app .recommendation-start-button {
+  min-height: 52px;
+  border-radius: 14px;
+}
+
+/* -----------------------------
+   Shared page shells
+   ----------------------------- */
+
+.games-page,
+.memories-page,
+.reminders-page,
+.performance-page,
+.caregiver-page,
+.caregiver-links-page,
+.memory-match-page,
+.sequence-memory-page,
+.object-recall-page,
+.personal-memory-page,
+.ner-cultural-page {
+  color: var(--p12-text);
+}
+
+.memories-page,
+.reminders-page,
+.performance-page,
+.caregiver-page,
+.caregiver-links-page,
+.memory-match-page,
+.sequence-memory-page,
+.object-recall-page,
+.personal-memory-page,
+.ner-cultural-page {
+  background:
+    radial-gradient(circle at 6% 5%, rgba(91, 75, 168, 0.055), transparent 22%),
+    radial-gradient(circle at 94% 7%, rgba(47, 111, 159, 0.05), transparent 22%),
+    var(--p12-bg);
+}
+
+/* -----------------------------
+   Shared headers / navigation
+   ----------------------------- */
+
+.games-header,
+.memories-header,
+.reminders-header,
+.performance-header,
+.caregiver-header,
+.caregiver-links-header,
+.memory-match-header,
+.sequence-header,
+.object-recall-header,
+.personal-memory-header,
+.ner-cultural-header {
+  width: min(980px, calc(100% - 24px));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.games-header,
+.memories-heading,
+.reminders-heading,
+.performance-heading,
+.caregiver-heading,
+.caregiver-links-title-area,
+.memory-match-heading,
+.sequence-heading,
+.object-recall-heading,
+.personal-memory-header,
+.ner-cultural-header-content {
+  border-color: var(--p12-border);
+}
+
+.games-heading,
+.memories-heading,
+.reminders-heading,
+.performance-heading,
+.caregiver-heading,
+.sequence-heading,
+.object-recall-heading {
+  background: linear-gradient(135deg, #ffffff, #f8fafe 60%, #faf7ff);
+  box-shadow: var(--p12-shadow-sm);
+}
+
+.games-title,
+.memories-heading h1,
+.reminders-heading h1,
+.performance-heading h1,
+.caregiver-heading h1,
+.memory-match-heading h1,
+.sequence-heading h1,
+.object-recall-heading h1,
+.personal-memory-heading h1,
+.ner-cultural-header-content h1 {
+  color: var(--p12-text);
+  letter-spacing: -0.025em;
+}
+
+.games-subtitle,
+.memories-heading p,
+.reminders-heading p,
+.performance-heading p,
+.caregiver-heading p,
+.personal-memory-heading p,
+.ner-cultural-header-content p {
+  color: var(--p12-text-muted);
+}
+
+.games-eyebrow,
+.memories-eyebrow,
+.reminders-eyebrow,
+.performance-eyebrow,
+.caregiver-eyebrow,
+.personal-memory-eyebrow,
+.memory-match-eyebrow,
+.sequence-eyebrow,
+.object-recall-eyebrow {
+  color: var(--p12-purple);
+}
+
+.back-button,
+.memories-back-button,
+.reminders-back-button,
+.performance-back-button,
+.caregiver-back-button,
+.caregiver-links-back-button,
+.memory-back-button,
+.sequence-back-button,
+.object-recall-back-button,
+.personal-memory-back,
+.ner-cultural-back {
+  min-height: 50px;
+  border: 2px solid var(--p12-border);
+  border-radius: 14px;
+  background: var(--p12-surface);
+  color: var(--p12-text-muted);
+  box-shadow: var(--p12-shadow-sm);
+}
+
+.back-button:hover,
+.memories-back-button:hover,
+.reminders-back-button:hover,
+.performance-back-button:hover,
+.caregiver-back-button:hover,
+.caregiver-links-back-button:hover,
+.memory-back-button:hover,
+.sequence-back-button:hover,
+.object-recall-back-button:hover,
+.personal-memory-back:hover,
+.ner-cultural-back:hover {
+  border-color: var(--p12-border-strong);
+  background: var(--p12-surface-soft);
+  color: var(--p12-text);
+  transform: translateY(-1px);
+}
+
+/* -----------------------------
+   Cognitive Games selection
+   ----------------------------- */
+
+.games-page {
+  min-height: 100vh;
+  padding: 30px 18px 48px;
+}
+
+.games-header-content {
+  padding: 6px 0 0;
+}
+
+.games-header-visual {
+  border: 1px solid #d8d2ed;
+  background: linear-gradient(145deg, #f0ecff, #eaf4fb, #edf8f3);
+  box-shadow: var(--p12-shadow-sm);
+}
+
+.games-grid {
+  width: min(1000px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.game-card {
+  min-height: 360px;
+  padding: 22px;
+  border: 1px solid var(--p12-border);
+  border-radius: var(--p12-radius-lg);
+  background: var(--p12-surface);
+  box-shadow: var(--p12-shadow-md);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.game-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--p12-border-strong);
+  box-shadow: var(--p12-shadow-lg);
+}
+
+.game-card-visual {
+  width: 100px;
+  height: 100px;
+  border-radius: 26px;
+  border: 1px solid #dddaf0;
+  background: var(--p12-purple-soft);
+  color: var(--p12-purple);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), var(--p12-shadow-sm);
+}
+
+.game-card:nth-child(2) .game-card-visual {
+  background: var(--p12-blue-soft);
+  color: var(--p12-blue);
+}
+
+.game-card:nth-child(3) .game-card-visual {
+  background: var(--p12-peach-soft);
+  color: var(--p12-peach);
+}
+
+.game-card:nth-child(4) .game-card-visual {
+  background: var(--p12-teal-soft);
+  color: var(--p12-teal);
+}
+
+.game-card:nth-child(5) .game-card-visual {
+  background: #f0effa;
+  color: #655b9c;
+}
+
+.game-card-number {
+  background: #eef2f7;
+  border: 1px solid var(--p12-border);
+  color: #687688;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-weight: 800;
+}
+
+.game-card-title {
+  color: var(--p12-text);
+  font-size: 1.45rem;
+}
+
+.game-card-description {
+  color: var(--p12-text-muted);
+  font-size: 1rem;
+  line-height: 1.62;
+}
+
+.game-card-button {
+  min-height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--p12-purple), #4d3e92);
+  box-shadow: 0 8px 18px rgba(91, 75, 168, 0.16);
+}
+
+.game-card:nth-child(2) .game-card-button {
+  background: linear-gradient(135deg, var(--p12-blue), #285d87);
+}
+
+.game-card:nth-child(3) .game-card-button {
+  background: linear-gradient(135deg, var(--p12-peach), #a6533f);
+}
+
+.game-card:nth-child(4) .game-card-button {
+  background: linear-gradient(135deg, var(--p12-teal), #256354);
+}
+
+.game-card:nth-child(5) .game-card-button {
+  background: linear-gradient(135deg, #655b9c, #544a88);
+}
+
+.game-card-button--disabled {
+  background: #e9edf2;
+  color: #778496;
+  box-shadow: none;
+}
+
+/* -----------------------------
+   Memory Vault / Reminders forms
+   ----------------------------- */
+
+.memory-form-card,
+.reminder-form-card,
+.memory-list-section,
+.reminder-list-section,
+.performance-panel,
+.performance-overview,
+.caregiver-panel,
+.caregiver-overview,
+.caregiver-intro-panel,
+.caregiver-links-card,
+.memory-history,
+.sequence-history,
+.object-history,
+.ner-cultural-info,
+.personal-memory-study,
+.personal-memory-question,
+.personal-memory-feedback,
+.personal-memory-complete,
+.personal-memory-empty {
+  border: 1px solid var(--p12-border);
+  border-radius: var(--p12-radius-lg);
+  background: var(--p12-surface);
+  box-shadow: var(--p12-shadow-sm);
+}
+
+.memory-form-card,
+.reminder-form-card {
+  padding: 24px;
+}
+
+.memory-form-heading h2,
+.reminder-form-heading h2,
+.memory-list-header h2,
+.reminder-list-header h2,
+.performance-panel-header h2,
+.caregiver-section-heading,
+.caregiver-overview-heading h2,
+.caregiver-links-list-heading h2,
+.personal-memory-study h2,
+.personal-memory-question h2,
+.personal-memory-feedback h2,
+.ner-cultural-result-card h2,
+.object-history-heading h2,
+.sequence-history-heading h2,
+.memory-history-heading h2 {
+  color: var(--p12-text);
+}
+
+.memory-primary-button,
+.reminder-primary-button,
+.caregiver-links-primary-button,
+.caregiver-links-approve-button,
+.personal-memory-primary-button,
+.object-start-button,
+.start-sequence-button,
+.memory-restart-button,
+.ner-cultural-start-button,
+.ner-cultural-next-button {
+  min-height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--p12-purple), #4d3e92);
+  box-shadow: 0 8px 18px rgba(91, 75, 168, 0.15);
+}
+
+.memory-secondary-button,
+.reminder-secondary-button,
+.caregiver-links-refresh-button,
+.caregiver-links-reject-button,
+.caregiver-links-remove-button,
+.personal-memory-secondary-button,
+.memory-clear-button,
+.sequence-clear-button,
+.object-clear-button,
+.user-bar-logout {
+  min-height: 50px;
+  border-radius: 14px;
+  border: 2px solid var(--p12-border);
+  background: var(--p12-surface);
+  color: var(--p12-text-muted);
+}
+
+.memory-secondary-button:hover,
+.reminder-secondary-button:hover,
+.caregiver-links-refresh-button:hover,
+.caregiver-links-reject-button:hover,
+.caregiver-links-remove-button:hover,
+.personal-memory-secondary-button:hover,
+.memory-clear-button:hover,
+.sequence-clear-button:hover,
+.object-clear-button:hover,
+.user-bar-logout:hover {
+  border-color: var(--p12-border-strong);
+  background: var(--p12-surface-soft);
+}
+
+.memory-delete-button,
+.reminder-delete-button,
+.caregiver-links-remove-button {
+  color: var(--p12-danger);
+}
+
+.memory-list,
+.reminder-list,
+.caregiver-links-list,
+.performance-list {
+  display: grid;
+  gap: 14px;
+}
+
+.memory-card,
+.reminder-card,
+.caregiver-links-item,
+.performance-item {
+  border-color: var(--p12-border);
+  border-radius: 18px;
+  background: #fbfcfe;
+  box-shadow: none;
+}
+
+.memory-card:hover,
+.reminder-card:hover,
+.caregiver-links-item:hover {
+  border-color: var(--p12-border-strong);
+  box-shadow: var(--p12-shadow-sm);
+}
+
+.memory-category,
+.reminder-category,
+.reminder-status,
+.caregiver-links-status,
+.memory-count,
+.reminder-count {
+  border-radius: 999px;
+}
+
+.memory-empty,
+.reminder-empty,
+.caregiver-empty,
+.performance-empty {
+  border: 1px dashed var(--p12-border-strong);
+  background: var(--p12-surface-soft);
+}
+
+.memory-count,
+.reminder-count {
+  background: #eef2f7;
+  border: 1px solid var(--p12-border);
+  color: #627083;
+}
+
+/* -----------------------------
+   Performance dashboard
+   ----------------------------- */
+
+.performance-page {
+  padding-bottom: 48px;
+}
+
+.performance-stats-grid,
+.performance-highlight-grid,
+.performance-distribution-grid,
+.performance-difficulty-grid,
+.performance-time-grid,
+.performance-weekly-grid {
+  gap: 14px;
+}
+
+.performance-stat-card,
+.performance-highlight-card,
+.performance-game-card,
+.performance-difficulty-card,
+.performance-time-card,
+.performance-weekly-card {
+  border-color: var(--p12-border);
+  border-radius: 18px;
+  background: var(--p12-surface);
+  box-shadow: var(--p12-shadow-sm);
+}
+
+.performance-stat-card:hover,
+.performance-highlight-card:hover,
+.performance-game-card:hover,
+.performance-difficulty-card:hover,
+.performance-time-card:hover,
+.performance-weekly-card:hover {
+  border-color: var(--p12-border-strong);
+  box-shadow: var(--p12-shadow-md);
+}
+
+.performance-stat-icon,
+.performance-summary-icon {
+  border-radius: 16px;
+}
+
+.performance-message,
+.caregiver-message,
+.memories-message,
+.reminders-message,
+.caregiver-links-message,
+.object-recall-message-wrap,
+.sequence-message-wrap {
+  border-radius: 16px;
+}
+
+/* -----------------------------
+   Caregiver screens
+   ----------------------------- */
+
+.caregiver-linked-user {
+  border-color: #d8e4ef;
+  background: var(--p12-blue-soft);
+  border-radius: 18px;
+}
+
+.caregiver-stat-card {
+  border-color: var(--p12-border);
+  border-radius: 18px;
+  background: var(--p12-surface);
+  box-shadow: var(--p12-shadow-sm);
+}
+
+.caregiver-stat-card:hover {
+  box-shadow: var(--p12-shadow-md);
+}
+
+.caregiver-game-card,
+.caregiver-reminder-item {
+  border-color: var(--p12-border);
+  border-radius: 16px;
+  background: #fbfcfe;
+}
+
+.caregiver-table-wrapper {
+  border-color: var(--p12-border);
+  border-radius: 18px;
+}
+
+.caregiver-table th {
+  background: #f3f6fa;
+}
+
+.caregiver-links-card {
+  padding: 22px;
+}
+
+.caregiver-links-input {
+  min-height: 52px;
+  border-radius: 14px;
+}
+
+/* -----------------------------
+   Game controls and statistics
+   ----------------------------- */
+
+.memory-stats,
+.sequence-stats,
+.object-recall-stats {
+  gap: 12px;
+}
+
+.memory-stat,
+.sequence-stat,
+.object-recall-stat {
+  border-color: var(--p12-border);
+  border-radius: 16px;
+  background: var(--p12-surface);
+  box-shadow: var(--p12-shadow-sm);
+}
+
+.memory-board,
+.sequence-display,
+.object-target-display,
+.object-options,
+.sequence-options,
+.sequence-controls,
+.object-recall-controls {
+  border-color: var(--p12-border);
+  border-radius: var(--p12-radius-lg);
+  background: var(--p12-surface);
+  box-shadow: var(--p12-shadow-sm);
+}
+
+.sequence-options-grid,
+.object-options-grid {
+  gap: 12px;
+}
+
+.sequence-symbol,
+.object-option,
+.personal-memory-answer-button,
+.ner-cultural-option {
+  border-radius: 15px;
+}
+
+.difficulty-buttons button,
+.object-difficulty-buttons button {
+  min-height: 50px;
+  border-radius: 13px;
+}
+
+.memory-history-item,
+.sequence-history-item,
+.object-history-item {
+  border-color: var(--p12-border);
+  border-radius: 16px;
+  background: #fbfcfe;
+}
+
+.memory-complete,
+.sequence-complete,
+.object-recall-complete,
+.ner-cultural-result-card {
+  border: 1px solid var(--p12-border);
+  border-radius: var(--p12-radius-lg);
+  background: linear-gradient(145deg, #ffffff, #f8fbfe);
+  box-shadow: var(--p12-shadow-md);
+}
+
+.completion-summary,
+.sequence-completion-grid,
+.object-completion-grid,
+.ner-cultural-result-grid,
+.personal-memory-results {
+  gap: 12px;
+}
+
+.completion-summary > *,
+.sequence-completion-grid > *,
+.object-completion-grid > *,
+.ner-cultural-result-grid > *,
+.personal-memory-results > * {
+  border-radius: 14px;
+  border-color: var(--p12-border);
+  background: var(--p12-surface-soft);
+}
+
+/* -----------------------------
+   Personal Memory Recall
+   ----------------------------- */
+
+.personal-memory-page {
+  padding-bottom: 44px;
+}
+
+.personal-memory-header {
+  padding: 22px;
+  background: linear-gradient(135deg, #ffffff, #f3f9f7 70%, #faf6ff);
+  box-shadow: var(--p12-shadow-md);
+}
+
+.personal-memory-content,
+.personal-memory-intro,
+.personal-memory-complete,
+.personal-memory-empty,
+.personal-memory-loading {
+  width: min(980px, calc(100% - 24px));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.personal-memory-progress-track {
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e6ecf2;
+}
+
+.personal-memory-progress-fill {
+  background: linear-gradient(90deg, var(--p12-teal), #5a9d89);
+}
+
+.personal-memory-story {
+  border-color: #d6e6df;
+  background: var(--p12-teal-soft);
+  border-radius: 18px;
+}
+
+.personal-memory-question {
+  border-color: #ddd6ef;
+  background: #faf8ff;
+}
+
+.personal-memory-answer-button {
+  min-height: 56px;
+  border: 2px solid var(--p12-border);
+  background: var(--p12-surface);
+  color: var(--p12-text);
+}
+
+.personal-memory-answer-button:hover {
+  border-color: #b9addf;
+  background: #f8f5ff;
+}
+
+.personal-memory-feedback {
+  background: var(--p12-surface);
+}
+
+/* -----------------------------
+   NER Cultural Recall
+   ----------------------------- */
+
+.ner-cultural-page {
+  padding: 30px 18px 48px;
+}
+
+.ner-cultural-info {
+  padding: 24px;
+  background: linear-gradient(135deg, #ffffff, #eef8f4 58%, #f8f5ff);
+}
+
+.ner-cultural-question-card {
+  border: 1px solid var(--p12-border);
+  border-radius: var(--p12-radius-lg);
+  background: var(--p12-surface);
+  box-shadow: var(--p12-shadow-md);
+}
+
+.ner-cultural-category {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--p12-teal-soft);
+  color: var(--p12-teal);
+  border: 1px solid #cfe7dd;
+}
+
+.ner-cultural-option {
+  min-height: 58px;
+  border: 2px solid var(--p12-border);
+  background: var(--p12-surface);
+  color: var(--p12-text);
+}
+
+.ner-cultural-option:hover {
+  border-color: #b7c7d8;
+  background: #f8fafc;
+}
+
+/* -----------------------------
+   Voice input / reminder alert
+   ----------------------------- */
+
+.voice-input-button {
+  min-height: 60px;
+  border-radius: 16px;
+  border-color: #c8ded6;
+  background: var(--p12-teal-soft);
+  color: #2c6557;
+}
+
+.voice-input-button:hover {
+  border-color: #a6c9bb;
+  background: #e2f3ec;
+}
+
+.reminder-alert-banner,
+.reminder-notification-row {
+  border-radius: 16px;
+}
+
+/* -----------------------------
+   Auth page polish
+   ----------------------------- */
+
+.auth-page {
+  background:
+    radial-gradient(circle at 8% 8%, rgba(91, 75, 168, 0.10), transparent 25%),
+    radial-gradient(circle at 92% 10%, rgba(47, 111, 159, 0.09), transparent 25%),
+    radial-gradient(circle at 50% 100%, rgba(185, 100, 79, 0.055), transparent 24%),
+    #f5f7fb;
+}
+
+.auth-shell {
+  border-color: var(--p12-border);
+  border-radius: 28px;
+  box-shadow: var(--p12-shadow-lg);
+}
+
+.auth-card,
+.auth-visual-panel {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.auth-input,
+.auth-field input,
+.auth-field select,
+.auth-field textarea {
+  min-height: 52px;
+  border-radius: 13px;
+  border-color: var(--p12-border);
+}
+
+/* -----------------------------
+   Mobile / tablet
+   ----------------------------- */
+
+@media (max-width: 900px) {
+  .games-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-app .dashboard {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-app .dashboard > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-app .recommendation-card {
+    flex-direction: column;
+  }
+
+  .dashboard-app .recommendation-visual {
+    width: 100%;
+    min-width: 0;
+    min-height: 170px;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 18px;
+  }
+}
+
+@media (max-width: 680px) {
+  #root {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .dashboard-app {
+    margin-top: 6px;
+    padding-left: 8px;
+    padding-right: 8px;
+    border-radius: 18px;
+  }
+
+  .dashboard-app .app-header {
+    padding: 20px 14px 18px;
+    border-radius: 18px;
+  }
+
+  .dashboard-app .dashboard {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .dashboard-app .dashboard > :first-child {
+    grid-column: auto;
+  }
+
+  .dashboard-app .card,
+  .game-card {
+    min-height: auto;
+  }
+
+  .dashboard-app .card-button,
+  .game-card-button,
+  .memory-primary-button,
+  .reminder-primary-button,
+  .personal-memory-primary-button,
+  .voice-input-button,
+  .voice-read-aloud {
+    width: 100%;
+  }
+
+  .games-page,
+  .memories-page,
+  .reminders-page,
+  .performance-page,
+  .caregiver-page,
+  .caregiver-links-page,
+  .memory-match-page,
+  .sequence-memory-page,
+  .object-recall-page,
+  .personal-memory-page,
+  .ner-cultural-page {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .games-header,
+  .memories-header,
+  .reminders-header,
+  .performance-header,
+  .caregiver-header,
+  .caregiver-links-header,
+  .memory-match-header,
+  .sequence-header,
+  .object-recall-header,
+  .personal-memory-header,
+  .ner-cultural-header {
+    width: 100%;
+  }
+
+  .game-card {
+    padding: 18px;
+  }
+
+  .game-card-visual {
+    width: 86px;
+    height: 86px;
+    border-radius: 22px;
+  }
+
+  .game-card-title {
+    font-size: 1.25rem;
+  }
+
+  .memory-form-card,
+  .reminder-form-card,
+  .caregiver-links-card,
+  .personal-memory-header {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 460px) {
+  .dashboard-app .app-logo {
+    font-size: 1.95rem;
+  }
+
+  .dashboard-app .greeting {
+    font-size: 1.35rem;
+  }
+
+  .dashboard-app .card-title {
+    font-size: 1.2rem;
+  }
+
+  .dashboard-app .card-description,
+  .game-card-description {
+    font-size: 0.95rem;
+  }
+
+  .dashboard-app .recommendation-visual {
+    min-height: 140px;
+    padding: 18px;
+  }
+
+  .dashboard-app .recommendation-icon {
+    width: 72px;
+    height: 72px;
+  }
+}
+
+/* -----------------------------
+   Reduced motion
+   ----------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-app .card,
+  .dashboard-app .card-button,
+  .dashboard-app .recommendation-card,
+  .game-card,
+  .back-button,
+  .memories-back-button,
+  .reminders-back-button,
+  .performance-back-button,
+  .caregiver-back-button,
+  .caregiver-links-back-button,
+  .memory-back-button,
+  .sequence-back-button,
+  .object-recall-back-button,
+  .personal-memory-back,
+  .ner-cultural-back {
+    transition: none;
+  }
+
+  .dashboard-app .card:hover,
+  .dashboard-app .recommendation-card:hover,
+  .game-card:hover {
+    transform: none;
+  }
+}
+
+
+2) src/App.jsx
+--------------------------------------------
+import { useEffect, useState } from 'react'
+
+import AuthPage from './pages/AuthPage'
+import CognitiveGames from './pages/CognitiveGames'
+import PerformanceDashboard from './pages/PerformanceDashboard'
+import CaregiverDashboard from './pages/CaregiverDashboard'
+import CaregiverLinks from './pages/CaregiverLinks'
+import RecommendationCard from './pages/RecommendationCard'
+import Memories from './pages/Memories'
+import Reminders from './pages/Reminders'
+
+import UserBar from './pages/UserBar'
+import OfflineStatus from './Components/OfflineStatus'
+import VoiceReadAloud from './Components/VoiceReadAloud'
+import LanguageSelector from './Components/LanguageSelector'
+import TimeScenery from './Components/TimeScenery'
+import { syncPendingOfflineData } from './utils/offlineData'
+import { syncPendingGameSessions } from './utils/performanceStorage'
+
+import {
+  getCurrentUser,
+} from './utils/auth'
+
+import translations from './data/translations'
+
+import './App.css'
+import './phase12.css'
+
+
+// ============================================
+// Helper — get time-appropriate greeting
+// ============================================
+
+function getGreeting(
+  text,
+  date = new Date(),
+) {
+  const hour = date.getHours()
+
+  if (hour < 12) {
+    return text.greetingMorning
+  }
+
+  if (hour < 17) {
+    return text.greetingAfternoon
+  }
+
+  return text.greetingEvening
+}
+
+
+// ============================================
+// Helper — format today's date
+// ============================================
+
+function getFormattedDate(
+  date = new Date(),
+) {
+  return date.toLocaleDateString(
+    'en-IN',
+    {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    },
+  )
+}
+
+
+// ============================================
+// Helper — determine scenery time
+// ============================================
+
+function getTimeOfDay(
+  date = new Date(),
+) {
+  const hour = date.getHours()
+
+  if (hour >= 5 && hour < 8) {
+    return 'dawn'
+  }
+
+  if (hour >= 8 && hour < 12) {
+    return 'morning'
+  }
+
+  if (hour >= 12 && hour < 17) {
+    return 'afternoon'
+  }
+
+  if (hour >= 17 && hour < 20) {
+    return 'evening'
+  }
+
+  return 'night'
+}
+
+
+// ============================================
+// Dashboard Card
+// ============================================
+
+function DashboardCard({
+  icon,
+  title,
+  description,
+  buttonLabel,
+  buttonStyle,
+  variant,
+  onClick,
+  children,
+}) {
+  return (
+    <article
+      className={`card${variant === 'danger'
+        ? ' card--danger'
+        : ''
+        }`}
+    >
+
+      <div className="card-visual">
+        <img
+          src={icon}
+          alt=""
+          className="card-illustration"
+        />
+      </div>
+
+
+      <h2 className="card-title">
+        {title}
+      </h2>
+
+
+      <p className="card-description">
+        {description}
+      </p>
+
+
+      {children}
+
+
+      <button
+        type="button"
+        className={`card-button${buttonStyle
+          ? ` card-button--${buttonStyle}`
+          : ''
+          }`}
+        onClick={onClick}
+      >
+        {buttonLabel}
+      </button>
+
+    </article>
+  )
+}
+
+
+// ============================================
+// App
+// ============================================
+
+function App() {
+  const [page, setPage] =
+    useState('dashboard')
+
+  const [currentUser, setCurrentUser] =
+    useState(null)
+
+  const [language, setLanguage] =
+    useState(() => {
+      return (
+        localStorage.getItem(
+          'cognicare-language',
+        ) || 'en'
+      )
+    })
+
+  const [authLoading, setAuthLoading] =
+    useState(true)
+
+  const [recommendedGame, setRecommendedGame] =
+    useState(null)
+
+  const [
+    recommendedDifficulty,
+    setRecommendedDifficulty,
+  ] = useState(null)
+
+  // ==========================================
+  // Current date/time
+  // ==========================================
+
+  const [now, setNow] =
+    useState(() => new Date())
+
+
+  const currentText =
+    translations[language] ||
+    translations.en
+
+
+  // ==========================================
+  // Language
+  // ==========================================
+
+  useEffect(() => {
+    localStorage.setItem(
+      'cognicare-language',
+      language,
+    )
+  }, [language])
+
+
+  useEffect(() => {
+    const languageMap = {
+      en: 'en-IN',
+      hi: 'hi-IN',
+      as: 'as-IN',
+    }
+
+    document.documentElement.lang =
+      languageMap[language] ||
+      'en-IN'
+  }, [language])
+
+
+  // ==========================================
+  // Update clock every minute
+  // ==========================================
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date())
+    }, 60000)
+
+    return () => {
+      clearInterval(timer)
+    }
+  }, [])
+
+
+  // ==========================================
+  // Restore logged-in session
+  // ==========================================
+
+  useEffect(() => {
+    const restoreUserSession =
+      async () => {
+        try {
+          const user =
+            await getCurrentUser()
+
+          setCurrentUser(user)
+        } finally {
+          setAuthLoading(false)
+        }
+      }
+
+    restoreUserSession()
+  }, [])
+  useEffect(() => {
+    if (!currentUser) {
+      return undefined
+    }
+
+    const syncAllPendingData = () => {
+      if (
+        typeof navigator === 'undefined' ||
+        !navigator.onLine
+      ) {
+        return
+      }
+
+      void syncPendingOfflineData()
+      void syncPendingGameSessions()
+    }
+
+    syncAllPendingData()
+
+    window.addEventListener(
+      'online',
+      syncAllPendingData,
+    )
+
+    return () => {
+      window.removeEventListener(
+        'online',
+        syncAllPendingData,
+      )
+    }
+  }, [currentUser])
+
+
+
+  // ==========================================
+  // Handle expired authentication
+  // ==========================================
+
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      setCurrentUser(null)
+      setPage('dashboard')
+      setRecommendedGame(null)
+      setRecommendedDifficulty(null)
+    }
+
+    window.addEventListener(
+      'cognicare-auth-expired',
+      handleAuthExpired,
+    )
+
+    return () => {
+      window.removeEventListener(
+        'cognicare-auth-expired',
+        handleAuthExpired,
+      )
+    }
+  }, [])
+
+
+  // ==========================================
+  // Open Cognitive Games
+  // ==========================================
+
+  const openGames = (
+    game = null,
+    difficulty = null,
+  ) => {
+    setRecommendedGame(game)
+    setRecommendedDifficulty(
+      difficulty,
+    )
+
+    setPage('games')
+  }
+
+
+  // ==========================================
+  // Dashboard information
+  // ==========================================
+
+  const greeting =
+    getGreeting(
+      currentText,
+      now,
+    )
+
+  const todayDate =
+    getFormattedDate(now)
+
+  const timeOfDay =
+    getTimeOfDay(now)
+
+  const currentTime =
+    now.toLocaleTimeString(
+      'en-IN',
+      {
+        hour: 'numeric',
+        minute: '2-digit',
+      },
+    )
+
+  const userName =
+    currentUser?.full_name ||
+    currentText.elderlyUser
+
+
+  const languageCode =
+    language === 'hi'
+      ? 'hi-IN'
+      : language === 'as'
+        ? 'as-IN'
+        : 'en-IN'
+
+
+  // ==========================================
+  // Authentication loading
+  // ==========================================
+
+  if (authLoading) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '24px',
+          boxSizing: 'border-box',
+          fontSize: '1.2rem',
+          color: '#5f6670',
+          textAlign: 'center',
+        }}
+      >
+        Loading Cognicare...
+      </div>
+    )
+  }
+
+
+  // ==========================================
+  // Not logged in
+  // ==========================================
+
+  if (!currentUser) {
+    return (
+      <AuthPage
+        onAuthenticated={(user) => {
+          setCurrentUser(user)
+          setPage('dashboard')
+          setRecommendedGame(null)
+          setRecommendedDifficulty(null)
+        }}
+      />
+    )
+  }
+
+
+  // ==========================================
+  // Cognitive Games
+  // ==========================================
+
+  if (page === 'games') {
+    return (
+      <CognitiveGames
+        text={currentText.gamesPage}
+        memoryMatchText={
+          currentText.memoryMatchPage
+        }
+        sequenceMemoryText={
+          currentText.sequenceMemoryPage
+        }
+        objectRecallText={
+          currentText.objectRecallPage
+        }
+        personalMemoryText={
+          currentText.personalMemoryPage
+        }
+        language={languageCode}
+        readAloudLabel={
+          currentText.readAloud
+        }
+        stopReadingLabel={
+          currentText.stopReading
+        }
+        initialGame={
+          recommendedGame
+        }
+        initialDifficulty={
+          recommendedDifficulty
+        }
+        onNavigate={(targetPage) => {
+          setRecommendedGame(null)
+          setRecommendedDifficulty(
+            null,
+          )
+          setPage(targetPage)
+        }}
+      />
+    )
+  }
+
+
+  // ==========================================
+  // Performance Dashboard
+  // ==========================================
+
+  if (page === 'performance') {
+    return (
+      <PerformanceDashboard
+        text={currentText.performancePage}
+        language={languageCode}
+        readAloudLabel={
+          currentText.readAloud
+        }
+        stopReadingLabel={
+          currentText.stopReading
+        }
+        onBack={() =>
+          setPage('dashboard')
+        }
+      />
+    )
+  }
+
+
+  // ==========================================
+  // Caregiver Dashboard
+  // ==========================================
+
+  if (page === 'caregiver') {
+    return (
+      <CaregiverDashboard
+        user={currentUser}
+        text={currentText.caregiverPage}
+        language={languageCode}
+        readAloudLabel={
+          currentText.readAloud
+        }
+        stopReadingLabel={
+          currentText.stopReading
+        }
+        onBack={() =>
+          setPage('dashboard')
+        }
+      />
+    )
+  }
+
+
+  // ==========================================
+  // Caregiver Connections
+  // ==========================================
+
+  if (page === 'caregiver-links') {
+    return (
+      <CaregiverLinks
+        user={currentUser}
+        text={
+          currentText.caregiverLinksPage
+        }
+        language={languageCode}
+        readAloudLabel={
+          currentText.readAloud
+        }
+        stopReadingLabel={
+          currentText.stopReading
+        }
+        onBack={() =>
+          setPage('dashboard')
+        }
+      />
+    )
+  }
+
+
+  // ==========================================
+  // Memories
+  // ==========================================
+
+  if (page === 'memories') {
+    return (
+      <Memories
+        text={currentText.memoriesPage}
+        language={languageCode}
+        readAloudLabel={
+          currentText.readAloud
+        }
+        stopReadingLabel={
+          currentText.stopReading
+        }
+        onBack={() =>
+          setPage('dashboard')
+        }
+      />
+    )
+  }
+
+
+  // ==========================================
+  // Reminders
+  // ==========================================
+
+  if (page === 'reminders') {
+    return (
+      <Reminders
+        text={currentText.remindersPage}
+        language={languageCode}
+        readAloudLabel={
+          currentText.readAloud
+        }
+        stopReadingLabel={
+          currentText.stopReading
+        }
+        onBack={() =>
+          setPage('dashboard')
+        }
+      />
+    )
+  }
+
+
+  // ==========================================
+  // Main Dashboard
+  // ==========================================
+
+  return (
+    <div
+      className={`dashboard-app dashboard-app--${timeOfDay}`}
+    >
+
+      {/* ----------------------------------------
+          Time-based scenery
+          ---------------------------------------- */}
+
+      <TimeScenery
+        timeOfDay={timeOfDay}
+      />
+
+
+      {/* ----------------------------------------
+          Skip Link
+          ---------------------------------------- */}
+
+      <a
+        className="skip-link"
+        href="#main-content"
+      >
+        Skip to main content
+      </a>
+
+
+      {/* ----------------------------------------
+          Header
+          ---------------------------------------- */}
+
+      <header className="app-header">
+
+        <div className="app-logo">
+          Cognicare{' '}
+
+          <span className="app-logo-highlight">
+            NER
+          </span>
+        </div>
+
+
+        <h1 className="greeting">
+          {greeting},{' '}
+          {userName}
+        </h1>
+
+
+        <p className="date-display">
+          {todayDate}
+        </p>
+
+
+        <p className="time-display">
+          {currentTime}
+        </p>
+
+
+        <LanguageSelector
+          language={language}
+          onChange={setLanguage}
+          label={currentText.language}
+        />
+
+      </header>
+
+
+      {/* ----------------------------------------
+          User Bar
+          ---------------------------------------- */}
+
+      <UserBar
+        user={currentUser}
+        text={{
+          caregiver:
+            currentText.caregiver,
+
+          elderlyUser:
+            currentText.elderlyUser,
+
+          logout:
+            currentText.logout,
+        }}
+        onLogout={() => {
+          setCurrentUser(null)
+          setPage('dashboard')
+          setRecommendedGame(null)
+          setRecommendedDifficulty(null)
+        }}
+      />
+
+
+      {/* ----------------------------------------
+          Online / Offline Status
+          ---------------------------------------- */}
+
+      <OfflineStatus
+        text={{
+          online:
+            currentText.online,
+
+          offline:
+            currentText.offline,
+        }}
+      />
+
+
+      {/* ----------------------------------------
+          Dashboard Read Aloud
+          ---------------------------------------- */}
+
+      <VoiceReadAloud
+        text={
+          `${greeting}, ${userName}. ` +
+          `${currentText.cognitiveGames}. ` +
+          `${currentText.cognitiveGamesDescription}`
+        }
+        language={languageCode}
+        label={currentText.readAloud}
+        stopLabel={
+          currentText.stopReading
+        }
+      />
+
+
+      {/* ----------------------------------------
+          Dashboard
+          ---------------------------------------- */}
+
+      <main
+        id="main-content"
+        className="dashboard"
+      >
+
+        {/* Recommendation */}
+
+        <RecommendationCard
+          text={
+            currentText.recommendationPage
+          }
+          onStart={(
+            game,
+            difficulty,
+          ) => {
+            const gameMap = {
+              'Memory Match':
+                'memory-match',
+
+              'Sequence Memory':
+                'sequence-memory',
+
+              'Object Recall':
+                'object-recall',
+            }
+
+            openGames(
+              gameMap[game],
+              difficulty,
+            )
+          }}
+        />
+
+
+        {/* Cognitive Games */}
+
+        <DashboardCard
+          icon="/illustrations/cognitive-games.svg"
+          title={
+            currentText.cognitiveGames
+          }
+          description={
+            currentText.cognitiveGamesDescription
+          }
+          buttonLabel={
+            currentText.playNow
+          }
+          onClick={() =>
+            openGames()
+          }
+        />
+
+
+        {/* Performance */}
+
+        <DashboardCard
+          icon="/illustrations/performance.svg"
+          title={
+            currentText.performance
+          }
+          description={
+            currentText.performanceDescription
+          }
+          buttonLabel={
+            currentText.viewPerformance
+          }
+          onClick={() =>
+            setPage('performance')
+          }
+        />
+
+
+        {/* Caregiver Dashboard */}
+
+        <DashboardCard
+          icon="/illustrations/caregiver.svg"
+          title={
+            currentText.caregiverDashboard
+          }
+          description={
+            currentText.caregiverDashboardDescription
+          }
+          buttonLabel={
+            currentText.openCaregiverDashboard
+          }
+          onClick={() =>
+            setPage('caregiver')
+          }
+        />
+
+
+        {/* Caregiver Connections */}
+
+        <DashboardCard
+          icon="/illustrations/connections.svg"
+          title={
+            currentUser.role ===
+              'caregiver'
+              ? currentText.caregiverConnections
+              : currentText.caregiverRequests
+          }
+          description={
+            currentUser.role ===
+              'caregiver'
+              ? currentText.caregiverConnectionsDescription
+              : currentText.caregiverRequestsDescription
+          }
+          buttonLabel={
+            currentUser.role ===
+              'caregiver'
+              ? currentText.manageConnections
+              : currentText.viewRequests
+          }
+          onClick={() =>
+            setPage(
+              'caregiver-links',
+            )
+          }
+        />
+
+
+        {/* Memories */}
+
+        <DashboardCard
+          icon="/illustrations/memories.svg"
+          title={
+            currentText.memories
+          }
+          description={
+            currentText.memoriesDescription
+          }
+          buttonLabel={
+            currentText.openMemories
+          }
+          onClick={() =>
+            setPage('memories')
+          }
+        />
+
+
+        {/* Reminders */}
+
+        <DashboardCard
+          icon="/illustrations/reminders.svg"
+          title={
+            currentText.reminders
+          }
+          description={
+            currentText.remindersDescription
+          }
+          buttonLabel={
+            currentText.openReminders
+          }
+          onClick={() =>
+            setPage('reminders')
+          }
+        />
+
+      </main>
+
+
+      {/* ----------------------------------------
+          Footer
+          ---------------------------------------- */}
+
+      <footer className="app-footer">
+        {currentText.footer}
+      </footer>
+
+    </div>
+  )
+}
+
+
+export default App
+
+3) src/pages/CognitiveGames.jsx
+--------------------------------------------
+import { useState } from 'react'
+
+import './CognitiveGames.css'
+import VoiceReadAloud from '../Components/VoiceReadAloud'
+
+import MemoryMatch from './MemoryMatch'
+import SequenceMemory from './SequenceMemory'
+import ObjectRecall from './ObjectRecall'
+import PersonalMemoryRecall from './PersonalMemoryRecall'
+import NERCulturalRecall from './NERCulturalRecall'
+import {
+    getAdaptiveDifficulty,
+} from '../utils/adaptiveDifficulty'
+
+
+// ============================================
+// Game Visual
+// ============================================
+
+function GameVisual({ gameId }) {
+    if (gameId === 'ner-cultural-recall') {
+        return (
+            <svg
+                viewBox="0 0 120 100"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+            >
+                <circle
+                    cx="60"
+                    cy="48"
+                    r="30"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                />
+
+                <path
+                    d="M38 48H82"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+
+                <path
+                    d="M60 18C50 28 46 38 46 48C46 58 50 68 60 78"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+
+                <path
+                    d="M60 18C70 28 74 38 74 48C74 58 70 68 60 78"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+
+                <path
+                    d="M33 35C41 28 50 25 60 25C70 25 79 28 87 35"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+
+                <path
+                    d="M33 61C41 68 50 71 60 71C70 71 79 68 87 61"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+
+                <path
+                    d="M91 15L94 22L101 25L94 28L91 35L88 28L81 25L88 22L91 15Z"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinejoin="round"
+                />
+            </svg>
+        )
+    }
+
+    if (gameId === 'personal-memory') {
+        return (
+            <svg
+                viewBox="0 0 120 100"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+            >
+                <circle
+                    cx="60"
+                    cy="48"
+                    r="28"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                />
+
+                <path
+                    d="M48 47C48 40 53 35 60 35C67 35 72 40 72 47V52C72 59 67 64 60 64C53 64 48 59 48 52V47Z"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                />
+
+                <circle
+                    cx="54"
+                    cy="47"
+                    r="2"
+                    fill="currentColor"
+                />
+
+                <circle
+                    cx="66"
+                    cy="47"
+                    r="2"
+                    fill="currentColor"
+                />
+
+                <path
+                    d="M54 56C57 59 63 59 66 56"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+
+                <path
+                    d="M82 20L85 27L92 30L85 33L82 40L79 33L72 30L79 27L82 20Z"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinejoin="round"
+                />
+            </svg>
+        )
+    }
+
+    if (gameId === 'memory-match') {
+        return (
+            <svg
+                viewBox="0 0 120 100"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+            >
+                <rect
+                    x="18"
+                    y="18"
+                    width="36"
+                    height="42"
+                    rx="8"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                />
+                <rect
+                    x="66"
+                    y="18"
+                    width="36"
+                    height="42"
+                    rx="8"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                />
+                <path
+                    d="M30 39L36 45L44 34"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+                <path
+                    d="M77 38C77 33.6 80.6 30 85 30C89.4 30 93 33.6 93 38"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+                <path
+                    d="M82 44H88"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+                <path
+                    d="M28 75H92"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+            </svg>
+        )
+    }
+
+    if (gameId === 'sequence-memory') {
+        return (
+            <svg
+                viewBox="0 0 120 100"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+            >
+                <circle
+                    cx="30"
+                    cy="35"
+                    r="13"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                />
+                <circle
+                    cx="60"
+                    cy="35"
+                    r="13"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                />
+                <circle
+                    cx="90"
+                    cy="35"
+                    r="13"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                />
+                <path
+                    d="M44 35H46"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+                <path
+                    d="M74 35H76"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+                <path
+                    d="M29 65L36 72L50 58"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+                <path
+                    d="M57 73H91"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                />
+            </svg>
+        )
+    }
+
+    return (
+        <svg
+            viewBox="0 0 120 100"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+        >
+            <rect
+                x="16"
+                y="24"
+                width="88"
+                height="56"
+                rx="12"
+                stroke="currentColor"
+                strokeWidth="3"
+            />
+            <circle
+                cx="39"
+                cy="46"
+                r="8"
+                stroke="currentColor"
+                strokeWidth="3"
+            />
+            <path
+                d="M28 69C31 61 37 58 44 58C51 58 57 61 60 69"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+            />
+            <path
+                d="M72 41H91"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+            />
+            <path
+                d="M72 54H91"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+            />
+            <path
+                d="M72 67H84"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+            />
+        </svg>
+    )
+}
+
+
+// ============================================
+// Game Card Component
+// ============================================
+
+function GameCard({
+    id,
+    title,
+    description,
+    buttonLabel,
+    onClick,
+    number,
+}) {
+    const isAvailable = Boolean(onClick)
+
+    return (
+        <article className="game-card">
+
+            <div className="game-card-visual">
+                <GameVisual gameId={id} />
+            </div>
+
+            <div className="game-card-content">
+
+                <span className="game-card-number">
+                    {String(number).padStart(2, '0')}
+                </span>
+                <h2 className="game-card-title">
+                    {title}
+                </h2>
+
+                <p className="game-card-description">
+                    {description}
+                </p>
+
+                <button
+                    type="button"
+                    className={`game-card-button${isAvailable
+                        ? ''
+                        : ' game-card-button--disabled'
+                        }`}
+                    disabled={!isAvailable}
+                    onClick={onClick}
+                    aria-label={`${title} — ${buttonLabel}`}
+                >
+                    <span>
+                        {buttonLabel}
+                    </span>
+
+                    <span
+                        className="game-card-button-arrow"
+                        aria-hidden="true"
+                    >
+                        →
+                    </span>
+                </button>
+
+            </div>
+
+        </article>
+    )
+}
+
+
+// ============================================
+// Cognitive Games Page
+// ============================================
+
+function CognitiveGames({
+    text,
+    memoryMatchText,
+    sequenceMemoryText,
+    objectRecallText,
+    personalMemoryText,
+    language = 'en-IN',
+    readAloudLabel = 'Read Aloud',
+    stopReadingLabel = 'Stop Reading',
+    onNavigate,
+    initialGame = null,
+    initialDifficulty = null,
+}) {
+    const [selectedGame, setSelectedGame] =
+        useState(initialGame)
+
+    const [launchDifficulty, setLaunchDifficulty] =
+        useState(initialDifficulty)
+
+
+
+    // ==========================================
+    // Open Personal Memory Recall
+    // ==========================================
+
+    if (
+        selectedGame === 'personal-memory'
+    ) {
+        return (
+            <PersonalMemoryRecall
+                text={personalMemoryText}
+                language={language}
+                readAloudLabel={
+                    readAloudLabel
+                }
+                stopReadingLabel={
+                    stopReadingLabel
+                }
+                onBack={() =>
+                    setSelectedGame(null)
+                }
+            />
+        )
+    }
+    // ==========================================
+    // Open Memory Match
+    // ==========================================
+
+    if (
+        selectedGame === 'memory-match'
+    ) {
+        return (
+            <MemoryMatch
+                text={memoryMatchText}
+                language={language}
+                readAloudLabel={readAloudLabel}
+                stopReadingLabel={stopReadingLabel}
+                onBack={() => setSelectedGame(null)}
+            />
+        )
+    }
+
+
+    // ==========================================
+    // Open Sequence Memory
+    // ==========================================
+
+    if (
+        selectedGame === 'sequence-memory'
+    ) {
+        return (
+            <SequenceMemory
+                text={sequenceMemoryText}
+                language={language}
+                readAloudLabel={readAloudLabel}
+                stopReadingLabel={stopReadingLabel}
+                initialDifficulty={
+                    launchDifficulty || 'Easy'
+                }
+                onBack={() =>
+                    setSelectedGame(null)
+                }
+            />
+        )
+    }
+
+
+    // ==========================================
+    // Open Object Recall
+    // ==========================================
+
+    if (
+        selectedGame === 'object-recall'
+    ) {
+        return (
+            <ObjectRecall
+                text={objectRecallText}
+                language={language}
+                readAloudLabel={readAloudLabel}
+                stopReadingLabel={stopReadingLabel}
+                initialDifficulty={
+                    launchDifficulty || 'Easy'
+                }
+                onBack={() =>
+                    setSelectedGame(null)
+                }
+            />
+        )
+    }
+    // ==========================================
+    // Open NER Cultural Recall
+    // ==========================================
+
+    if (
+        selectedGame === 'ner-cultural-recall'
+    ) {
+        return (
+            <NERCulturalRecall
+                language={language}
+                readAloudLabel={
+                    readAloudLabel
+                }
+                stopReadingLabel={
+                    stopReadingLabel
+                }
+                onBack={() =>
+                    setSelectedGame(null)
+                }
+            />
+        )
+    }
+
+
+    // ==========================================
+    // Game Card Click Handler
+    // ==========================================
+    const handleGameClick = (
+        gameId,
+    ) => {
+
+        // --------------------------------------------------------
+        // Direct launch:
+        // automatically determine difficulty from recent history.
+        // --------------------------------------------------------
+
+        if (
+            gameId ===
+            'sequence-memory'
+        ) {
+            const adaptive =
+                getAdaptiveDifficulty(
+                    'Sequence Memory',
+                )
+
+            setLaunchDifficulty(
+                adaptive.difficulty,
+            )
+        }
+
+
+        if (
+            gameId ===
+            'object-recall'
+        ) {
+            const adaptive =
+                getAdaptiveDifficulty(
+                    'Object Recall',
+                )
+
+            setLaunchDifficulty(
+                adaptive.difficulty,
+            )
+        }
+
+
+        // Memory Match has one fixed level.
+
+        if (
+            gameId ===
+            'memory-match'
+        ) {
+            setLaunchDifficulty(
+                'Standard',
+            )
+        }
+
+
+        // Personal Memory Recall
+        // has its own Personalized level.
+
+        if (
+            gameId ===
+            'personal-memory'
+        ) {
+            setLaunchDifficulty(
+                'Personalized',
+            )
+        }
+
+
+        setSelectedGame(
+            gameId,
+        )
+    }
+
+    return (
+        <div className="games-page">
+
+            {/* Back */}
+
+            <button
+                type="button"
+                className="back-button"
+                onClick={() =>
+                    onNavigate('dashboard')
+                }
+            >
+                <span aria-hidden="true">
+                    ←
+                </span>
+
+                {text.backButton}
+            </button>
+
+
+            {/* Header */}
+
+            <header className="games-header">
+
+                <div className="games-header-visual">
+                    <svg
+                        viewBox="0 0 100 100"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                    >
+                        <circle
+                            cx="50"
+                            cy="50"
+                            r="38"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                        />
+
+                        <path
+                            d="M35 47C35 39.3 41.3 33 49 33H53C60.7 33 67 39.3 67 47V51C67 58.7 60.7 65 53 65H49C41.3 65 35 58.7 35 51V47Z"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                        />
+
+                        <path
+                            d="M43 43H43.01"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            strokeLinecap="round"
+                        />
+
+                        <path
+                            d="M57 43H57.01"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            strokeLinecap="round"
+                        />
+
+                        <path
+                            d="M43 55C46 58 54 58 57 55"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                        />
+
+                        <path
+                            d="M71 28L74 35L81 38L74 41L71 48L68 41L61 38L68 35L71 28Z"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinejoin="round"
+                        />
+                    </svg>
+                </div>
+
+                <div className="games-header-content">
+
+                    <span className="games-eyebrow">
+                        {text.title}
+                    </span>
+
+                    <h1 className="games-title">
+                        {text.title}
+                    </h1>
+
+                    <p className="games-subtitle">
+                        {text.subtitle}
+                    </p>
+
+                    <VoiceReadAloud
+                        text={`${text.title}. ${text.subtitle}`}
+                        language={language}
+                        label={readAloudLabel}
+                        stopLabel={stopReadingLabel}
+                    />
+
+                </div>
+
+            </header>
+
+
+            {/* Game Cards */}
+
+            <main className="games-grid">
+
+                {text.games.map(
+                    (game, index) => (
+                        <GameCard
+                            key={game.id}
+                            id={game.id}
+                            number={index + 1}
+                            title={game.title}
+                            description={
+                                game.description
+                            }
+                            buttonLabel={
+                                game.button
+                            }
+                            onClick={() =>
+                                handleGameClick(
+                                    game.id,
+                                )
+                            }
+                        />
+                    ),
+                )}
+                <GameCard
+                    id="personal-memory"
+                    number={text.games.length + 1}
+                    title={
+                        personalMemoryText?.cardTitle ||
+                        'Personal Memory Recall'
+                    }
+                    description={
+                        personalMemoryText?.cardDescription ||
+                        'Use your own saved memories to practice recall and recognition.'
+                    }
+                    buttonLabel={
+                        personalMemoryText?.cardButton ||
+                        'Start Activity'
+                    }
+                    onClick={() =>
+                        handleGameClick(
+                            'personal-memory',
+                        )
+                    }
+                />
+
+            </main>
+
+        </div>
+    )
+}
+
+
+export default CognitiveGames
+
+4) src/data/translations.js
+--------------------------------------------
 const translations = {
     en: {
         languageName: 'English',

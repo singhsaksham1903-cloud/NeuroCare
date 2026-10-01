@@ -22,12 +22,53 @@ def get_db():
         db.close()
 
 
+def serialize_game_session(item):
+    return {
+        "id": item.id,
+        "game": item.game,
+        "difficulty": item.difficulty,
+        "accuracy": item.accuracy,
+        "mistakes": item.mistakes,
+        "time": item.time,
+        "completed": item.completed,
+        "matches": item.matches,
+        "sequenceLength": item.sequence_length,
+        "targetCount": item.target_count,
+        "correct": item.correct,
+        "wrong": item.wrong,
+        "clientSessionId": item.client_session_id,
+        "created_at": item.created_at,
+    }
+
+
 @router.post("", status_code=201)
 def create_game_session(
     session: GameSessionCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    # Idempotency guard: a retry of the same offline game result
+    # returns the already-created row instead of creating a duplicate.
+    if session.clientSessionId:
+        existing_session = (
+            db.query(GameSession)
+            .filter(
+                GameSession.user_id == current_user.id,
+                GameSession.client_session_id
+                == session.clientSessionId,
+            )
+            .first()
+        )
+
+        if existing_session is not None:
+            return {
+                "message": "Game session already saved",
+                "session": serialize_game_session(
+                    existing_session,
+                ),
+                "idempotent": True,
+            }
+
     try:
         new_session = GameSession(
             user_id=current_user.id,
@@ -42,6 +83,7 @@ def create_game_session(
             target_count=session.targetCount,
             correct=session.correct,
             wrong=session.wrong,
+            client_session_id=session.clientSessionId,
         )
 
         db.add(new_session)
@@ -50,26 +92,11 @@ def create_game_session(
 
         return {
             "message": "Game session saved successfully",
-            "session": {
-                "id": new_session.id,
-                "game": new_session.game,
-                "difficulty": new_session.difficulty,
-                "accuracy": new_session.accuracy,
-                "mistakes": new_session.mistakes,
-                "time": new_session.time,
-                "completed": new_session.completed,
-                "matches": new_session.matches,
-                "sequenceLength": new_session.sequence_length,
-                "targetCount": new_session.target_count,
-                "correct": new_session.correct,
-                "wrong": new_session.wrong,
-                "created_at": new_session.created_at,
-            },
+            "session": serialize_game_session(new_session),
         }
 
-    except Exception as error:
+    except Exception:
         db.rollback()
-
         raise HTTPException(
             status_code=500,
             detail="Could not save game session.",
@@ -84,7 +111,7 @@ def get_game_sessions(
     sessions = (
         db.query(GameSession)
         .filter(
-            GameSession.user_id == current_user.id
+            GameSession.user_id == current_user.id,
         )
         .order_by(GameSession.created_at.desc())
         .all()
@@ -93,15 +120,7 @@ def get_game_sessions(
     return {
         "count": len(sessions),
         "sessions": [
-    {
-        "id": item.id,
-        "game": item.game,
-        "difficulty": item.difficulty,
-        "accuracy": item.accuracy,
-        "mistakes": item.mistakes,
-        "time": item.time,
-        "created_at": item.created_at,
-    }
-    for item in sessions
+            serialize_game_session(item)
+            for item in sessions
         ],
     }

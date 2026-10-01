@@ -1,6 +1,4 @@
-import {
-  apiPost,
-} from './api'
+import { apiPost, ApiError } from './api'
 
 import {
   getAccessToken,
@@ -15,18 +13,13 @@ const PENDING_SESSIONS_PREFIX =
   'cognicare-pending-game-sessions-'
 
 
-// ============================================================
-// Get Current User ID
-// ============================================================
-
 function getCurrentUserId() {
-  const user = getStoredUser()
-
-  return user?.id || null
+  return getStoredUser()?.id || null
 }
+
+
 function getPerformanceHistoryKey() {
-  const userId =
-    getCurrentUserId()
+  const userId = getCurrentUserId()
 
   if (!userId) {
     return null
@@ -36,13 +29,8 @@ function getPerformanceHistoryKey() {
 }
 
 
-// ============================================================
-// Get User-Specific Pending Queue Key
-// ============================================================
-
 function getPendingQueueKey() {
-  const userId =
-    getCurrentUserId()
+  const userId = getCurrentUserId()
 
   if (!userId) {
     return null
@@ -52,9 +40,19 @@ function getPendingQueueKey() {
 }
 
 
-// ============================================================
-// Read Performance History
-// ============================================================
+function createClientSessionId() {
+  if (
+    typeof crypto !== 'undefined' &&
+    typeof crypto.randomUUID === 'function'
+  ) {
+    return `session-${crypto.randomUUID()}`
+  }
+
+  return `session-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 10)}`
+}
+
 
 export function getPerformanceHistory() {
   const historyKey =
@@ -63,18 +61,16 @@ export function getPerformanceHistory() {
   if (!historyKey) {
     return []
   }
+
   const savedData =
-    localStorage.getItem(
-      historyKey,
-    )
+    localStorage.getItem(historyKey)
 
   if (!savedData) {
     return []
   }
 
   try {
-    const parsedData =
-      JSON.parse(savedData)
+    const parsedData = JSON.parse(savedData)
 
     return Array.isArray(parsedData)
       ? parsedData
@@ -85,13 +81,7 @@ export function getPerformanceHistory() {
 }
 
 
-// ============================================================
-// Save Performance History
-// ============================================================
-
-function savePerformanceHistory(
-  history,
-) {
+function savePerformanceHistory(history) {
   const historyKey =
     getPerformanceHistoryKey()
 
@@ -106,13 +96,8 @@ function savePerformanceHistory(
 }
 
 
-// ============================================================
-// Read Pending Game Sessions
-// ============================================================
-
 function getPendingGameSessions() {
-  const queueKey =
-    getPendingQueueKey()
+  const queueKey = getPendingQueueKey()
 
   if (!queueKey) {
     return []
@@ -126,31 +111,20 @@ function getPendingGameSessions() {
   }
 
   try {
-    const parsedQueue =
-      JSON.parse(savedQueue)
+    const parsedQueue = JSON.parse(savedQueue)
 
     return Array.isArray(parsedQueue)
       ? parsedQueue
       : []
   } catch {
-    localStorage.removeItem(
-      queueKey,
-    )
-
+    localStorage.removeItem(queueKey)
     return []
   }
 }
 
 
-// ============================================================
-// Save Pending Game Sessions
-// ============================================================
-
-function savePendingGameSessions(
-  sessions,
-) {
-  const queueKey =
-    getPendingQueueKey()
+function savePendingGameSessions(sessions) {
+  const queueKey = getPendingQueueKey()
 
   if (!queueKey) {
     return
@@ -163,20 +137,10 @@ function savePendingGameSessions(
 }
 
 
-// ============================================================
-// Add Result to Offline Queue
-// ============================================================
+function queueGameSession(result) {
+  const userId = getCurrentUserId()
+  const accessToken = getAccessToken()
 
-function queueGameSession(
-  result,
-) {
-  const userId =
-    getCurrentUserId()
-
-  const accessToken =
-    getAccessToken()
-
-  // Never queue data without an authenticated user.
   if (!userId || !accessToken) {
     return false
   }
@@ -185,26 +149,21 @@ function queueGameSession(
     getPendingGameSessions()
 
   const queuedSession = {
-    queueId: `${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2, 8)}`,
-
+    queueId: createClientSessionId(),
+    clientSessionId:
+      result.clientSessionId ||
+      createClientSessionId(),
     userId,
-
-    queuedAt:
-      new Date().toISOString(),
-
+    queuedAt: new Date().toISOString(),
     ...result,
   }
 
   const updatedQueue = [
     ...pendingSessions,
     queuedSession,
-  ].slice(-50)
+  ].slice(-100)
 
-  savePendingGameSessions(
-    updatedQueue,
-  )
+  savePendingGameSessions(updatedQueue)
 
   window.dispatchEvent(
     new CustomEvent(
@@ -216,18 +175,15 @@ function queueGameSession(
 }
 
 
-// ============================================================
-// Sync Pending Game Sessions
-// ============================================================
+function isNetworkError(error) {
+  return error instanceof TypeError
+}
+
 
 export async function syncPendingGameSessions() {
-  const userId =
-    getCurrentUserId()
+  const userId = getCurrentUserId()
+  const accessToken = getAccessToken()
 
-  const accessToken =
-    getAccessToken()
-
-  // No authenticated user.
   if (!userId || !accessToken) {
     return {
       synced: 0,
@@ -235,24 +191,20 @@ export async function syncPendingGameSessions() {
     }
   }
 
-  // Browser reports no network connection.
   if (
     typeof navigator !== 'undefined' &&
     !navigator.onLine
   ) {
     return {
       synced: 0,
-      remaining:
-        getPendingGameSessions().length,
+      remaining: getPendingGameSessions().length,
     }
   }
 
-  const pendingSessions =
+  let remainingSessions =
     getPendingGameSessions()
 
-  if (
-    pendingSessions.length === 0
-  ) {
+  if (remainingSessions.length === 0) {
     return {
       synced: 0,
       remaining: 0,
@@ -261,58 +213,40 @@ export async function syncPendingGameSessions() {
 
   let syncedCount = 0
 
-  const remainingSessions = []
+  while (remainingSessions.length > 0) {
+    const current = remainingSessions[0]
 
-  for (
-    const session
-    of pendingSessions
-  ) {
     try {
       await apiPost(
         '/game-sessions',
-        session,
+        current,
       )
 
       syncedCount += 1
+      remainingSessions =
+        remainingSessions.slice(1)
 
+      savePendingGameSessions(
+        remainingSessions,
+      )
     } catch (error) {
-      // Network failure:
-      // keep the session for a future retry.
       if (
-        error instanceof TypeError
+        isNetworkError(error) ||
+        error instanceof ApiError
       ) {
-        remainingSessions.push(
-          session,
+        // Keep the failed item and everything after it.
+        savePendingGameSessions(
+          remainingSessions,
         )
-
-        continue
-      }
-
-      // Authentication/session failure:
-      // do not keep retrying after logout.
-      if (
-        !getAccessToken()
-      ) {
-        remainingSessions.push(
-          ...pendingSessions.slice(
-            syncedCount,
-          ),
-        )
-
         break
       }
 
-      // Other backend errors:
-      // keep the session so we don't lose the result.
-      remainingSessions.push(
-        session,
+      savePendingGameSessions(
+        remainingSessions,
       )
+      break
     }
   }
-
-  savePendingGameSessions(
-    remainingSessions,
-  )
 
   window.dispatchEvent(
     new CustomEvent(
@@ -322,45 +256,33 @@ export async function syncPendingGameSessions() {
 
   return {
     synced: syncedCount,
-    remaining:
-      remainingSessions.length,
+    remaining: remainingSessions.length,
   }
 }
 
 
-// ============================================================
-// Save Game Performance Result
-// ============================================================
+export async function savePerformanceResult(result) {
+  const history = getPerformanceHistory()
 
-export async function savePerformanceResult(
-  result,
-) {
-  const history =
-    getPerformanceHistory()
+  const clientSessionId =
+    result.clientSessionId ||
+    createClientSessionId()
 
   const localResult = {
     id: Date.now(),
-    date:
-      new Date().toISOString(),
+    clientSessionId,
+    date: new Date().toISOString(),
     ...result,
   }
 
   const updatedHistory = [
     localResult,
     ...history,
-  ].slice(0, 50)
+  ].slice(0, 100)
 
-  savePerformanceHistory(
-    updatedHistory,
-  )
+  savePerformanceHistory(updatedHistory)
 
-  const accessToken =
-    getAccessToken()
-
-  // ----------------------------------------------------------
-  // User is not authenticated.
-  // Keep local copy only.
-  // ----------------------------------------------------------
+  const accessToken = getAccessToken()
 
   if (!accessToken) {
     window.dispatchEvent(
@@ -375,16 +297,16 @@ export async function savePerformanceResult(
     }
   }
 
-  // ----------------------------------------------------------
-  // Browser is offline.
-  // Queue the authenticated session locally.
-  // ----------------------------------------------------------
+  const requestPayload = {
+    ...result,
+    clientSessionId,
+  }
 
   if (
     typeof navigator !== 'undefined' &&
     !navigator.onLine
   ) {
-    queueGameSession(result)
+    queueGameSession(requestPayload)
 
     window.dispatchEvent(
       new CustomEvent(
@@ -399,25 +321,14 @@ export async function savePerformanceResult(
     }
   }
 
-
-  // ----------------------------------------------------------
-  // Try to synchronize older pending sessions first.
-  // ----------------------------------------------------------
-
   await syncPendingGameSessions()
-
-
-  // ----------------------------------------------------------
-  // Try saving the current result online.
-  // ----------------------------------------------------------
 
   try {
     const backendResult =
       await apiPost(
         '/game-sessions',
-        result,
+        requestPayload,
       )
-
 
     window.dispatchEvent(
       new CustomEvent(
@@ -426,22 +337,13 @@ export async function savePerformanceResult(
     )
 
     return backendResult
-
   } catch (error) {
-
-    // --------------------------------------------------------
-    // Network failure:
-    // save to the offline queue.
-    // --------------------------------------------------------
-
-    if (
-      error instanceof TypeError
-    ) {
+    if (isNetworkError(error)) {
       console.warn(
         'Backend unavailable. Game result queued for later sync.',
       )
 
-      queueGameSession(result)
+      queueGameSession(requestPayload)
 
       window.dispatchEvent(
         new CustomEvent(
@@ -456,19 +358,7 @@ export async function savePerformanceResult(
       }
     }
 
-
-    // --------------------------------------------------------
-    // Authentication failure:
-    // do not pretend this is an offline result.
-    // --------------------------------------------------------
-
-    if (
-      !getAccessToken()
-    ) {
-      console.warn(
-        'Game result kept locally because the user session is no longer authenticated.',
-      )
-
+    if (!getAccessToken()) {
       window.dispatchEvent(
         new CustomEvent(
           'cognicare:performance-updated',
@@ -480,14 +370,6 @@ export async function savePerformanceResult(
         result: localResult,
       }
     }
-
-
-    // --------------------------------------------------------
-    // Other backend error:
-    // Keep the local copy and report the error.
-    // --------------------------------------------------------
-
-
 
     window.dispatchEvent(
       new CustomEvent(
@@ -504,10 +386,6 @@ export async function savePerformanceResult(
 }
 
 
-// ============================================================
-// Clear Local Performance History
-// ============================================================
-
 export function clearPerformanceHistory() {
   const historyKey =
     getPerformanceHistoryKey()
@@ -516,15 +394,9 @@ export function clearPerformanceHistory() {
     return
   }
 
-  localStorage.removeItem(
-    historyKey,
-  )
+  localStorage.removeItem(historyKey)
 }
 
-
-// ============================================================
-// Automatic Sync When Internet Returns
-// ============================================================
 
 if (
   typeof window !== 'undefined'
@@ -532,7 +404,7 @@ if (
   window.addEventListener(
     'online',
     () => {
-      syncPendingGameSessions()
+      void syncPendingGameSessions()
     },
   )
 }

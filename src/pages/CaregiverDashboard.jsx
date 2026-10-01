@@ -1,4 +1,8 @@
-import { useEffect, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
 
 import './CaregiverDashboard.css'
 import VoiceReadAloud from '../Components/VoiceReadAloud'
@@ -323,7 +327,7 @@ function CaregiverDashboard({
   // Load Caregiver Data
   // ==========================================
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
@@ -383,7 +387,8 @@ function CaregiverDashboard({
       )
 
       setMemoryCount(
-        linkedData.memory_count ||
+        linkedData.memory_count ??
+        linkedData.memories ??
         0,
       )
 
@@ -399,12 +404,22 @@ function CaregiverDashboard({
     } finally {
       setLoading(false)
     }
-  }
+  }, [
+    text.caregiverOnlyError,
+    text.loadError,
+    user,
+  ])
 
 
   useEffect(() => {
-    loadData()
-  }, [user])
+    const timer = window.setTimeout(() => {
+      void loadData()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [loadData])
 
 
   // ==========================================

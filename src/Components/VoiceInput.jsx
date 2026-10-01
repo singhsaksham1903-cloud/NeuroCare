@@ -18,14 +18,20 @@ function VoiceInput({
     const [isListening, setIsListening] =
         useState(false)
 
-    const [isSupported, setIsSupported] =
-        useState(true)
-
     const [error, setError] =
         useState('')
 
     const recognitionRef =
         useRef(null)
+
+    const SpeechRecognition =
+        typeof window !== 'undefined'
+            ? window.SpeechRecognition ||
+              window.webkitSpeechRecognition
+            : null
+
+    const isSupported =
+        Boolean(SpeechRecognition)
 
 
     // ==========================================
@@ -33,12 +39,7 @@ function VoiceInput({
     // ==========================================
 
     useEffect(() => {
-        const SpeechRecognition =
-            window.SpeechRecognition ||
-            window.webkitSpeechRecognition
-
         if (!SpeechRecognition) {
-            setIsSupported(false)
             return undefined
         }
 
@@ -139,6 +140,7 @@ function VoiceInput({
         language,
         onResult,
         errorLabel,
+        SpeechRecognition,
     ])
 
 

@@ -22,12 +22,45 @@ def get_db():
         db.close()
 
 
+def serialize_reminder(reminder):
+    return {
+        "id": reminder.id,
+        "title": reminder.title,
+        "description": reminder.description,
+        "category": reminder.category,
+        "dueDatetime": reminder.due_datetime,
+        "completed": reminder.completed,
+        "clientMutationId": reminder.client_mutation_id,
+        "created_at": reminder.created_at,
+    }
+
+
 @router.post("", status_code=201)
 def create_reminder(
     reminder: ReminderCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    if reminder.clientMutationId:
+        existing_reminder = (
+            db.query(Reminder)
+            .filter(
+                Reminder.user_id == current_user.id,
+                Reminder.client_mutation_id
+                == reminder.clientMutationId,
+            )
+            .first()
+        )
+
+        if existing_reminder is not None:
+            return {
+                "message": "Reminder already saved",
+                "reminder": serialize_reminder(
+                    existing_reminder,
+                ),
+                "idempotent": True,
+            }
+
     try:
         new_reminder = Reminder(
             user_id=current_user.id,
@@ -36,6 +69,7 @@ def create_reminder(
             category=reminder.category,
             due_datetime=reminder.dueDatetime,
             completed=reminder.completed,
+            client_mutation_id=reminder.clientMutationId,
         )
 
         db.add(new_reminder)
@@ -44,20 +78,11 @@ def create_reminder(
 
         return {
             "message": "Reminder saved successfully",
-            "reminder": {
-                "id": new_reminder.id,
-                "title": new_reminder.title,
-                "description": new_reminder.description,
-                "category": new_reminder.category,
-                "dueDatetime": new_reminder.due_datetime,
-                "completed": new_reminder.completed,
-                "created_at": new_reminder.created_at,
-            },
+            "reminder": serialize_reminder(new_reminder),
         }
 
-    except Exception as error:
+    except Exception:
         db.rollback()
-
         raise HTTPException(
             status_code=500,
             detail="Could not save reminder.",
@@ -72,7 +97,7 @@ def get_reminders(
     reminders = (
         db.query(Reminder)
         .filter(
-            Reminder.user_id == current_user.id
+            Reminder.user_id == current_user.id,
         )
         .order_by(Reminder.created_at.desc())
         .all()
@@ -81,15 +106,7 @@ def get_reminders(
     return {
         "count": len(reminders),
         "reminders": [
-            {
-                "id": reminder.id,
-                "title": reminder.title,
-                "description": reminder.description,
-                "category": reminder.category,
-                "dueDatetime": reminder.due_datetime,
-                "completed": reminder.completed,
-                "created_at": reminder.created_at,
-            }
+            serialize_reminder(reminder)
             for reminder in reminders
         ],
     }
@@ -117,6 +134,19 @@ def update_reminder(
             detail="Reminder not found",
         )
 
+    if (
+        reminder.clientMutationId
+        and existing_reminder.client_mutation_id
+        == reminder.clientMutationId
+    ):
+        return {
+            "message": "Reminder update already applied",
+            "reminder": serialize_reminder(
+                existing_reminder,
+            ),
+            "idempotent": True,
+        }
+
     if reminder.title is not None:
         existing_reminder.title = reminder.title
 
@@ -128,7 +158,7 @@ def update_reminder(
     if reminder.category is not None:
         existing_reminder.category = reminder.category
 
-    if reminder.dueDatetime is not None:
+    if "dueDatetime" in reminder.model_fields_set:
         existing_reminder.due_datetime = (
             reminder.dueDatetime
         )
@@ -138,13 +168,17 @@ def update_reminder(
             reminder.completed
         )
 
+    if reminder.clientMutationId:
+        existing_reminder.client_mutation_id = (
+            reminder.clientMutationId
+        )
+
     try:
         db.commit()
         db.refresh(existing_reminder)
 
-    except Exception as error:
+    except Exception:
         db.rollback()
-
         raise HTTPException(
             status_code=500,
             detail="Could not update reminder.",
@@ -152,15 +186,7 @@ def update_reminder(
 
     return {
         "message": "Reminder updated successfully",
-        "reminder": {
-            "id": existing_reminder.id,
-            "title": existing_reminder.title,
-            "description": existing_reminder.description,
-            "category": existing_reminder.category,
-            "dueDatetime": existing_reminder.due_datetime,
-            "completed": existing_reminder.completed,
-            "created_at": existing_reminder.created_at,
-        },
+        "reminder": serialize_reminder(existing_reminder),
     }
 
 
@@ -189,9 +215,8 @@ def delete_reminder(
         db.delete(existing_reminder)
         db.commit()
 
-    except Exception as error:
+    except Exception:
         db.rollback()
-
         raise HTTPException(
             status_code=500,
             detail="Could not delete reminder.",

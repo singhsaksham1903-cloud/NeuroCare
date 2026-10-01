@@ -1,4 +1,8 @@
-import { useEffect, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
 
 import './Memories.css'
 import VoiceReadAloud from '../Components/VoiceReadAloud'
@@ -108,7 +112,7 @@ function Memories({
   // Load Memories
   // ==========================================
 
-  const loadMemories = async () => {
+  const loadMemories = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
@@ -127,12 +131,18 @@ function Memories({
     } finally {
       setLoading(false)
     }
-  }
+  }, [text.loadError])
 
 
   useEffect(() => {
-    loadMemories()
-  }, [])
+    const timer = window.setTimeout(() => {
+      void loadMemories()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [loadMemories])
 
 
   // ==========================================

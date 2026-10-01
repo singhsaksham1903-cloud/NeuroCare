@@ -433,7 +433,7 @@ def get_linked_elderly_data(
             "full_name": elderly_user.full_name,
         },
         "sessions": session_data,
-        "memories": memory_count,
+        "memory_count": memory_count,
         "reminders": reminder_data,
     }
 

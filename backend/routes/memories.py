@@ -22,12 +22,44 @@ def get_db():
         db.close()
 
 
+def serialize_memory(memory):
+    return {
+        "id": memory.id,
+        "title": memory.title,
+        "description": memory.description,
+        "category": memory.category,
+        "memoryDate": memory.memory_date,
+        "clientMutationId": memory.client_mutation_id,
+        "created_at": memory.created_at,
+    }
+
+
 @router.post("", status_code=201)
 def create_memory(
     memory: MemoryCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    if memory.clientMutationId:
+        existing_memory = (
+            db.query(Memory)
+            .filter(
+                Memory.user_id == current_user.id,
+                Memory.client_mutation_id
+                == memory.clientMutationId,
+            )
+            .first()
+        )
+
+        if existing_memory is not None:
+            return {
+                "message": "Memory already saved",
+                "memory": serialize_memory(
+                    existing_memory,
+                ),
+                "idempotent": True,
+            }
+
     try:
         new_memory = Memory(
             user_id=current_user.id,
@@ -35,6 +67,7 @@ def create_memory(
             description=memory.description,
             category=memory.category,
             memory_date=memory.memoryDate,
+            client_mutation_id=memory.clientMutationId,
         )
 
         db.add(new_memory)
@@ -43,22 +76,14 @@ def create_memory(
 
         return {
             "message": "Memory saved successfully",
-            "memory": {
-                "id": new_memory.id,
-                "title": new_memory.title,
-                "description": new_memory.description,
-                "category": new_memory.category,
-                "memoryDate": new_memory.memory_date,
-                "created_at": new_memory.created_at,
-            },
+            "memory": serialize_memory(new_memory),
         }
 
-    except Exception as error:
+    except Exception:
         db.rollback()
-
         raise HTTPException(
             status_code=500,
-            detail=f"Could not save memory: {error}",
+            detail="Could not save memory.",
         )
 
 
@@ -70,7 +95,7 @@ def get_memories(
     memories = (
         db.query(Memory)
         .filter(
-            Memory.user_id == current_user.id
+            Memory.user_id == current_user.id,
         )
         .order_by(Memory.created_at.desc())
         .all()
@@ -79,14 +104,7 @@ def get_memories(
     return {
         "count": len(memories),
         "memories": [
-            {
-                "id": memory.id,
-                "title": memory.title,
-                "description": memory.description,
-                "category": memory.category,
-                "memoryDate": memory.memory_date,
-                "created_at": memory.created_at,
-            }
+            serialize_memory(memory)
             for memory in memories
         ],
     }
@@ -114,44 +132,49 @@ def update_memory(
             detail="Memory not found",
         )
 
+    # A retry of the same client mutation id has already been applied.
+    if (
+        memory.clientMutationId
+        and existing_memory.client_mutation_id
+        == memory.clientMutationId
+    ):
+        return {
+            "message": "Memory update already applied",
+            "memory": serialize_memory(existing_memory),
+            "idempotent": True,
+        }
+
     if memory.title is not None:
         existing_memory.title = memory.title
 
     if memory.description is not None:
-        existing_memory.description = (
-            memory.description
-        )
+        existing_memory.description = memory.description
 
     if memory.category is not None:
         existing_memory.category = memory.category
 
-    if memory.memoryDate is not None:
-        existing_memory.memory_date = (
-            memory.memoryDate
+    if "memoryDate" in memory.model_fields_set:
+        existing_memory.memory_date = memory.memoryDate
+
+    if memory.clientMutationId:
+        existing_memory.client_mutation_id = (
+            memory.clientMutationId
         )
 
     try:
         db.commit()
         db.refresh(existing_memory)
 
-    except Exception as error:
+    except Exception:
         db.rollback()
-
         raise HTTPException(
             status_code=500,
-            detail="Could not save memory.",
+            detail="Could not update memory.",
         )
 
     return {
         "message": "Memory updated successfully",
-        "memory": {
-            "id": existing_memory.id,
-            "title": existing_memory.title,
-            "description": existing_memory.description,
-            "category": existing_memory.category,
-            "memoryDate": existing_memory.memory_date,
-            "created_at": existing_memory.created_at,
-        },
+        "memory": serialize_memory(existing_memory),
     }
 
 
@@ -180,9 +203,8 @@ def delete_memory(
         db.delete(existing_memory)
         db.commit()
 
-    except Exception as error:
+    except Exception:
         db.rollback()
-
         raise HTTPException(
             status_code=500,
             detail="Could not delete memory.",
