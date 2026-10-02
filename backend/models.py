@@ -9,6 +9,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    Text,
     UniqueConstraint,
     func,
 )
@@ -259,6 +260,11 @@ class Memory(Base):
 
     memory_date: Mapped[date | None] = mapped_column(
         Date,
+        nullable=True,
+    )
+
+    image_data: Mapped[str | None] = mapped_column(
+        Text,
         nullable=True,
     )
 

@@ -554,7 +554,7 @@
   gap: 14px;
 }
 
-.memory-card {
+.saved-memory-card {
   display: flex;
   align-items: stretch;
 
@@ -576,7 +576,7 @@
     border-color 0.2s ease;
 }
 
-.memory-card:hover {
+.saved-memory-card:hover {
   transform: translateY(-2px);
 
   border-color: #e2c9c1;
@@ -585,7 +585,7 @@
     0 9px 21px rgba(60, 72, 88, 0.07);
 }
 
-.memory-card-visual {
+.saved-memory-card-visual {
   width: 130px;
   min-width: 130px;
 
@@ -605,19 +605,19 @@
   border-right: 1px solid #eadcda;
 }
 
-.memory-card-visual svg {
+.saved-memory-card-visual svg {
   width: 60px;
   height: 60px;
 }
 
-.memory-card-body {
+.saved-memory-card-body {
   min-width: 0;
   flex: 1;
 
   padding: 20px;
 }
 
-.memory-card-header {
+.saved-memory-card-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -627,7 +627,7 @@
   margin-bottom: 12px;
 }
 
-.memory-card-header h3 {
+.saved-memory-card-header h3 {
   margin: 0 0 8px;
 
   color: #3f4a53;
@@ -654,7 +654,7 @@
   font-weight: 750;
 }
 
-.memory-card-header time {
+.saved-memory-card-header time {
   flex-shrink: 0;
 
   color: #85878b;
@@ -667,7 +667,7 @@
   white-space: nowrap;
 }
 
-.memory-card-body > p {
+.saved-memory-card-body > p {
   margin: 0 0 17px;
 
   color: #636b72;
@@ -678,7 +678,7 @@
   white-space: pre-wrap;
 }
 
-.memory-card-actions {
+.saved-memory-card-actions {
   display: flex;
   flex-wrap: wrap;
 
@@ -754,12 +754,12 @@
     grid-template-columns: 1fr;
   }
 
-  .memory-card-visual {
+  .saved-memory-card-visual {
     width: 105px;
     min-width: 105px;
   }
 
-  .memory-card-visual svg {
+  .saved-memory-card-visual svg {
     width: 50px;
     height: 50px;
   }
@@ -807,11 +807,11 @@
     align-items: flex-start;
   }
 
-  .memory-card {
+  .saved-memory-card {
     flex-direction: column;
   }
 
-  .memory-card-visual {
+  .saved-memory-card-visual {
     width: 100%;
     min-width: 0;
     height: 105px;
@@ -820,17 +820,17 @@
     border-bottom: 1px solid #eadcda;
   }
 
-  .memory-card-header {
+  .saved-memory-card-header {
     flex-direction: column;
     gap: 8px;
   }
 
-  .memory-card-header time {
+  .saved-memory-card-header time {
     white-space: normal;
   }
 
   .memory-form-actions,
-  .memory-card-actions {
+  .saved-memory-card-actions {
     flex-direction: column;
     align-items: stretch;
   }
@@ -839,5 +839,172 @@
   .memory-secondary-button,
   .memory-delete-button {
     width: 100%;
+  }
+}
+
+/* ============================================
+   Saved memory card image support
+   ============================================ */
+
+.saved-memory-card {
+  color: #3f4a53;
+  background: linear-gradient(135deg, #fffdfc 0%, #f7fbff 100%);
+  aspect-ratio: auto;
+  cursor: default;
+}
+
+.saved-memory-card h3,
+.saved-memory-card p,
+.saved-memory-card time {
+  color: #3f4a53;
+}
+
+.saved-memory-card-visual {
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.saved-memory-card-visual input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.saved-memory-card-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.saved-memory-card-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgba(20, 34, 48, 0.14));
+  pointer-events: none;
+}
+
+.saved-memory-card-image-badge {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #d8e0e8;
+  color: #356b91;
+  font-size: 1rem;
+  font-weight: 800;
+  box-shadow: 0 5px 12px rgba(20, 34, 48, 0.10);
+}
+
+.memory-image-field input[type='file'] {
+  min-height: 52px;
+  padding: 10px;
+  background: #ffffff;
+}
+
+.memory-image-preview {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 4px;
+  padding: 14px;
+  border: 1px solid #dfe6ed;
+  border-radius: 17px;
+  background: #f8fafc;
+}
+
+.memory-image-preview-visual {
+  width: 84px;
+  height: 84px;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d8e1ea;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #fff0e8, #eef4fb);
+  color: #b96c58;
+}
+
+.memory-image-preview-visual img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.memory-image-preview-visual svg {
+  width: 44px;
+  height: 44px;
+}
+
+.memory-image-preview-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+
+.memory-image-preview-content strong {
+  color: #394852;
+  font-size: 0.94rem;
+  font-weight: 800;
+}
+
+.memory-image-preview-content span {
+  color: #74808a;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.memory-image-remove-button {
+  min-height: 40px;
+  padding: 7px 11px;
+  border: 1px solid #e2b9b0;
+  border-radius: 11px;
+  background: #fff8f6;
+  color: #a4574c;
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.memory-image-remove-button:hover {
+  background: #fff0ed;
+  border-color: #d69b91;
+}
+
+.saved-memory-card-actions button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+@media (max-width: 560px) {
+  .memory-image-preview {
+    align-items: flex-start;
+  }
+
+  .memory-image-preview-visual {
+    width: 72px;
+    height: 72px;
+  }
+
+  .saved-memory-card-image-badge {
+    right: 8px;
+    bottom: 8px;
   }
 }

@@ -29,6 +29,7 @@ def serialize_memory(memory):
         "description": memory.description,
         "category": memory.category,
         "memoryDate": memory.memory_date,
+        "imageData": memory.image_data,
         "clientMutationId": memory.client_mutation_id,
         "created_at": memory.created_at,
     }
@@ -67,6 +68,7 @@ def create_memory(
             description=memory.description,
             category=memory.category,
             memory_date=memory.memoryDate,
+            image_data=memory.imageData,
             client_mutation_id=memory.clientMutationId,
         )
 
@@ -155,6 +157,9 @@ def update_memory(
 
     if "memoryDate" in memory.model_fields_set:
         existing_memory.memory_date = memory.memoryDate
+
+    if "imageData" in memory.model_fields_set:
+        existing_memory.image_data = memory.imageData
 
     if memory.clientMutationId:
         existing_memory.client_mutation_id = (

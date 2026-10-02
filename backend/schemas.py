@@ -99,6 +99,11 @@ class MemoryCreate(BaseModel):
 
     memoryDate: Optional[date] = None
 
+    imageData: Optional[str] = Field(
+        default=None,
+        max_length=2000000,
+    )
+
 
 # ============================================================
 # Memory Update Schema
@@ -129,6 +134,11 @@ class MemoryUpdate(BaseModel):
     )
 
     memoryDate: Optional[date] = None
+
+    imageData: Optional[str] = Field(
+        default=None,
+        max_length=2000000,
+    )
 
 
 # ============================================================

@@ -20,6 +20,158 @@ const EMPTY_FORM = {
   description: '',
   category: 'General',
   memoryDate: '',
+  imageData: '',
+}
+
+
+const IMAGE_TEXT = {
+  en: {
+    label: 'Memory Image (optional)',
+    choose: 'Choose an image',
+    change: 'Change image',
+    add: 'Add image',
+    remove: 'Remove image',
+    hint: 'JPG, PNG or WebP. The image is resized automatically.',
+    invalid: 'Please choose an image file.',
+    tooLarge: 'Please choose an image smaller than 5 MB.',
+    failed: 'Could not process the image. Please try another file.',
+    saving: 'Saving image...',
+  },
+  hi: {
+    label: 'याद की तस्वीर (वैकल्पिक)',
+    choose: 'तस्वीर चुनें',
+    change: 'तस्वीर बदलें',
+    add: 'तस्वीर जोड़ें',
+    remove: 'तस्वीर हटाएँ',
+    hint: 'JPG, PNG या WebP. तस्वीर अपने आप छोटे आकार में सहेजी जाएगी।',
+    invalid: 'कृपया एक तस्वीर चुनें।',
+    tooLarge: 'कृपया 5 MB से छोटी तस्वीर चुनें।',
+    failed: 'तस्वीर तैयार नहीं हो सकी। कृपया दूसरी फ़ाइल चुनें।',
+    saving: 'तस्वीर सहेजी जा रही है...',
+  },
+  as: {
+    label: 'স্মৃতিৰ ছবি (ঐচ্ছিক)',
+    choose: 'ছবি বাছনি কৰক',
+    change: 'ছবি সলনি কৰক',
+    add: 'ছবি যোগ কৰক',
+    remove: 'ছবি আঁতৰাওক',
+    hint: 'JPG, PNG বা WebP। ছবিখন স্বয়ংক্রিয়ভাৱে সৰু কৰি সংৰক্ষণ কৰা হ’ব।',
+    invalid: 'অনুগ্ৰহ কৰি এখন ছবি বাছনি কৰক।',
+    tooLarge: 'অনুগ্ৰহ কৰি 5 MB-তকৈ সৰু ছবি বাছনি কৰক।',
+    failed: 'ছবিখন প্ৰস্তুত কৰিব পৰা নগ’ল। আন এটা ফাইল চেষ্টা কৰক।',
+    saving: 'ছবি সংৰক্ষণ কৰা হৈছে...',
+  },
+}
+
+const MAX_IMAGE_FILE_SIZE = 5 * 1024 * 1024
+const MAX_IMAGE_DIMENSION = 1200
+const IMAGE_QUALITY = 0.82
+const MAX_IMAGE_DATA_LENGTH = 1200000
+
+
+function getImageText(language) {
+  const key = String(language || 'en').slice(0, 2)
+  return IMAGE_TEXT[key] || IMAGE_TEXT.en
+}
+
+
+function prepareMemoryImage(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) {
+      reject(new Error('invalid'))
+      return
+    }
+
+    if (file.size > MAX_IMAGE_FILE_SIZE) {
+      reject(new Error('tooLarge'))
+      return
+    }
+
+    const reader = new FileReader()
+
+    reader.onerror = () => {
+      reject(new Error('failed'))
+    }
+
+    reader.onload = () => {
+      const image = new Image()
+
+      image.onload = () => {
+        const longestSide = Math.max(
+          image.naturalWidth,
+          image.naturalHeight,
+        )
+
+        const scale = Math.min(
+          1,
+          MAX_IMAGE_DIMENSION / longestSide,
+        )
+
+        const width = Math.max(
+          1,
+          Math.round(image.naturalWidth * scale),
+        )
+
+        const height = Math.max(
+          1,
+          Math.round(image.naturalHeight * scale),
+        )
+
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+
+        const context = canvas.getContext('2d')
+
+        if (!context) {
+          reject(new Error('failed'))
+          return
+        }
+
+        context.drawImage(image, 0, 0, width, height)
+
+        let dataUrl
+
+        try {
+          dataUrl = canvas.toDataURL(
+            'image/webp',
+            IMAGE_QUALITY,
+          )
+        } catch {
+          dataUrl = ''
+        }
+
+        if (!dataUrl || dataUrl === 'data:image/webp,') {
+          try {
+            dataUrl = canvas.toDataURL(
+              'image/jpeg',
+              IMAGE_QUALITY,
+            )
+          } catch {
+            dataUrl = ''
+          }
+        }
+
+        if (
+          !dataUrl ||
+          dataUrl.length > MAX_IMAGE_DATA_LENGTH
+        ) {
+          reject(new Error('tooLarge'))
+          return
+        }
+
+        resolve(dataUrl)
+      }
+
+      image.onerror = () => {
+        reject(new Error('failed'))
+      }
+
+      image.src = String(reader.result || '')
+    }
+
+    reader.readAsDataURL(file)
+  })
 }
 
 
@@ -107,6 +259,11 @@ function Memories({
   const [message, setMessage] =
     useState('')
 
+  const [imageSavingId, setImageSavingId] =
+    useState(null)
+
+  const imageText = getImageText(language)
+
 
   // ==========================================
   // Load Memories
@@ -164,6 +321,105 @@ function Memories({
   }
 
 
+  const handleImageChange = async (event) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+
+    if (!file) {
+      return
+    }
+
+    try {
+      setError('')
+      const imageData = await prepareMemoryImage(file)
+
+      setForm((currentForm) => ({
+        ...currentForm,
+        imageData,
+      }))
+    } catch (err) {
+      setError(
+        err.message === 'invalid'
+          ? imageText.invalid
+          : err.message === 'tooLarge'
+            ? imageText.tooLarge
+            : imageText.failed,
+      )
+    }
+  }
+
+
+  const handleRemoveImage = () => {
+    setForm((currentForm) => ({
+      ...currentForm,
+      imageData: '',
+    }))
+  }
+
+
+  const handleSavedMemoryImageChange = async (
+    memoryId,
+    event,
+  ) => {
+    const file = event.target.files?.[0]
+
+    event.target.value = ''
+
+    if (!file) {
+      return
+    }
+
+    try {
+      setError('')
+      setMessage('')
+      setImageSavingId(memoryId)
+
+      const imageData =
+        await prepareMemoryImage(file)
+
+      // Show the image immediately in the UI.
+      setMemories((currentMemories) =>
+        currentMemories.map((memory) =>
+          memory.id === memoryId
+            ? {
+              ...memory,
+              imageData,
+            }
+            : memory,
+        ),
+      )
+
+      await apiPut(
+        `/memories/${memoryId}`,
+        {
+          imageData,
+        },
+      )
+
+      setMessage(
+        text.updateSuccess,
+      )
+
+      // Reload from backend/cache so the
+      // saved state is confirmed.
+      await loadMemories()
+    } catch (err) {
+      setError(
+        err.message === 'invalid'
+          ? imageText.invalid
+          : err.message === 'tooLarge'
+            ? imageText.tooLarge
+            : err.message ||
+            imageText.failed,
+      )
+    } finally {
+      setImageSavingId(null)
+    }
+  }
+
+
+
+
   const resetForm = () => {
     setForm(EMPTY_FORM)
     setEditingId(null)
@@ -209,6 +465,10 @@ function Memories({
 
         memoryDate:
           form.memoryDate ||
+          null,
+
+        imageData:
+          form.imageData ||
           null,
       }
 
@@ -269,6 +529,9 @@ function Memories({
 
       memoryDate:
         memory.memoryDate || '',
+
+      imageData:
+        memory.imageData || '',
     })
 
     setMessage('')
@@ -595,6 +858,51 @@ function Memories({
             </div>
 
 
+            <label className="memory-image-field">
+              {imageText.label}
+
+              <input
+                type="file"
+                name="memoryImage"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={handleImageChange}
+              />
+            </label>
+
+
+            <div className="memory-image-preview">
+              <div className="memory-image-preview-visual">
+                {form.imageData ? (
+                  <img
+                    src={form.imageData}
+                    alt="Memory preview"
+                  />
+                ) : (
+                  <MemoryIcon />
+                )}
+              </div>
+
+              <div className="memory-image-preview-content">
+                <strong>
+                  {form.imageData
+                    ? imageText.change
+                    : imageText.choose}
+                </strong>
+                <span>{imageText.hint}</span>
+
+                {form.imageData && (
+                  <button
+                    type="button"
+                    className="memory-image-remove-button"
+                    onClick={handleRemoveImage}
+                  >
+                    {imageText.remove}
+                  </button>
+                )}
+              </div>
+            </div>
+
+
             <div className="memory-form-actions">
 
               <button
@@ -703,18 +1011,62 @@ function Memories({
               {memories.map(
                 (memory) => (
                   <article
-                    className="memory-card"
+                    className="saved-memory-card"
                     key={memory.id}
                   >
 
-                    <div className="memory-card-visual">
-                      <MemoryIcon />
-                    </div>
+                    <label
+                      className="saved-memory-card-visual"
+                      title={
+                        imageSavingId === memory.id
+                          ? imageText.saving
+                          : memory.imageData
+                            ? imageText.change
+                            : imageText.add
+                      }
+                    >
+                      {memory.imageData ? (
+                        <img
+                          src={memory.imageData}
+                          alt=""
+                          className="saved-memory-card-image"
+                        />
+                      ) : (
+                        <MemoryIcon />
+                      )}
+
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        onChange={(event) =>
+                          handleSavedMemoryImageChange(
+                            memory.id,
+                            event,
+                          )
+                        }
+                        disabled={
+                          imageSavingId === memory.id
+                        }
+                        aria-label={
+                          memory.imageData
+                            ? imageText.change
+                            : imageText.add
+                        }
+                      />
+
+                      <span className="saved-memory-card-image-badge">
+                        {imageSavingId === memory.id
+                          ? '…'
+                          : memory.imageData
+                            ? '↻'
+                            : '+'}
+                      </span>
+                    </label>
 
 
-                    <div className="memory-card-body">
+                    <div className="saved-memory-card-body">
 
-                      <div className="memory-card-header">
+                      <div className="saved-memory-card-header">
 
                         <div>
 
@@ -752,7 +1104,7 @@ function Memories({
                       </p>
 
 
-                      <div className="memory-card-actions">
+                      <div className="saved-memory-card-actions">
 
                         <button
                           type="button"
