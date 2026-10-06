@@ -1,0 +1,843 @@
+/* ============================================
+   Cognicare NER — Memories
+   Warm Peach + Coral + Lavender Theme
+   ============================================ */
+
+/* --------------------------------------------
+   Page
+   -------------------------------------------- */
+
+.memories-page {
+  min-height: 100vh;
+  box-sizing: border-box;
+
+  padding: 28px 24px 50px;
+
+  background:
+    radial-gradient(
+      circle at 8% 8%,
+      rgba(215, 122, 98, 0.08),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 92% 12%,
+      rgba(115, 87, 199, 0.07),
+      transparent 24%
+    ),
+    #faf8f7;
+
+  color: #3f4650;
+}
+
+/* --------------------------------------------
+   Header
+   -------------------------------------------- */
+
+.memories-header {
+  width: min(1100px, 100%);
+  margin: 0 auto 28px;
+}
+
+.memories-back-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  min-height: 48px;
+  padding: 10px 18px;
+
+  border: 2px solid #ead4ce;
+  border-radius: 14px;
+
+  background: #ffffff;
+  color: #9a5e50;
+
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 5px 14px rgba(60, 72, 88, 0.06);
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.memories-back-button:hover {
+  background: #fff6f2;
+  border-color: #d9b8ae;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 7px 16px rgba(60, 72, 88, 0.09);
+}
+
+.memories-back-button:active {
+  transform: translateY(0);
+}
+
+.memories-back-button:focus-visible {
+  outline: 3px solid rgba(215, 122, 98, 0.26);
+  outline-offset: 3px;
+}
+
+/* --------------------------------------------
+   Header Content
+   -------------------------------------------- */
+
+.memories-heading {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  margin-top: 24px;
+  padding: 24px;
+
+  border: 1px solid #eaded9;
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fffdfc 0%,
+      #fff3ee 100%
+    );
+
+  box-shadow:
+    0 9px 25px rgba(60, 72, 88, 0.07);
+}
+
+.memories-heading-icon {
+  width: 82px;
+  height: 82px;
+
+  flex: 0 0 82px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 22px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fff0e9 0%,
+      #f3ecff 100%
+    );
+
+  color: #bd6d59;
+
+  border: 1px solid #ecd9d1;
+
+  box-shadow:
+    0 8px 18px rgba(60, 72, 88, 0.07);
+}
+
+.memories-heading-icon svg {
+  width: 52px;
+  height: 52px;
+}
+
+.memories-eyebrow {
+  display: inline-block;
+
+  margin-bottom: 5px;
+
+  color: #a2776d;
+
+  font-size: 0.78rem;
+  font-weight: 750;
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.memories-heading h1 {
+  margin: 0 0 8px;
+
+  color: #3d4650;
+
+  font-size: clamp(1.9rem, 4vw, 2.65rem);
+  font-weight: 800;
+
+  line-height: 1.15;
+}
+
+.memories-heading p {
+  margin: 0;
+
+  color: #6f747b;
+
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.memories-header > .voice-read-aloud {
+  margin-top: 16px;
+}
+
+/* --------------------------------------------
+   Messages
+   -------------------------------------------- */
+
+.memories-message {
+  width: min(900px, 100%);
+  box-sizing: border-box;
+
+  margin: 0 auto 18px;
+  padding: 13px 17px;
+
+  border-radius: 14px;
+
+  font-size: 0.92rem;
+  font-weight: 650;
+
+  text-align: center;
+
+  box-shadow:
+    0 5px 14px rgba(60, 72, 88, 0.04);
+}
+
+.memories-message--error {
+  border: 1px solid #e4bcbc;
+  background: #fff7f6;
+  color: #8d5050;
+}
+
+.memories-message--success {
+  border: 1px solid #e1c9a4;
+  background: #fff8eb;
+  color: #88612d;
+}
+
+/* --------------------------------------------
+   Main Content
+   -------------------------------------------- */
+
+.memories-content {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
+/* --------------------------------------------
+   Form Card
+   -------------------------------------------- */
+
+.memory-form-card {
+  margin-bottom: 24px;
+  padding: 24px;
+
+  border: 1px solid #eaded9;
+  border-radius: 24px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 23px rgba(60, 72, 88, 0.055);
+}
+
+.memory-form-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  margin-bottom: 22px;
+}
+
+.memory-form-icon {
+  width: 52px;
+  height: 52px;
+
+  flex: 0 0 52px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 15px;
+
+  background: #f2ecff;
+  color: #7357c7;
+
+  border: 1px solid #e1d7fa;
+}
+
+.memory-form-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.memory-form-heading span {
+  display: block;
+
+  margin-bottom: 2px;
+
+  color: #9b7f95;
+
+  font-size: 0.76rem;
+  font-weight: 750;
+
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.memory-form-heading h2 {
+  margin: 0;
+
+  color: #3d4650;
+
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.memory-form {
+  display: grid;
+  gap: 17px;
+}
+
+.memory-form-row {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 16px;
+}
+
+.memory-form label {
+  display: grid;
+  gap: 8px;
+
+  color: #4e5962;
+
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.memory-form input,
+.memory-form textarea,
+.memory-form select {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 12px 14px;
+
+  border: 2px solid #e5dfe3;
+  border-radius: 12px;
+
+  background: #fffdfd;
+  color: #3d4650;
+
+  font-family: var(--font-sans);
+  font-size: 0.94rem;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.memory-form input::placeholder,
+.memory-form textarea::placeholder {
+  color: #a2a0a2;
+}
+
+.memory-form input:hover,
+.memory-form textarea:hover,
+.memory-form select:hover {
+  border-color: #d9c8c3;
+}
+
+.memory-form input:focus,
+.memory-form textarea:focus,
+.memory-form select:focus {
+  outline: none;
+
+  border-color: #c98a79;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 0 0 4px rgba(215, 122, 98, 0.12);
+}
+
+.memory-form textarea {
+  resize: vertical;
+  min-height: 130px;
+}
+
+.memory-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 10px;
+
+  margin-top: 2px;
+}
+
+/* --------------------------------------------
+   Buttons
+   -------------------------------------------- */
+
+.memory-primary-button,
+.memory-secondary-button,
+.memory-delete-button {
+  min-height: 48px;
+
+  padding: 11px 18px;
+
+  border-radius: 13px;
+
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.memory-primary-button {
+  border: 2px solid #d77a62;
+
+  background: #d77a62;
+  color: #ffffff;
+
+  box-shadow:
+    0 6px 14px rgba(215, 122, 98, 0.14);
+}
+
+.memory-primary-button:hover:not(:disabled) {
+  background: #bd6651;
+  border-color: #bd6651;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 8px 17px rgba(215, 122, 98, 0.2);
+}
+
+.memory-primary-button:focus-visible,
+.memory-secondary-button:focus-visible,
+.memory-delete-button:focus-visible {
+  outline: 3px solid rgba(115, 87, 199, 0.22);
+  outline-offset: 3px;
+}
+
+.memory-primary-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.memory-secondary-button {
+  border: 2px solid #cfc0dc;
+
+  background: #ffffff;
+  color: #725b88;
+}
+
+.memory-secondary-button:hover {
+  background: #f8f3fb;
+  border-color: #bda9cc;
+
+  transform: translateY(-1px);
+}
+
+.memory-delete-button {
+  border: 2px solid #e1b2aa;
+
+  background: #fff9f8;
+  color: #a15349;
+}
+
+.memory-delete-button:hover {
+  background: #fff0ed;
+  border-color: #d9958c;
+
+  transform: translateY(-1px);
+}
+
+/* --------------------------------------------
+   Saved Memories
+   -------------------------------------------- */
+
+.memory-list-section {
+  padding: 24px;
+
+  border: 1px solid #eaded9;
+  border-radius: 24px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 23px rgba(60, 72, 88, 0.055);
+}
+
+.memory-list-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  margin-bottom: 20px;
+}
+
+.memories-section-label {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #a2776d;
+
+  font-size: 0.76rem;
+  font-weight: 750;
+
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.memory-list-header h2 {
+  margin: 0 0 6px;
+
+  color: #3d4650;
+
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.memory-list-header p {
+  margin: 0;
+
+  color: #72767d;
+
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.memory-count {
+  flex-shrink: 0;
+
+  padding: 8px 12px;
+
+  border-radius: 999px;
+
+  background: #f2ecff;
+  color: #6e57a8;
+
+  border: 1px solid #e0d6f8;
+
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+/* --------------------------------------------
+   Memory Cards
+   -------------------------------------------- */
+
+.memory-list {
+  display: grid;
+
+  gap: 14px;
+}
+
+.memory-card {
+  display: flex;
+  align-items: stretch;
+
+  overflow: hidden;
+
+  border: 1px solid #eadfe0;
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fffdfc 0%,
+      #fff7f3 100%
+    );
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.memory-card:hover {
+  transform: translateY(-2px);
+
+  border-color: #e2c9c1;
+
+  box-shadow:
+    0 9px 21px rgba(60, 72, 88, 0.07);
+}
+
+.memory-card-visual {
+  width: 130px;
+  min-width: 130px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fff0e8 0%,
+      #f2ebff 100%
+    );
+
+  color: #c37762;
+
+  border-right: 1px solid #eadcda;
+}
+
+.memory-card-visual svg {
+  width: 60px;
+  height: 60px;
+}
+
+.memory-card-body {
+  min-width: 0;
+  flex: 1;
+
+  padding: 20px;
+}
+
+.memory-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  margin-bottom: 12px;
+}
+
+.memory-card-header h3 {
+  margin: 0 0 8px;
+
+  color: #3f4a53;
+
+  font-size: 1.2rem;
+  font-weight: 800;
+
+  line-height: 1.3;
+}
+
+.memory-category {
+  display: inline-flex;
+
+  padding: 5px 9px;
+
+  border-radius: 999px;
+
+  background: #fff0eb;
+  color: #a76150;
+
+  border: 1px solid #f0d6cf;
+
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.memory-card-header time {
+  flex-shrink: 0;
+
+  color: #85878b;
+
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  line-height: 1.4;
+
+  white-space: nowrap;
+}
+
+.memory-card-body > p {
+  margin: 0 0 17px;
+
+  color: #636b72;
+
+  font-size: 0.92rem;
+  line-height: 1.65;
+
+  white-space: pre-wrap;
+}
+
+.memory-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 9px;
+}
+
+/* --------------------------------------------
+   Empty State
+   -------------------------------------------- */
+
+.memory-empty {
+  padding: 34px 20px;
+
+  border: 1px dashed #dacfd0;
+  border-radius: 18px;
+
+  background: #fffdfd;
+
+  text-align: center;
+}
+
+.memory-empty-icon {
+  width: 68px;
+  height: 68px;
+
+  margin: 0 auto 13px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 19px;
+
+  background: #f7efe9;
+  color: #be7764;
+}
+
+.memory-empty-icon svg {
+  width: 40px;
+  height: 40px;
+}
+
+.memory-empty h3 {
+  margin: 0 0 6px;
+
+  color: #49535b;
+
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.memory-empty p {
+  max-width: 560px;
+
+  margin: 0 auto;
+
+  color: #767d82;
+
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+/* --------------------------------------------
+   Responsive — Tablet
+   -------------------------------------------- */
+
+@media (max-width: 800px) {
+  .memories-page {
+    padding: 20px 14px 40px;
+  }
+
+  .memory-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .memory-card-visual {
+    width: 105px;
+    min-width: 105px;
+  }
+
+  .memory-card-visual svg {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+/* --------------------------------------------
+   Responsive — Mobile
+   -------------------------------------------- */
+
+@media (max-width: 560px) {
+  .memories-page {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .memories-back-button {
+    width: 100%;
+  }
+
+  .memories-heading {
+    flex-direction: column;
+    align-items: center;
+
+    text-align: center;
+
+    padding: 20px;
+
+    border-radius: 21px;
+  }
+
+  .memories-heading-icon {
+    width: 76px;
+    height: 76px;
+    flex-basis: 76px;
+  }
+
+  .memory-form-card,
+  .memory-list-section {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .memory-list-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .memory-card {
+    flex-direction: column;
+  }
+
+  .memory-card-visual {
+    width: 100%;
+    min-width: 0;
+    height: 105px;
+
+    border-right: none;
+    border-bottom: 1px solid #eadcda;
+  }
+
+  .memory-card-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .memory-card-header time {
+    white-space: normal;
+  }
+
+  .memory-form-actions,
+  .memory-card-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .memory-primary-button,
+  .memory-secondary-button,
+  .memory-delete-button {
+    width: 100%;
+  }
+}

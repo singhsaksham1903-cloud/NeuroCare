@@ -1,0 +1,331 @@
+<svg
+  width="600"
+  height="420"
+  viewBox="0 0 600 420"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <linearGradient
+      id="bg"
+      x1="0"
+      y1="0"
+      x2="600"
+      y2="420"
+    >
+      <stop
+        offset="0%"
+        stop-color="#EAF9F2"
+      />
+      <stop
+        offset="100%"
+        stop-color="#E8F4FF"
+      />
+    </linearGradient>
+
+    <linearGradient
+      id="personLeft"
+      x1="150"
+      y1="260"
+      x2="270"
+      y2="370"
+    >
+      <stop
+        offset="0%"
+        stop-color="#43B99A"
+      />
+      <stop
+        offset="100%"
+        stop-color="#328ED8"
+      />
+    </linearGradient>
+
+    <linearGradient
+      id="personRight"
+      x1="350"
+      y1="260"
+      x2="470"
+      y2="370"
+    >
+      <stop
+        offset="0%"
+        stop-color="#8060D9"
+      />
+      <stop
+        offset="100%"
+        stop-color="#5A87DD"
+      />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect
+    width="600"
+    height="420"
+    rx="50"
+    fill="url(#bg)"
+  />
+
+  <!-- Decorative circles -->
+  <circle
+    cx="85"
+    cy="90"
+    r="27"
+    fill="#CDEFE2"
+  />
+
+  <circle
+    cx="515"
+    cy="92"
+    r="24"
+    fill="#D9E9FF"
+  />
+
+  <circle
+    cx="510"
+    cy="326"
+    r="31"
+    fill="#E5DAFF"
+  />
+
+  <!-- Connection arc -->
+  <path
+    d="M205 170
+       C250 110 350 110 395 170"
+    stroke="#48B895"
+    stroke-width="10"
+    stroke-linecap="round"
+    stroke-dasharray="8 16"
+  />
+
+  <!-- Left person -->
+  <circle
+    cx="205"
+    cy="164"
+    r="58"
+    fill="#F4C3A1"
+  />
+
+  <!-- Left hair -->
+  <path
+    d="M147 156
+       C144 107 170 73 208 70
+       C250 67 278 99 270 145
+       C254 128 238 119 220 122
+       C196 125 176 115 147 156Z"
+    fill="#4E4C61"
+  />
+
+  <!-- Left body -->
+  <path
+    d="M122 355
+       C130 287 158 242 205 242
+       C252 242 280 287 288 355Z"
+    fill="url(#personLeft)"
+  />
+
+  <!-- Left face details -->
+  <circle
+    cx="184"
+    cy="161"
+    r="5"
+    fill="#27394D"
+  />
+
+  <circle
+    cx="226"
+    cy="161"
+    r="5"
+    fill="#27394D"
+  />
+
+  <path
+    d="M185 193
+       C198 202 212 202 225 193"
+    stroke="#A25F63"
+    stroke-width="5"
+    stroke-linecap="round"
+  />
+
+  <!-- Right person -->
+  <circle
+    cx="395"
+    cy="164"
+    r="58"
+    fill="#F1C2A0"
+  />
+
+  <!-- Right hair -->
+  <path
+    d="M337 153
+       C334 108 358 76 397 72
+       C440 67 467 100 462 150
+       C448 132 432 121 412 123
+       C388 126 364 116 337 153Z"
+    fill="#B5B2BA"
+  />
+
+  <!-- Right glasses -->
+  <circle
+    cx="374"
+    cy="161"
+    r="18"
+    fill="white"
+    stroke="#334D72"
+    stroke-width="5"
+  />
+
+  <circle
+    cx="418"
+    cy="161"
+    r="18"
+    fill="white"
+    stroke="#334D72"
+    stroke-width="5"
+  />
+
+  <path
+    d="M392 161H400"
+    stroke="#334D72"
+    stroke-width="5"
+    stroke-linecap="round"
+  />
+
+  <circle
+    cx="374"
+    cy="161"
+    r="4"
+    fill="#27394D"
+  />
+
+  <circle
+    cx="418"
+    cy="161"
+    r="4"
+    fill="#27394D"
+  />
+
+  <path
+    d="M376 193
+       C389 202 403 202 416 193"
+    stroke="#A25F63"
+    stroke-width="5"
+    stroke-linecap="round"
+  />
+
+  <!-- Right body -->
+  <path
+    d="M312 355
+       C320 287 348 242 395 242
+       C442 242 470 287 478 355Z"
+    fill="url(#personRight)"
+  />
+
+  <!-- Hands reaching toward each other -->
+  <path
+    d="M262 280
+       C292 270 316 269 341 282"
+    stroke="#F1B994"
+    stroke-width="19"
+    stroke-linecap="round"
+  />
+
+  <path
+    d="M341 282
+       C356 291 372 292 389 286"
+    stroke="#F4C3A1"
+    stroke-width="19"
+    stroke-linecap="round"
+  />
+
+  <!-- Handshake -->
+  <path
+    d="M309 278
+       C326 267 347 268 362 280
+       C350 298 330 304 313 292Z"
+    fill="#ECAE8C"
+  />
+
+  <path
+    d="M337 282
+       C349 272 365 276 377 286
+       C366 301 349 302 337 294Z"
+    fill="#F4C3A1"
+  />
+
+  <!-- Heart -->
+  <path
+    d="M300 98
+       C285 80 255 90 255 114
+       C255 133 273 147 300 168
+       C327 147 345 133 345 114
+       C345 90 315 80 300 98Z"
+    fill="#38B98F"
+  />
+
+  <!-- Heart highlight -->
+  <path
+    d="M300 111
+       C292 101 277 107 277 119
+       C277 128 286 136 300 147
+       C314 136 323 128 323 119
+       C323 107 308 101 300 111Z"
+    fill="white"
+    opacity="0.95"
+  />
+
+  <!-- Connection dots -->
+  <circle
+    cx="190"
+    cy="112"
+    r="7"
+    fill="#2F8EDB"
+  />
+
+  <circle
+    cx="410"
+    cy="112"
+    r="7"
+    fill="#8565D8"
+  />
+
+  <!-- Leaves -->
+  <path
+    d="M83 278
+       C65 254 68 230 88 216
+       C105 238 103 259 83 278Z"
+    fill="#52B78E"
+  />
+
+  <path
+    d="M517 278
+       C535 254 532 230 512 216
+       C495 238 497 259 517 278Z"
+    fill="#52B78E"
+  />
+
+  <!-- Sparkles -->
+  <path
+    d="M101 154
+       L107 167
+       L120 173
+       L107 179
+       L101 192
+       L95 179
+       L82 173
+       L95 167Z"
+    fill="#F5B64B"
+  />
+
+  <path
+    d="M500 154
+       L506 167
+       L519 173
+       L506 179
+       L500 192
+       L494 179
+       L481 173
+       L494 167Z"
+    fill="#F5B64B"
+  />
+</svg>

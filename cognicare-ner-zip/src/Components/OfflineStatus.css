@@ -1,0 +1,85 @@
+/* ============================================
+   Cognicare NER — Network Status
+   Elderly-friendly status indicator
+   ============================================ */
+
+.offline-status {
+  width: min(1100px, calc(100% - 40px));
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  box-sizing: border-box;
+
+  margin: 0 auto 18px;
+  padding: 11px 18px;
+
+  border: 1px solid transparent;
+  border-radius: 999px;
+
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.4;
+
+  box-shadow:
+    0 5px 16px rgba(60, 72, 88, 0.06);
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+/* Online */
+
+.offline-status--online {
+  background: #eef9f3;
+  border-color: #c9ead9;
+  color: #2f7258;
+}
+
+/* Offline */
+
+.offline-status--offline {
+  background: #fff5e7;
+  border-color: #f1d6aa;
+  color: #895b25;
+}
+
+/* Status dot */
+
+.offline-status-dot {
+  width: 10px;
+  height: 10px;
+
+  flex: 0 0 10px;
+
+  border-radius: 50%;
+
+  background: currentColor;
+
+  box-shadow:
+    0 0 0 4px rgba(73, 185, 149, 0.12);
+}
+
+/* Offline dot */
+
+.offline-status--offline .offline-status-dot {
+  box-shadow:
+    0 0 0 4px rgba(225, 165, 91, 0.12);
+}
+
+/* Mobile */
+
+@media (max-width: 640px) {
+  .offline-status {
+    width: calc(100% - 24px);
+
+    margin-bottom: 14px;
+    padding: 10px 14px;
+
+    font-size: 0.86rem;
+  }
+}

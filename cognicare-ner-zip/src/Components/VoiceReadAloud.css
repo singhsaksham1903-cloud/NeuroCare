@@ -1,0 +1,101 @@
+/* ============================================
+   Cognicare NER — Read Aloud Control
+   Elderly-friendly voice assistance
+   ============================================ */
+
+.voice-read-aloud {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  min-height: 48px;
+  padding: 10px 18px;
+
+  border: 2px solid #c8dbe2;
+  border-radius: 14px;
+
+  background: #ffffff;
+  color: #315b72;
+
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 5px 14px rgba(60, 72, 88, 0.06);
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.voice-read-aloud:hover {
+  background: #f3f8fb;
+  border-color: #aac5d1;
+  transform: translateY(-1px);
+  box-shadow: 0 7px 16px rgba(60, 72, 88, 0.09);
+}
+
+.voice-read-aloud:active {
+  transform: translateY(0);
+}
+
+.voice-read-aloud:focus-visible {
+  outline: 3px solid rgba(73, 185, 149, 0.32);
+  outline-offset: 3px;
+}
+
+/* Speaking state */
+
+.voice-read-aloud--speaking {
+  background: #eef8f4;
+  border-color: #a9d8c5;
+  color: #2f7258;
+}
+
+.voice-read-aloud--speaking:hover {
+  background: #e5f4ee;
+  border-color: #91ccb5;
+}
+
+/* Icon */
+
+.voice-read-aloud-icon {
+  width: 22px;
+  height: 22px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+}
+
+.voice-read-aloud-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Text */
+
+.voice-read-aloud-text {
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* Mobile */
+
+@media (max-width: 640px) {
+  .voice-read-aloud {
+    width: 100%;
+    min-height: 50px;
+    padding: 11px 16px;
+    font-size: 0.95rem;
+  }
+}
