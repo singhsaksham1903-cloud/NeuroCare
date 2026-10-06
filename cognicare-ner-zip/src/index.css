@@ -1,0 +1,332 @@
+/* ============================================
+   Cognicare NER — Global Styles
+   Soft Multicolor Elder-Friendly Palette
+   ============================================ */
+
+:root {
+  /* --- Global Backgrounds --- */
+  --bg: #f7f7fb;
+  --bg-card: #ffffff;
+  --bg-soft: #f2f4f8;
+
+  /* --- Text --- */
+  --text: #344054;
+  --text-light: #667085;
+  --text-heading: #1f2937;
+
+  /* --- Primary Purple / Cognitive --- */
+  --accent: #7357c7;
+  --accent-hover: #5f46ae;
+  --accent-soft: #f0ebff;
+
+  /* --- Blue / Information --- */
+  --accent-blue: #4c7fb8;
+  --accent-blue-hover: #3d699b;
+  --accent-blue-soft: #eaf3fb;
+
+  /* --- Teal / Caregiver --- */
+  --accent-green: #438f7b;
+  --accent-green-hover: #347764;
+  --accent-green-soft: #eaf7f2;
+
+  /* --- Peach / Memories --- */
+  --accent-peach: #d77a62;
+  --accent-peach-hover: #bd6651;
+  --accent-peach-soft: #fff0eb;
+
+  /* --- Amber / Reminders --- */
+  --accent-amber: #c18a32;
+  --accent-amber-hover: #a87525;
+  --accent-amber-soft: #fff7e6;
+
+  /* --- Borders --- */
+  --border: #d9dfe8;
+  --border-light: #e8ebf0;
+
+  /* --- Shadows --- */
+  --shadow:
+    0 5px 18px rgba(31, 41, 55, 0.07);
+
+  --shadow-hover:
+    0 10px 26px rgba(31, 41, 55, 0.11);
+
+  /* --- Status --- */
+  --danger: #c95b5b;
+  --danger-hover: #ae4747;
+  --danger-bg: #fff3f3;
+
+  /* --- Shape --- */
+  --card-radius: 22px;
+  --btn-radius: 14px;
+
+  /* --- Typography --- */
+  --font-sans:
+    system-ui,
+    'Segoe UI',
+    Roboto,
+    'Noto Sans',
+    sans-serif;
+
+  --font-size-base: 20px;
+  --font-size-sm: 16px;
+  --font-size-lg: 24px;
+  --font-size-xl: 32px;
+  --font-size-btn: 18px;
+
+  --line-height: 1.5;
+
+  /* --- Global Rendering --- */
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height);
+
+  color: var(--text);
+  background: var(--bg);
+
+  color-scheme: light;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+/* ============================================
+   Reset & Base
+   ============================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+
+  background:
+    radial-gradient(
+      circle at 8% 10%,
+      rgba(115, 87, 199, 0.07),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 92% 12%,
+      rgba(76, 127, 184, 0.06),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 50% 95%,
+      rgba(215, 122, 98, 0.045),
+      transparent 22%
+    ),
+    var(--bg);
+
+  line-height: 1.6;
+}
+
+#root {
+  width: 100%;
+  max-width: 1180px;
+
+  min-height: 100svh;
+
+  margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 0 24px;
+}
+
+
+/* ============================================
+   Headings
+   ============================================ */
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-sans);
+
+  font-weight: 700;
+
+  color: var(--text-heading);
+
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--font-size-xl);
+}
+
+h2 {
+  font-size: var(--font-size-lg);
+}
+
+p {
+  margin: 0;
+}
+
+
+/* ============================================
+   Form & Interactive Elements
+   ============================================ */
+
+button,
+a,
+select,
+input,
+textarea {
+  min-height: 48px;
+}
+
+button,
+select,
+input,
+textarea {
+  font-family: var(--font-sans);
+  font-size: 16px;
+}
+
+p,
+li,
+label,
+button,
+input,
+select,
+textarea {
+  line-height: 1.5;
+}
+
+
+/* ============================================
+   Accessible Focus
+   ============================================ */
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+
+/* ============================================
+   Disabled Controls
+   ============================================ */
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* ============================================
+   Accessibility — Reduced Motion
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+/* ============================================
+   Accessibility — Skip Link
+   ============================================ */
+
+.skip-link {
+  position: fixed;
+
+  top: 12px;
+  left: 12px;
+
+  z-index: 9999;
+
+  padding: 12px 16px;
+
+  border-radius: 10px;
+
+  background: #ffffff;
+  color: var(--accent);
+
+  font-weight: 700;
+
+  text-decoration: none;
+
+  transform: translateY(-150%);
+
+  transition:
+    transform 0.2s ease;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+
+/* ============================================
+   Accessibility — High Contrast
+   ============================================ */
+
+@media (prefers-contrast: more) {
+  button,
+  select,
+  input,
+  textarea {
+    border: 2px solid currentColor;
+  }
+
+  .card,
+  .offline-status,
+  .user-bar,
+  section {
+    border-width: 2px;
+  }
+
+  :focus-visible {
+    outline-width: 4px;
+  }
+}
+
+
+/* ============================================
+   Responsive Typography
+   ============================================ */
+
+@media (max-width: 640px) {
+  :root {
+    --font-size-base: 18px;
+    --font-size-xl: 27px;
+    --font-size-lg: 21px;
+  }
+
+  #root {
+    padding: 0 14px;
+  }
+}

@@ -1,0 +1,166 @@
+/* ============================================
+   Cognicare NER — Language Selector
+   Purple + Blue Accessible Control
+   ============================================ */
+
+.language-selector {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+/* --------------------------------------------
+   Label
+   -------------------------------------------- */
+
+.language-selector-label {
+  color: #555c66;
+
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  font-weight: 750;
+
+  line-height: 1.4;
+}
+
+/* --------------------------------------------
+   Control
+   -------------------------------------------- */
+
+.language-selector-control {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  min-width: 155px;
+}
+
+.language-selector-icon {
+  position: absolute;
+  left: 12px;
+
+  width: 20px;
+  height: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #7357c7;
+
+  pointer-events: none;
+
+  z-index: 1;
+}
+
+.language-selector-icon svg {
+  width: 18px;
+  height: 18px;
+
+  display: block;
+}
+
+/* --------------------------------------------
+   Select
+   -------------------------------------------- */
+
+.language-selector-select {
+  width: 100%;
+
+  min-height: 48px;
+
+  box-sizing: border-box;
+
+  padding:
+    10px
+    36px
+    10px
+    40px;
+
+  border: 2px solid #ddd6e8;
+  border-radius: 13px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #faf8fc 100%
+    );
+
+  color: #4b5260;
+
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  outline: none;
+
+  appearance: auto;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.language-selector-select:hover {
+  border-color: #cfc3dd;
+
+  background: #ffffff;
+}
+
+.language-selector-select:focus {
+  border-color: #7357c7;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 0 0 4px rgba(115, 87, 199, 0.12);
+}
+
+.language-selector-select:focus-visible {
+  outline: 3px solid rgba(76, 127, 184, 0.20);
+  outline-offset: 2px;
+}
+
+.language-selector-select option {
+  background: #ffffff;
+  color: #3f4650;
+}
+
+/* --------------------------------------------
+   Mobile
+   -------------------------------------------- */
+
+@media (max-width: 600px) {
+  .language-selector {
+    width: 100%;
+
+    align-items: stretch;
+    flex-direction: column;
+
+    gap: 7px;
+  }
+
+  .language-selector-control {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .language-selector-select {
+    width: 100%;
+  }
+}
+
+/* --------------------------------------------
+   Reduced Motion
+   -------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .language-selector-select {
+    transition: none;
+  }
+}

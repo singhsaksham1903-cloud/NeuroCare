@@ -1,0 +1,1375 @@
+/* ============================================
+   Cognicare NER — Object Recall
+   Peach + Blue + Lavender + Amber Theme
+   ============================================ */
+
+/* --------------------------------------------
+   Page
+   -------------------------------------------- */
+
+.object-recall-page {
+  min-height: 100vh;
+  box-sizing: border-box;
+
+  padding: 28px 20px 50px;
+
+  background:
+    radial-gradient(circle at 8% 7%,
+      rgba(215, 122, 98, 0.08),
+      transparent 23%),
+    radial-gradient(circle at 92% 10%,
+      rgba(76, 127, 184, 0.08),
+      transparent 23%),
+    radial-gradient(circle at 50% 97%,
+      rgba(115, 87, 199, 0.06),
+      transparent 22%),
+    #faf9fb;
+
+  color: #414850;
+}
+
+/* --------------------------------------------
+   Header
+   -------------------------------------------- */
+
+.object-recall-header {
+  width: min(900px, 100%);
+  margin: 0 auto 25px;
+}
+
+.object-recall-back-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  min-height: 48px;
+  padding: 10px 18px;
+
+  border: 2px solid #e5d1ca;
+  border-radius: 14px;
+
+  background: #ffffff;
+  color: #9a6256;
+
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 5px 14px rgba(60, 72, 88, 0.06);
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.object-recall-back-button:hover {
+  background: #fff7f3;
+  border-color: #d8b8ae;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 7px 17px rgba(60, 72, 88, 0.08);
+}
+
+.object-recall-back-button:active {
+  transform: translateY(0);
+}
+
+.object-recall-back-button:focus-visible {
+  outline: 3px solid rgba(215, 122, 98, 0.22);
+  outline-offset: 3px;
+}
+
+.object-recall-back-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* --------------------------------------------
+   Heading
+   -------------------------------------------- */
+
+.object-recall-heading {
+  display: flex;
+  align-items: center;
+  gap: 19px;
+
+  margin-top: 22px;
+  padding: 23px;
+
+  border: 1px solid #e7dedb;
+  border-radius: 24px;
+
+  background:
+    linear-gradient(135deg,
+      #fffdfc 0%,
+      #fff3ee 48%,
+      #f3effb 100%);
+
+  box-shadow:
+    0 9px 25px rgba(60, 72, 88, 0.065);
+}
+
+.object-recall-heading-icon {
+  width: 82px;
+  height: 82px;
+
+  flex: 0 0 82px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 23px;
+
+  background:
+    linear-gradient(145deg,
+      #fff0e9 0%,
+      #eee8ff 100%);
+
+  color: #c57460;
+
+  border: 1px solid #ead8d1;
+
+  box-shadow:
+    0 8px 18px rgba(60, 72, 88, 0.07);
+}
+
+.object-recall-heading-icon svg {
+  width: 52px;
+  height: 52px;
+}
+
+.object-recall-eyebrow {
+  display: inline-block;
+
+  margin-bottom: 5px;
+
+  color: #9a7c8b;
+
+  font-size: 0.76rem;
+  font-weight: 800;
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.object-recall-heading h1 {
+  margin: 0 0 8px;
+
+  color: #3d4650;
+
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+  font-weight: 800;
+
+  line-height: 1.15;
+}
+
+.object-recall-heading p {
+  max-width: 650px;
+
+  margin: 0;
+
+  color: #6d747b;
+
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.object-recall-header>.voice-read-aloud {
+  margin-top: 15px;
+}
+
+/* --------------------------------------------
+   Difficulty Controls
+   -------------------------------------------- */
+
+.object-recall-controls {
+  width: min(720px, 100%);
+  box-sizing: border-box;
+
+  margin: 0 auto 24px;
+  padding: 23px;
+
+  border: 1px solid #e6ddd9;
+  border-radius: 23px;
+
+  background:
+    linear-gradient(145deg,
+      #ffffff 0%,
+      #fffaf7 100%);
+
+  box-shadow:
+    0 8px 22px rgba(60, 72, 88, 0.055);
+
+  text-align: center;
+}
+
+.object-recall-controls-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 13px;
+
+  margin-bottom: 18px;
+}
+
+.object-recall-controls-icon {
+  width: 46px;
+  height: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  background: #fff0eb;
+  color: #d07760;
+
+  border: 1px solid #ecd7cf;
+}
+
+.object-recall-controls-icon svg {
+  width: 27px;
+  height: 27px;
+}
+
+.object-recall-section-label {
+  display: block;
+
+  margin-bottom: 2px;
+
+  color: #9a7d88;
+
+  font-size: 0.72rem;
+  font-weight: 800;
+
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.object-recall-controls h2 {
+  margin: 0;
+
+  color: #414a53;
+
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+/* --------------------------------------------
+   Difficulty Buttons
+   -------------------------------------------- */
+
+.object-difficulty-buttons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  gap: 10px;
+
+  margin-bottom: 18px;
+}
+
+.object-difficulty-button {
+  min-height: 48px;
+
+  padding: 10px 20px;
+
+  border: 2px solid #ddd6df;
+  border-radius: 13px;
+
+  background: #ffffff;
+  color: #6f6875;
+
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.object-difficulty-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 12px rgba(60, 72, 88, 0.07);
+}
+
+.object-difficulty-button--easy:hover:not(:disabled) {
+  border-color: #bdd2e4;
+  background: #f2f7fb;
+}
+
+.object-difficulty-button--medium:hover:not(:disabled) {
+  border-color: #cdbfe3;
+  background: #f6f2fc;
+}
+
+.object-difficulty-button--hard:hover:not(:disabled) {
+  border-color: #e4bbb0;
+  background: #fff3ef;
+}
+
+.object-difficulty-button--active {
+  color: #ffffff;
+}
+
+.object-difficulty-button--easy.object-difficulty-button--active {
+  border-color: #4c7fb8;
+  background: #4c7fb8;
+
+  box-shadow:
+    0 6px 14px rgba(76, 127, 184, 0.16);
+}
+
+.object-difficulty-button--medium.object-difficulty-button--active {
+  border-color: #7357c7;
+  background: #7357c7;
+
+  box-shadow:
+    0 6px 14px rgba(115, 87, 199, 0.16);
+}
+
+.object-difficulty-button--hard.object-difficulty-button--active {
+  border-color: #d07760;
+  background: #d07760;
+
+  box-shadow:
+    0 6px 14px rgba(208, 119, 96, 0.16);
+}
+
+.object-difficulty-button:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+/* --------------------------------------------
+   Start Button
+   -------------------------------------------- */
+
+.object-start-button {
+  min-height: 52px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+
+  padding: 12px 23px;
+
+  border: 2px solid #d07760;
+  border-radius: 14px;
+
+  background:
+    linear-gradient(135deg,
+      #d07760 0%,
+      #bd6651 100%);
+
+  color: #ffffff;
+
+  font-family: var(--font-sans);
+  font-size: 0.93rem;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 7px 16px rgba(208, 119, 96, 0.16);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.object-start-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+
+  background:
+    linear-gradient(135deg,
+      #bd6651 0%,
+      #ac5947 100%);
+
+  box-shadow:
+    0 9px 20px rgba(208, 119, 96, 0.22);
+}
+
+.object-start-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.object-start-button:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+.object-start-icon {
+  font-size: 0.78rem;
+}
+
+/* --------------------------------------------
+   Statistics
+   -------------------------------------------- */
+
+.object-recall-stats {
+  width: min(900px, 100%);
+
+  margin: 0 auto 22px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(5, minmax(0, 1fr));
+
+  gap: 10px;
+}
+
+.object-recall-stat {
+  position: relative;
+
+  min-height: 105px;
+
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 14px;
+
+  border: 1px solid #e3dfe2;
+  border-radius: 17px;
+
+  background: #ffffff;
+
+  text-align: center;
+
+  box-shadow:
+    0 6px 17px rgba(60, 72, 88, 0.04);
+
+  overflow: hidden;
+}
+
+.object-recall-stat::before {
+  content: '';
+
+  position: absolute;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 4px;
+}
+
+.object-recall-stat--objects::before {
+  background: #4c7fb8;
+}
+
+.object-recall-stat--correct::before {
+  background: #438f7b;
+}
+
+.object-recall-stat--wrong::before {
+  background: #d77a62;
+}
+
+.object-recall-stat--time::before {
+  background: #c18a32;
+}
+
+.object-recall-stat--accuracy::before {
+  background: #7357c7;
+}
+
+.object-recall-stat strong {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #424a53;
+
+  font-size: clamp(1.35rem, 3vw, 1.8rem);
+  font-weight: 800;
+
+  line-height: 1.15;
+}
+
+.object-recall-stat span {
+  color: #777d83;
+
+  font-size: 0.77rem;
+  font-weight: 700;
+
+  line-height: 1.3;
+}
+
+/* --------------------------------------------
+   Message
+   -------------------------------------------- */
+
+.object-recall-message-wrap {
+  width: min(720px, 100%);
+  box-sizing: border-box;
+
+  margin: 0 auto 22px;
+  padding: 14px 18px;
+
+  border: 1px solid #e4d8d4;
+  border-radius: 16px;
+
+  background:
+    linear-gradient(135deg,
+      #fff7f3 0%,
+      #f7f3fc 100%);
+
+  text-align: center;
+}
+
+.object-recall-message-label {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #987c87;
+
+  font-size: 0.7rem;
+  font-weight: 800;
+
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.object-recall-message {
+  margin: 0;
+
+  color: #626c74;
+
+  font-size: 0.98rem;
+  font-weight: 700;
+
+  line-height: 1.5;
+}
+
+/* --------------------------------------------
+   Target Objects
+   -------------------------------------------- */
+
+.object-target-display {
+  width: min(800px, 100%);
+  box-sizing: border-box;
+
+  margin: 0 auto 24px;
+  padding: 21px;
+
+  border: 1px solid #e3d9df;
+  border-radius: 23px;
+
+  background:
+    linear-gradient(145deg,
+      #fff4ef 0%,
+      #f4effb 100%);
+
+  box-shadow:
+    0 9px 23px rgba(60, 72, 88, 0.065);
+}
+
+.object-target-heading,
+.object-options-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  margin-bottom: 17px;
+}
+
+.object-target-heading span,
+.object-options-heading span {
+  color: #686f77;
+
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.object-target-heading strong,
+.object-options-heading strong {
+  padding: 5px 9px;
+
+  border-radius: 999px;
+
+  background: #ffffff;
+  color: #a56656;
+
+  border: 1px solid #ecd8d1;
+
+  font-size: 0.74rem;
+  font-weight: 750;
+}
+
+.object-target-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 13px;
+}
+
+.object-target {
+  aspect-ratio: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  position: relative;
+
+  border: 3px solid #e4c4ba;
+  border-radius: 19px;
+
+  background: #fffdfc;
+
+  font-size: clamp(2.2rem, 5vw, 3rem);
+
+  box-shadow:
+    0 7px 15px rgba(60, 72, 88, 0.055);
+}
+
+.object-target--1 {
+  border-color: #b9cfe3;
+  background: #f2f7fb;
+}
+
+.object-target--2 {
+  border-color: #cdbfe3;
+  background: #f7f2fc;
+}
+
+.object-target--3 {
+  border-color: #e5c1b6;
+  background: #fff3ef;
+}
+
+.object-target--4 {
+  border-color: #e0cda6;
+  background: #fff9eb;
+}
+
+.object-target--5 {
+  border-color: #c8ddd5;
+  background: #f0f8f5;
+}
+
+/* --------------------------------------------
+   Answer Options
+   -------------------------------------------- */
+
+.object-options {
+  width: min(800px, 100%);
+  box-sizing: border-box;
+
+  margin: 0 auto 24px;
+  padding: 21px;
+
+  border: 1px solid #e1dce5;
+  border-radius: 23px;
+
+  background:
+    linear-gradient(145deg,
+      #ffffff 0%,
+      #f7f4fb 100%);
+
+  box-shadow:
+    0 9px 23px rgba(60, 72, 88, 0.06);
+}
+
+.object-options-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
+  gap: 13px;
+}
+
+.object-option {
+  position: relative;
+
+  aspect-ratio: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 3px solid #d5dde7;
+  border-radius: 19px;
+
+  background: #ffffff;
+
+  font-family: var(--font-sans);
+  font-size: clamp(2.2rem, 5vw, 3rem);
+
+  cursor: pointer;
+
+  box-shadow:
+    0 7px 15px rgba(60, 72, 88, 0.055);
+
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.object-option:hover:not(:disabled) {
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 10px 19px rgba(60, 72, 88, 0.08);
+}
+
+.object-option:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.object-option:focus-visible {
+  outline: 3px solid rgba(76, 127, 184, 0.24);
+  outline-offset: 4px;
+}
+
+.object-option--1 {
+  border-color: #b8cfe4;
+  background: #f1f7fb;
+}
+
+.object-option--2 {
+  border-color: #cdbfe3;
+  background: #f6f1fc;
+}
+
+.object-option--3 {
+  border-color: #e4c0b5;
+  background: #fff2ee;
+}
+
+.object-option--4 {
+  border-color: #dfcba5;
+  background: #fff8e8;
+}
+
+.object-option--5 {
+  border-color: #c9ddd5;
+  background: #f0f8f5;
+}
+
+.object-option--correct {
+  border-color: #9bc7b4;
+
+  background:
+    linear-gradient(145deg,
+      #eaf7f0 0%,
+      #f2faf6 100%);
+
+  cursor: default;
+
+  box-shadow:
+    0 7px 17px rgba(67, 143, 123, 0.11);
+}
+
+.object-option--wrong {
+  border-color: #dfa9a1;
+
+  background:
+    linear-gradient(145deg,
+      #fff0ed 0%,
+      #fff7f5 100%);
+
+  cursor: default;
+
+  box-shadow:
+    0 7px 17px rgba(215, 122, 98, 0.10);
+}
+
+.object-selection-mark {
+  position: absolute;
+
+  top: 7px;
+  right: 7px;
+
+  width: 27px;
+  height: 27px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.object-option--correct .object-selection-mark {
+  color: #438f7b;
+  border: 1px solid #cfe5d9;
+}
+
+.object-option--wrong .object-selection-mark {
+  color: #c46c5d;
+  border: 1px solid #ecd0ca;
+}
+
+/* --------------------------------------------
+   Completion
+   -------------------------------------------- */
+
+.object-recall-complete {
+  width: min(650px, 100%);
+  box-sizing: border-box;
+
+  margin: 0 auto 26px;
+
+  padding: 28px 24px;
+
+  border: 1px solid #dfd2e8;
+  border-radius: 24px;
+
+  background:
+    linear-gradient(145deg,
+      #fffdfd 0%,
+      #f5effb 100%);
+
+  text-align: center;
+
+  box-shadow:
+    0 11px 27px rgba(60, 72, 88, 0.07);
+}
+
+.object-recall-complete-icon {
+  width: 68px;
+  height: 68px;
+
+  margin: 0 auto 13px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(145deg,
+      #eee8ff 0%,
+      #eaf6ef 100%);
+
+  color: #638875;
+
+  border: 1px solid #d8ded9;
+}
+
+.object-recall-complete-icon svg {
+  width: 42px;
+  height: 42px;
+}
+
+.object-recall-complete-eyebrow {
+  display: inline-block;
+
+  margin-bottom: 5px;
+
+  color: #8b7698;
+
+  font-size: 0.74rem;
+  font-weight: 800;
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.object-recall-complete h2 {
+  margin: 0 0 8px;
+
+  color: #414a53;
+
+  font-size: 1.65rem;
+  font-weight: 800;
+}
+
+.object-recall-complete-description {
+  max-width: 500px;
+
+  margin: 0 auto 19px;
+
+  color: #70777e;
+
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.object-completion-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(5, minmax(0, 1fr));
+
+  gap: 8px;
+
+  margin-bottom: 21px;
+}
+
+.object-completion-grid>div {
+  padding: 11px 7px;
+
+  border: 1px solid #e3dce9;
+  border-radius: 13px;
+
+  background: #ffffff;
+}
+
+.object-completion-grid span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #858a90;
+
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.object-completion-grid strong {
+  display: block;
+
+  color: #4c5560;
+
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+/* --------------------------------------------
+   History
+   -------------------------------------------- */
+
+.object-history {
+  width: min(900px, 100%);
+  box-sizing: border-box;
+
+  margin: 40px auto 0;
+  padding: 24px;
+
+  border: 1px solid #e1dce5;
+  border-radius: 24px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 8px 23px rgba(60, 72, 88, 0.055);
+}
+
+.object-history-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  margin-bottom: 20px;
+}
+
+.object-history-heading {
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  min-width: 0;
+}
+
+.object-history-icon {
+  width: 54px;
+  height: 54px;
+
+  flex: 0 0 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 16px;
+
+  background: #fff0eb;
+  color: #c57460;
+
+  border: 1px solid #ecd7d0;
+}
+
+.object-history-icon svg {
+  width: 31px;
+  height: 31px;
+}
+
+.object-history-eyebrow {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: #8f7a87;
+
+  font-size: 0.72rem;
+  font-weight: 800;
+
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.object-history-header h2 {
+  margin: 0 0 5px;
+
+  color: #424b54;
+
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.object-history-header p {
+  margin: 0;
+
+  color: #767c82;
+
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.object-clear-button {
+  flex-shrink: 0;
+
+  min-height: 44px;
+
+  padding: 9px 14px;
+
+  border: 2px solid #dfb9b1;
+  border-radius: 12px;
+
+  background: #fff9f8;
+  color: #a4574c;
+
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 750;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.object-clear-button:hover {
+  background: #fff0ed;
+  border-color: #d69b91;
+
+  transform: translateY(-1px);
+}
+
+.object-clear-button:focus-visible {
+  outline: 3px solid rgba(115, 87, 199, 0.23);
+  outline-offset: 3px;
+}
+
+/* --------------------------------------------
+   History Items
+   -------------------------------------------- */
+
+.object-history-list {
+  display: grid;
+
+  gap: 11px;
+}
+
+.object-history-item {
+  display: grid;
+
+  grid-template-columns:
+    minmax(160px, 0.7fr) minmax(0, 1.3fr);
+
+  gap: 17px;
+
+  padding: 15px;
+
+  border: 1px solid #e4e0e5;
+  border-radius: 17px;
+
+  background:
+    linear-gradient(135deg,
+      #fffefe 0%,
+      #faf8fc 100%);
+}
+
+.object-history-date {
+  display: flex;
+  align-items: center;
+}
+
+.object-history-item>div>strong,
+.object-history-date strong {
+  color: #555e67;
+
+  font-size: 0.83rem;
+  font-weight: 750;
+
+  line-height: 1.45;
+}
+
+.object-history-metrics {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 7px;
+}
+
+.object-history-metrics span {
+  padding: 7px 9px;
+
+  border-radius: 10px;
+
+  background: #f4f1f8;
+  color: #70757d;
+
+  font-size: 0.75rem;
+  font-weight: 650;
+
+  line-height: 1.35;
+}
+
+.object-local-note {
+  margin: 17px 0 0;
+
+  color: #80858a;
+
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+/* --------------------------------------------
+   Tablet
+   -------------------------------------------- */
+
+@media (max-width: 800px) {
+  .object-recall-stats {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+  .object-recall-stat:last-child {
+    grid-column: span 3;
+  }
+
+  .object-target-grid,
+  .object-options-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+  .object-completion-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+  .object-history-item {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* --------------------------------------------
+   Mobile
+   -------------------------------------------- */
+
+@media (max-width: 560px) {
+  .object-recall-page {
+    padding: 18px 10px 40px;
+  }
+
+  .object-recall-back-button {
+    width: 100%;
+  }
+
+  .object-recall-heading {
+    flex-direction: column;
+    align-items: center;
+
+    padding: 20px;
+
+    text-align: center;
+
+    border-radius: 21px;
+  }
+
+  .object-recall-heading-icon {
+    width: 76px;
+    height: 76px;
+
+    flex-basis: 76px;
+  }
+
+  .object-recall-heading h1 {
+    font-size: 1.85rem;
+  }
+
+  .object-recall-heading p {
+    font-size: 0.9rem;
+  }
+
+  .object-recall-controls {
+    padding: 19px;
+
+    border-radius: 20px;
+  }
+
+  .object-recall-controls-heading {
+    align-items: flex-start;
+    justify-content: flex-start;
+
+    text-align: left;
+  }
+
+  .object-difficulty-buttons {
+    flex-direction: column;
+  }
+
+  .object-difficulty-button,
+  .object-start-button {
+    width: 100%;
+  }
+
+  .object-recall-stats {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 8px;
+  }
+
+  .object-recall-stat {
+    min-height: 92px;
+  }
+
+  .object-recall-stat:last-child {
+    grid-column: auto;
+  }
+
+  .object-target-display,
+  .object-options,
+  .object-recall-complete,
+  .object-history {
+    border-radius: 20px;
+  }
+
+  .object-target-display,
+  .object-options {
+    padding: 18px;
+  }
+
+  .object-target-grid,
+  .object-options-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 9px;
+  }
+
+  .object-target,
+  .object-option {
+    border-width: 2px;
+    border-radius: 15px;
+  }
+
+  .object-recall-complete {
+    padding: 22px 18px;
+  }
+
+  .object-completion-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .object-history {
+    padding: 18px;
+  }
+
+  .object-history-header {
+    flex-direction: column;
+  }
+
+  .object-clear-button {
+    width: 100%;
+  }
+
+  .object-history-heading {
+    align-items: flex-start;
+  }
+
+  .object-history-metrics {
+    grid-template-columns:
+      1fr 1fr;
+  }
+}
+
+/* --------------------------------------------
+   Very Small Screens
+   -------------------------------------------- */
+
+@media (max-width: 390px) {
+  .object-recall-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .object-recall-stat:last-child {
+    grid-column: auto;
+  }
+
+  .object-completion-grid,
+  .object-history-metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------
+   Reduced Motion
+   -------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+
+  .object-recall-back-button,
+  .object-difficulty-button,
+  .object-start-button,
+  .object-option,
+  .object-clear-button {
+    transition: none;
+  }
+}
