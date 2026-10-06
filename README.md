@@ -17,7 +17,7 @@ If you are developing a production application, we recommend using TypeScript wi
 
 ## Team NeuroCare:-
 -> Saksham Singh
-->
+-> Abhinav Gupta
 ->
 ->
   
