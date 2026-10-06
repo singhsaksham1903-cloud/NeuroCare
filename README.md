@@ -89,10 +89,10 @@ Add your demonstration video or presentation link here.
 
 👥 Team
 Team NeuroCare
-Mratunjay Gaur
-Saksham Singh
-Abhinav Gupta
-Ayush Yadav
+Mratunjay Gaur(Team Leader)
+Saksham Singh(Team Member)
+Abhinav Gupta(Team Member)
+Ayush Yadav(Team Member)
 
 Hackathon Project — Cognicare NER
 
