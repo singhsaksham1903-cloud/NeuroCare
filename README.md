@@ -16,7 +16,6 @@
 | **Project Name** | Cognicare NER |
 | **Team** | NeuroCare |
 | Team Member | Contribution |
-|---|---|
 | **Mratunjay Gaur** | Project Lead / Development |
 | **Saksham Singh** | Frontend Development |
 | **Ayush Yadav** | Backend / Database |
@@ -30,11 +29,11 @@
 
 ---
 
-# 🎥 Demo Video
 
 ## Cognicare NER Working Prototype
+## 🎥 Demo Video
 
-**▶️ [Watch the Cognicare NER Demo]<video controls src="Cognicare-Care_video_demo.mp4" title="Demo Link Video"></video>**
+**▶️ [Watch the Cognicare NER Demo](Cognicare-Care_video_demo.mp4)**
 
 The demonstration is intended to showcase the working prototype, including the elderly dashboard, cognitive games, personalized recommendations, voice interaction, memories, reminders, caregiver functionality, and NER-focused cognitive content.
 
@@ -894,13 +893,13 @@ The project is intended for:
 
 # 🎥 Demo & Presentation
 
-## 🎬 Demo Video
+## 🎥 Demo Video
 
-**[▶️ Watch Cognicare NER Demo]<video controls src="Cognicare-Care_video_demo.mp4" title="Cognicare Demo Video Link"></video>**
+**▶️ [Watch the Cognicare NER Demo](Cognicare-Care_video_demo.mp4)**
 
 ## 📊 Hackathon Presentation
 
-**[View Cognicare NER Presentation](ADD_PRESENTATION_LINK_HERE)**
+**[View Cognicare NER Presentation](NEUROCARE.pptx.pptx)**
 
 ## 🗂️ Project Repository
 
