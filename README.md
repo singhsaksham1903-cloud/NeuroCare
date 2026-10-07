@@ -899,7 +899,7 @@ The project is intended for:
 
 ## 📊 Hackathon Presentation
 
-**[View Cognicare NER Presentation](ADD_PRESENTATION_LINK_HERE)**
+**[View Cognicare NER Presentation](NEUROCARE.pptx.pptx)**
 
 ## 🗂️ Project Repository
 
