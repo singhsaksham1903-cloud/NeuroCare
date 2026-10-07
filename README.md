@@ -1,5 +1,4 @@
 # 🧠 Cognicare NER
-# 🧠 Cognicare NER
 
 <p align="center">
   <img src="team-neurocare-logo.png" alt="Team NeuroCare Logo" width="600">
