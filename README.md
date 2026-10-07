@@ -1,11 +1,18 @@
 # 🧠 Cognicare NER
+# 🧠 Cognicare NER
 
-## AI-Based Cognitive Gaming and Memory Assistance Platform for Elderly Dementia Patients in North Eastern Region (NER)
+<p align="center">
+  <img src="team-neurocare-logo.png" alt="Team NeuroCare Logo" width="600">
+</p>
 
 <p align="center">
   <strong>Team NeuroCare</strong><br>
-  <em>Hackathon Prototype • Cognitive Assistance • Memory Support • Elder-Friendly Technology</em>
+   <em>Hackathon Prototype • Cognitive Assistance • Memory Support • Elder-Friendly Technology</em>
 </p>
+
+
+## AI-Based Cognitive Gaming and Memory Assistance Platform for Elderly Dementia Patients in North Eastern Region (NER)
+
 
 ---
 
