@@ -1,46 +1,26 @@
-import express, { Request, Response, NextFunction } from 'express';
-import crypto from 'crypto';
+import express from 'express';
+import cors from 'cors';
+import fs from 'fs';
 import path from 'path';
-import { GoogleGenAI } from '@google/genai';
-import {
-  generatePersonalizedDailyPlan,
-  DailyBrainPlanRecord,
-} from './src/server/companionEngine';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-const JWT_SECRET = process.env.JWT_SECRET_KEY || 'cognicare-secret-key-2026';
 
-let aiClient: GoogleGenAI | null = null;
-if (process.env.GEMINI_API_KEY) {
-  aiClient = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      },
-    },
-  });
-}
-
-const dailyPlansStore: Map<string, DailyBrainPlanRecord> = new Map();
-
-function getTodayDateString(): string {
-  return new Date().toISOString().split('T')[0];
-}
-
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(cors());
+app.use(express.json({ limit: '15mb' }));
 
 // ============================================================
-// In-Memory Data Store
+// Data Models & Store
 // ============================================================
 
 interface UserRecord {
   id: number;
   full_name: string;
   email: string;
-  password_hash: string;
+  password: string;
   role: 'elderly' | 'caregiver';
   is_active: boolean;
   created_at: string;
@@ -52,9 +32,9 @@ interface MemoryRecord {
   title: string;
   description: string;
   category: string;
-  memory_date?: string | null;
-  image_data?: string | null;
-  client_mutation_id?: string | null;
+  memoryDate: string;
+  imageData?: string;
+  clientMutationId?: string | null;
   created_at: string;
 }
 
@@ -64,9 +44,9 @@ interface ReminderRecord {
   title: string;
   description: string;
   category: string;
-  due_datetime?: string | null;
+  dueDatetime: string;
   completed: boolean;
-  client_mutation_id?: string | null;
+  clientMutationId?: string | null;
   created_at: string;
 }
 
@@ -77,14 +57,14 @@ interface GameSessionRecord {
   difficulty: string;
   accuracy: number;
   mistakes: number;
-  time: number;
+  time: number | null;
   completed: boolean;
-  matches?: number | null;
-  sequence_length?: number | null;
-  target_count?: number | null;
-  correct?: number | null;
-  wrong?: number | null;
-  client_session_id?: string | null;
+  matches?: number;
+  sequenceLength?: number;
+  targetCount?: number;
+  correct?: number;
+  wrong?: number;
+  clientSessionId?: string | null;
   created_at: string;
 }
 
@@ -96,54 +76,52 @@ interface CaregiverLinkRecord {
   created_at: string;
 }
 
-function hashPassword(password: string): string {
-  return crypto.createHmac('sha256', JWT_SECRET).update(password).digest('hex');
-}
+const dataDir = path.resolve(__dirname, 'data');
+const storeFile = path.resolve(dataDir, 'store.json');
 
-// Seed Initial Data
 const users: UserRecord[] = [
   {
     id: 1,
-    full_name: 'Sunita Sharma',
+    full_name: 'Grandma Alice',
     email: 'elderly@cognicare.com',
-    password_hash: hashPassword('password123'),
+    password: 'password123',
     role: 'elderly',
     is_active: true,
-    created_at: new Date('2025-01-15T09:00:00Z').toISOString(),
+    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
   },
   {
     id: 2,
-    full_name: 'Dr. Rajesh Sharma',
+    full_name: 'Nurse Sarah',
     email: 'caregiver@cognicare.com',
-    password_hash: hashPassword('password123'),
+    password: 'password123',
     role: 'caregiver',
     is_active: true,
-    created_at: new Date('2025-01-15T09:00:00Z').toISOString(),
+    created_at: new Date(Date.now() - 25 * 86400000).toISOString(),
   },
 ];
+
+const tokens = new Map<string, number>();
+tokens.set('demo-token-elderly', 1);
+tokens.set('demo-token-caregiver', 2);
 
 const memories: MemoryRecord[] = [
   {
     id: 1,
     user_id: 1,
-    title: "Granddaughter's Graduation Day",
-    description: 'Priya graduated with first class honors in engineering. The whole family wore traditional attire and celebrated with home-made pitha and sweets.',
+    title: 'Spring Tea in the Courtyard',
+    description: 'Drinking fresh warm Assam tea with family under the blooming garden trees.',
     category: 'Family',
-    memory_date: '2024-05-15',
-    image_data: null,
-    client_mutation_id: 'seed-memory-1',
-    created_at: new Date('2025-02-01T10:00:00Z').toISOString(),
+    memoryDate: '2026-03-21',
+    created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
   },
   {
     id: 2,
     user_id: 1,
-    title: 'Morning Walk at Kaziranga Tea Estate',
-    description: 'Enjoyed the fresh morning breeze and beautiful mist across the lush green tea bushes with my dear friends.',
-    category: 'Travel',
-    memory_date: '2024-11-20',
-    image_data: null,
-    client_mutation_id: 'seed-memory-2',
-    created_at: new Date('2025-02-10T14:30:00Z').toISOString(),
+    title: 'Rongali Bihu Festivities',
+    description: 'Joyful music, rhythmic dhol beats, and sharing freshly prepared homemade pitha.',
+    category: 'Culture',
+    memoryDate: '2026-04-14',
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
   },
 ];
 
@@ -151,24 +129,22 @@ const reminders: ReminderRecord[] = [
   {
     id: 1,
     user_id: 1,
-    title: 'Blood Pressure Tablet',
-    description: 'Take 1 tablet with warm water after breakfast',
-    category: 'Health',
-    due_datetime: new Date(Date.now() + 2 * 3600000).toISOString(),
+    title: 'Morning Blood Pressure Medication',
+    description: 'Take one blue tablet with breakfast and a glass of water.',
+    category: 'Medication',
+    dueDatetime: new Date(Date.now() + 2 * 3600000).toISOString().slice(0, 16),
     completed: false,
-    client_mutation_id: 'seed-rem-1',
-    created_at: new Date().toISOString(),
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
   },
   {
     id: 2,
     user_id: 1,
-    title: 'Evening Walk & Hydration',
-    description: '20-minute gentle stroll in the courtyard, drink 1 glass of water',
-    category: 'Daily',
-    due_datetime: new Date(Date.now() + 6 * 3600000).toISOString(),
+    title: 'Gentle Evening Garden Walk',
+    description: '15 minutes of peaceful walking and fresh air in the courtyard.',
+    category: 'Activity',
+    dueDatetime: new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 16),
     completed: false,
-    client_mutation_id: 'seed-rem-2',
-    created_at: new Date().toISOString(),
+    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
   },
 ];
 
@@ -183,36 +159,33 @@ const gameSessions: GameSessionRecord[] = [
     time: 44,
     completed: true,
     matches: 6,
-    client_session_id: 'seed-game-1',
-    created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
   },
   {
     id: 2,
     user_id: 1,
     game: 'Sequence Memory',
     difficulty: 'Easy',
-    accuracy: 92,
+    accuracy: 82,
     mistakes: 1,
     time: 32,
     completed: true,
-    sequence_length: 5,
-    client_session_id: 'seed-game-2',
-    created_at: new Date(Date.now() - 86400000).toISOString(),
+    sequenceLength: 5,
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
   },
   {
     id: 3,
     user_id: 1,
     game: 'Object Recall',
     difficulty: 'Easy',
-    accuracy: 85,
-    mistakes: 1,
-    time: 40,
+    accuracy: 75,
+    mistakes: 2,
+    time: 29,
     completed: true,
-    target_count: 5,
-    correct: 5,
+    targetCount: 4,
+    correct: 3,
     wrong: 1,
-    client_session_id: 'seed-game-3',
-    created_at: new Date().toISOString(),
+    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
   },
 ];
 
@@ -222,7 +195,7 @@ const caregiverLinks: CaregiverLinkRecord[] = [
     caregiver_id: 2,
     elderly_id: 1,
     status: 'approved',
-    created_at: new Date('2025-01-20T10:00:00Z').toISOString(),
+    created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
   },
 ];
 
@@ -232,108 +205,137 @@ let nextReminderId = 3;
 let nextSessionId = 4;
 let nextLinkId = 2;
 
-// ============================================================
-// Auth & JWT Helpers
-// ============================================================
+function loadStore() {
+  try {
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    if (fs.existsSync(storeFile)) {
+      const raw = fs.readFileSync(storeFile, 'utf-8');
+      const data = JSON.parse(raw);
+      if (Array.isArray(data.users)) {
+        users.length = 0;
+        users.push(...data.users);
+      }
+      if (Array.isArray(data.tokens)) {
+        tokens.clear();
+        data.tokens.forEach(([k, v]: [string, number]) => tokens.set(k, v));
+      }
+      if (Array.isArray(data.memories)) {
+        memories.length = 0;
+        memories.push(...data.memories);
+      }
+      if (Array.isArray(data.reminders)) {
+        reminders.length = 0;
+        reminders.push(...data.reminders);
+      }
+      if (Array.isArray(data.gameSessions)) {
+        gameSessions.length = 0;
+        gameSessions.push(...data.gameSessions);
+      }
+      if (Array.isArray(data.caregiverLinks)) {
+        caregiverLinks.length = 0;
+        caregiverLinks.push(...data.caregiverLinks);
+      }
 
-function createToken(userId: number, role: string): string {
-  const payload = {
-    sub: String(userId),
-    role,
-    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7, // 7 days
-  };
-  const b64Payload = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const signature = crypto.createHmac('sha256', JWT_SECRET).update(b64Payload).digest('base64url');
-  return `${b64Payload}.${signature}`;
+      nextUserId = Math.max(3, ...users.map((u) => u.id + 1));
+      nextMemoryId = Math.max(3, ...memories.map((m) => m.id + 1));
+      nextReminderId = Math.max(3, ...reminders.map((r) => r.id + 1));
+      nextSessionId = Math.max(4, ...gameSessions.map((s) => s.id + 1));
+      nextLinkId = Math.max(2, ...caregiverLinks.map((l) => l.id + 1));
+      return;
+    }
+  } catch (err) {
+    console.warn('Failed to load store from disk:', err);
+  }
+  saveStore();
 }
 
-function verifyToken(token: string): { sub: string; role: string } | null {
+function saveStore() {
   try {
-    const parts = token.split('.');
-    if (parts.length !== 2) return null;
-    const [b64Payload, signature] = parts;
-    const expectedSig = crypto.createHmac('sha256', JWT_SECRET).update(b64Payload).digest('base64url');
-    if (signature !== expectedSig) return null;
-    const payload = JSON.parse(Buffer.from(b64Payload, 'base64url').toString('utf-8'));
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
-    return payload;
-  } catch {
-    return null;
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    const data = {
+      users,
+      tokens: Array.from(tokens.entries()),
+      memories,
+      reminders,
+      gameSessions,
+      caregiverLinks,
+    };
+    fs.writeFileSync(storeFile, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (err) {
+    console.warn('Failed to save store to disk:', err);
   }
 }
 
-interface AuthenticatedRequest extends Request {
-  user?: UserRecord;
-}
+// Initial store hydration
+loadStore();
 
-function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+// ============================================================
+// Auth Middleware
+// ============================================================
+
+function authenticate(req: express.Request, res: express.Response, next: express.NextFunction): void {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ detail: 'Invalid or expired authentication token.' });
+    res.status(401).json({ detail: 'Authentication token missing or invalid.' });
+    return;
   }
 
   const token = authHeader.slice(7).trim();
-  const decoded = verifyToken(token);
-  if (!decoded || !decoded.sub) {
-    return res.status(401).json({ detail: 'Invalid or expired authentication token.' });
+  const userId = tokens.get(token);
+
+  if (!userId) {
+    res.status(401).json({ detail: 'Session expired or invalid.' });
+    return;
   }
 
-  const user = users.find((u) => u.id === parseInt(decoded.sub, 10));
-  if (!user || !user.is_active) {
-    return res.status(401).json({ detail: 'User not found or inactive.' });
+  const user = users.find((u) => u.id === userId && u.is_active);
+  if (!user) {
+    res.status(401).json({ detail: 'User account not found or inactive.' });
+    return;
   }
 
-  req.user = user;
+  (req as any).user = user;
   next();
 }
-
-// ============================================================
-// Health & DB Routes
-// ============================================================
-
-app.get('/', (req, res, next) => {
-  // If request accepts text/html, pass to Vite/SPA handler
-  if (req.accepts('html')) {
-    return next();
-  }
-  res.json({ message: 'Cognicare NER API is running', status: 'success' });
-});
-
-app.get('/health', (_req, res) => {
-  res.json({ status: 'healthy' });
-});
-
-app.get('/db-health', (_req, res) => {
-  res.json({ status: 'connected', database: 'cognicare' });
-});
 
 // ============================================================
 // Auth Routes
 // ============================================================
 
 app.post('/auth/register', (req, res) => {
-  const { full_name, email, password, role } = req.body;
+  const { full_name, email, password, role } = req.body || {};
 
-  if (!full_name || !email || !password) {
-    return res.status(400).json({ detail: 'Full name, email, and password are required.' });
+  if (!email || !password || !full_name) {
+    res.status(400).json({ detail: 'Full name, email, and password are required.' });
+    return;
   }
 
-  const existing = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const existing = users.find((u) => u.email.toLowerCase() === normalizedEmail);
   if (existing) {
-    return res.status(409).json({ detail: 'An account with this email already exists.' });
+    res.status(409).json({ detail: 'An account with this email already exists.' });
+    return;
   }
 
   const newUser: UserRecord = {
     id: nextUserId++,
-    full_name: full_name.trim(),
-    email: email.trim().toLowerCase(),
-    password_hash: hashPassword(password),
+    full_name: String(full_name).trim(),
+    email: normalizedEmail,
+    password: String(password),
     role: role === 'caregiver' ? 'caregiver' : 'elderly',
     is_active: true,
     created_at: new Date().toISOString(),
   };
 
   users.push(newUser);
+
+  const token = `token-${newUser.id}-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+  tokens.set(token, newUser.id);
+  saveStore();
 
   res.status(201).json({
     id: newUser.id,
@@ -342,31 +344,46 @@ app.post('/auth/register', (req, res) => {
     role: newUser.role,
     is_active: newUser.is_active,
     created_at: newUser.created_at,
+    access_token: token,
+    token_type: 'bearer',
   });
 });
 
 app.post('/auth/login', (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body || {};
 
   if (!email || !password) {
-    return res.status(400).json({ detail: 'Email and password are required.' });
+    res.status(400).json({ detail: 'Email and password are required.' });
+    return;
   }
 
-  const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
-  if (!user || user.password_hash !== hashPassword(password)) {
-    return res.status(401).json({ detail: 'Invalid email or password.' });
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const user = users.find(
+    (u) => u.email.toLowerCase() === normalizedEmail && u.password === String(password),
+  );
+
+  if (!user) {
+    res.status(401).json({ detail: 'Invalid email or password.' });
+    return;
   }
 
   if (!user.is_active) {
-    return res.status(403).json({ detail: 'User account is inactive.' });
+    res.status(403).json({ detail: 'User account is inactive.' });
+    return;
   }
 
-  const token = createToken(user.id, user.role);
-  res.json({ access_token: token, token_type: 'bearer' });
+  const token = `token-${user.id}-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+  tokens.set(token, user.id);
+  saveStore();
+
+  res.json({
+    access_token: token,
+    token_type: 'bearer',
+  });
 });
 
-app.get('/auth/me', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const user = req.user!;
+app.get('/auth/me', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
   res.json({
     id: user.id,
     full_name: user.full_name,
@@ -387,102 +404,103 @@ function serializeMemory(m: MemoryRecord) {
     title: m.title,
     description: m.description,
     category: m.category,
-    memoryDate: m.memory_date,
-    imageData: m.image_data,
-    clientMutationId: m.client_mutation_id,
+    memoryDate: m.memoryDate,
+    imageData: m.imageData || '',
+    clientMutationId: m.clientMutationId || null,
     created_at: m.created_at,
   };
 }
 
-app.get('/memories', authMiddleware, (req: AuthenticatedRequest, res) => {
+app.get('/memories', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
   const userMemories = memories
-    .filter((m) => m.user_id === req.user!.id)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    .filter((m) => m.user_id === user.id)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .map(serializeMemory);
 
   res.json({
     count: userMemories.length,
-    memories: userMemories.map(serializeMemory),
+    memories: userMemories,
   });
 });
 
-app.post('/memories', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const { title, description, category, memoryDate, imageData, clientMutationId } = req.body;
-
-  if (!title || !description) {
-    return res.status(400).json({ detail: 'Title and description are required.' });
-  }
+app.post('/memories', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
+  const { title, description, category, memoryDate, imageData, clientMutationId } = req.body || {};
 
   if (clientMutationId) {
-    const existing = memories.find((m) => m.user_id === req.user!.id && m.client_mutation_id === clientMutationId);
+    const existing = memories.find(
+      (m) => m.user_id === user.id && m.clientMutationId === clientMutationId,
+    );
     if (existing) {
-      return res.status(200).json({
+      res.json({
         message: 'Memory already saved',
         memory: serializeMemory(existing),
         idempotent: true,
       });
+      return;
     }
   }
 
-  const newMem: MemoryRecord = {
+  const newMemory: MemoryRecord = {
     id: nextMemoryId++,
-    user_id: req.user!.id,
-    title: title.trim(),
-    description: description.trim(),
+    user_id: user.id,
+    title: title || 'Untitled Memory',
+    description: description || '',
     category: category || 'General',
-    memory_date: memoryDate || null,
-    image_data: imageData || null,
-    client_mutation_id: clientMutationId || null,
+    memoryDate: memoryDate || '',
+    imageData: imageData || '',
+    clientMutationId: clientMutationId || null,
     created_at: new Date().toISOString(),
   };
 
-  memories.push(newMem);
+  memories.push(newMemory);
+  saveStore();
 
   res.status(201).json({
     message: 'Memory saved successfully',
-    memory: serializeMemory(newMem),
+    memory: serializeMemory(newMemory),
   });
 });
 
-app.put('/memories/:id', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const id = parseInt(req.params.id, 10);
-  const mem = memories.find((m) => m.id === id && m.user_id === req.user!.id);
+app.put('/memories/:id', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
+  const id = Number(req.params.id);
+  const memory = memories.find((m) => m.id === id && m.user_id === user.id);
 
-  if (!mem) {
-    return res.status(404).json({ detail: 'Memory not found' });
+  if (!memory) {
+    res.status(404).json({ detail: 'Memory not found.' });
+    return;
   }
 
-  const { title, description, category, memoryDate, imageData, clientMutationId } = req.body;
+  const { title, description, category, memoryDate, imageData } = req.body || {};
+  if (title !== undefined) memory.title = title;
+  if (description !== undefined) memory.description = description;
+  if (category !== undefined) memory.category = category;
+  if (memoryDate !== undefined) memory.memoryDate = memoryDate;
+  if (imageData !== undefined) memory.imageData = imageData;
 
-  if (clientMutationId && mem.client_mutation_id === clientMutationId) {
-    return res.json({
-      message: 'Memory update already applied',
-      memory: serializeMemory(mem),
-      idempotent: true,
-    });
-  }
-
-  if (title !== undefined) mem.title = title.trim();
-  if (description !== undefined) mem.description = description.trim();
-  if (category !== undefined) mem.category = category;
-  if (memoryDate !== undefined) mem.memory_date = memoryDate;
-  if (imageData !== undefined) mem.image_data = imageData;
-  if (clientMutationId !== undefined) mem.client_mutation_id = clientMutationId;
+  saveStore();
 
   res.json({
     message: 'Memory updated successfully',
-    memory: serializeMemory(mem),
+    memory: serializeMemory(memory),
   });
 });
 
-app.delete('/memories/:id', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const id = parseInt(req.params.id, 10);
-  const index = memories.findIndex((m) => m.id === id && m.user_id === req.user!.id);
+app.delete('/memories/:id', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
+  const id = Number(req.params.id);
+  const index = memories.findIndex((m) => m.id === id && m.user_id === user.id);
 
   if (index === -1) {
-    return res.status(404).json({ detail: 'Memory not found' });
+    res.status(404).json({ detail: 'Memory not found.' });
+    return;
   }
 
   memories.splice(index, 1);
+  saveStore();
+
   res.json({ message: 'Memory deleted successfully' });
 });
 
@@ -496,102 +514,103 @@ function serializeReminder(r: ReminderRecord) {
     title: r.title,
     description: r.description,
     category: r.category,
-    dueDatetime: r.due_datetime,
+    dueDatetime: r.dueDatetime,
     completed: r.completed,
-    clientMutationId: r.client_mutation_id,
+    clientMutationId: r.clientMutationId || null,
     created_at: r.created_at,
   };
 }
 
-app.get('/reminders', authMiddleware, (req: AuthenticatedRequest, res) => {
+app.get('/reminders', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
   const userReminders = reminders
-    .filter((r) => r.user_id === req.user!.id)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    .filter((r) => r.user_id === user.id)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .map(serializeReminder);
 
   res.json({
     count: userReminders.length,
-    reminders: userReminders.map(serializeReminder),
+    reminders: userReminders,
   });
 });
 
-app.post('/reminders', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const { title, description, category, dueDatetime, completed, clientMutationId } = req.body;
-
-  if (!title || !description) {
-    return res.status(400).json({ detail: 'Title and description are required.' });
-  }
+app.post('/reminders', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
+  const { title, description, category, dueDatetime, completed, clientMutationId } = req.body || {};
 
   if (clientMutationId) {
-    const existing = reminders.find((r) => r.user_id === req.user!.id && r.client_mutation_id === clientMutationId);
+    const existing = reminders.find(
+      (r) => r.user_id === user.id && r.clientMutationId === clientMutationId,
+    );
     if (existing) {
-      return res.status(200).json({
+      res.json({
         message: 'Reminder already saved',
         reminder: serializeReminder(existing),
         idempotent: true,
       });
+      return;
     }
   }
 
-  const newRem: ReminderRecord = {
+  const newReminder: ReminderRecord = {
     id: nextReminderId++,
-    user_id: req.user!.id,
-    title: title.trim(),
-    description: description.trim(),
+    user_id: user.id,
+    title: title || 'Untitled Reminder',
+    description: description || '',
     category: category || 'General',
-    due_datetime: dueDatetime || null,
+    dueDatetime: dueDatetime || new Date().toISOString(),
     completed: Boolean(completed),
-    client_mutation_id: clientMutationId || null,
+    clientMutationId: clientMutationId || null,
     created_at: new Date().toISOString(),
   };
 
-  reminders.push(newRem);
+  reminders.push(newReminder);
+  saveStore();
 
   res.status(201).json({
-    message: 'Reminder saved successfully',
-    reminder: serializeReminder(newRem),
+    message: 'Reminder created successfully',
+    reminder: serializeReminder(newReminder),
   });
 });
 
-app.put('/reminders/:id', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const id = parseInt(req.params.id, 10);
-  const rem = reminders.find((r) => r.id === id && r.user_id === req.user!.id);
+app.put('/reminders/:id', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
+  const id = Number(req.params.id);
+  const reminder = reminders.find((r) => r.id === id && r.user_id === user.id);
 
-  if (!rem) {
-    return res.status(404).json({ detail: 'Reminder not found' });
+  if (!reminder) {
+    res.status(404).json({ detail: 'Reminder not found.' });
+    return;
   }
 
-  const { title, description, category, dueDatetime, completed, clientMutationId } = req.body;
+  const { title, description, category, dueDatetime, completed } = req.body || {};
+  if (title !== undefined) reminder.title = title;
+  if (description !== undefined) reminder.description = description;
+  if (category !== undefined) reminder.category = category;
+  if (dueDatetime !== undefined) reminder.dueDatetime = dueDatetime;
+  if (completed !== undefined) reminder.completed = Boolean(completed);
 
-  if (clientMutationId && rem.client_mutation_id === clientMutationId) {
-    return res.json({
-      message: 'Reminder update already applied',
-      reminder: serializeReminder(rem),
-      idempotent: true,
-    });
-  }
-
-  if (title !== undefined) rem.title = title.trim();
-  if (description !== undefined) rem.description = description.trim();
-  if (category !== undefined) rem.category = category;
-  if (dueDatetime !== undefined) rem.due_datetime = dueDatetime;
-  if (completed !== undefined) rem.completed = Boolean(completed);
-  if (clientMutationId !== undefined) rem.client_mutation_id = clientMutationId;
+  saveStore();
 
   res.json({
     message: 'Reminder updated successfully',
-    reminder: serializeReminder(rem),
+    reminder: serializeReminder(reminder),
   });
 });
 
-app.delete('/reminders/:id', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const id = parseInt(req.params.id, 10);
-  const index = reminders.findIndex((r) => r.id === id && r.user_id === req.user!.id);
+app.delete('/reminders/:id', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
+  const id = Number(req.params.id);
+  const index = reminders.findIndex((r) => r.id === id && r.user_id === user.id);
 
   if (index === -1) {
-    return res.status(404).json({ detail: 'Reminder not found' });
+    res.status(404).json({ detail: 'Reminder not found.' });
+    return;
   }
 
   reminders.splice(index, 1);
+  saveStore();
+
   res.json({ message: 'Reminder deleted successfully' });
 });
 
@@ -599,107 +618,228 @@ app.delete('/reminders/:id', authMiddleware, (req: AuthenticatedRequest, res) =>
 // Game Sessions Routes
 // ============================================================
 
-function serializeGameSession(item: GameSessionRecord) {
+function serializeSession(s: GameSessionRecord) {
   return {
-    id: item.id,
-    game: item.game,
-    difficulty: item.difficulty,
-    accuracy: item.accuracy,
-    mistakes: item.mistakes,
-    time: item.time,
-    completed: item.completed,
-    matches: item.matches ?? null,
-    sequenceLength: item.sequence_length ?? null,
-    targetCount: item.target_count ?? null,
-    correct: item.correct ?? null,
-    wrong: item.wrong ?? null,
-    clientSessionId: item.client_session_id ?? null,
-    created_at: item.created_at,
+    id: s.id,
+    game: s.game,
+    difficulty: s.difficulty,
+    accuracy: s.accuracy,
+    mistakes: s.mistakes,
+    time: s.time,
+    completed: s.completed,
+    matches: s.matches ?? 0,
+    sequenceLength: s.sequenceLength ?? 0,
+    targetCount: s.targetCount ?? 0,
+    correct: s.correct ?? 0,
+    wrong: s.wrong ?? 0,
+    clientSessionId: s.clientSessionId || null,
+    created_at: s.created_at,
   };
 }
 
-app.post('/game-sessions', authMiddleware, (req: AuthenticatedRequest, res) => {
+app.get('/game-sessions', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
+  const sessions = gameSessions
+    .filter((s) => s.user_id === user.id)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .map(serializeSession);
+
+  res.json({
+    count: sessions.length,
+    sessions,
+  });
+});
+
+app.post('/game-sessions', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
   const {
     game,
     difficulty,
     accuracy,
     mistakes,
     time,
-    completed = true,
+    completed,
     matches,
     sequenceLength,
     targetCount,
     correct,
     wrong,
     clientSessionId,
-  } = req.body;
+  } = req.body || {};
 
   if (clientSessionId) {
     const existing = gameSessions.find(
-      (s) => s.user_id === req.user!.id && s.client_session_id === clientSessionId
+      (s) => s.user_id === user.id && s.clientSessionId === clientSessionId,
     );
     if (existing) {
-      return res.status(200).json({
+      res.json({
         message: 'Game session already saved',
-        session: serializeGameSession(existing),
+        session: serializeSession(existing),
         idempotent: true,
       });
+      return;
     }
   }
 
-  const newSess: GameSessionRecord = {
+  const newSession: GameSessionRecord = {
     id: nextSessionId++,
-    user_id: req.user!.id,
-    game,
-    difficulty,
+    user_id: user.id,
+    game: game || 'Memory Match',
+    difficulty: difficulty || 'Standard',
     accuracy: Number(accuracy) || 0,
     mistakes: Number(mistakes) || 0,
-    time: Number(time) || 0,
-    completed: Boolean(completed),
-    matches: matches !== undefined ? Number(matches) : null,
-    sequence_length: sequenceLength !== undefined ? Number(sequenceLength) : null,
-    target_count: targetCount !== undefined ? Number(targetCount) : null,
-    correct: correct !== undefined ? Number(correct) : null,
-    wrong: wrong !== undefined ? Number(wrong) : null,
-    client_session_id: clientSessionId || null,
+    time: time !== undefined && time !== null ? Number(time) : null,
+    completed: completed !== undefined ? Boolean(completed) : true,
+    matches: matches ? Number(matches) : 0,
+    sequenceLength: sequenceLength ? Number(sequenceLength) : 0,
+    targetCount: targetCount ? Number(targetCount) : 0,
+    correct: correct ? Number(correct) : 0,
+    wrong: wrong ? Number(wrong) : 0,
+    clientSessionId: clientSessionId || null,
     created_at: new Date().toISOString(),
   };
 
-  gameSessions.push(newSess);
-
-  // Auto-update today's daily companion plan if matching activity was played
-  const todayStr = getTodayDateString();
-  const planKey = `${req.user!.id}_${todayStr}`;
-  const plan = dailyPlansStore.get(planKey);
-  if (plan) {
-    const act = plan.activities.find(
-      (a) =>
-        a.gameName.toLowerCase() === newSess.game.toLowerCase() ||
-        (a.gameId === 'ner-cultural-recall' && newSess.game.toLowerCase().includes('cultural'))
-    );
-    if (act) {
-      act.completed = true;
-      act.completedAt = newSess.created_at;
-      act.accuracy = newSess.accuracy;
-      plan.completedCount = plan.activities.filter((a) => a.completed).length;
-      plan.updatedAt = new Date().toISOString();
-    }
-  }
+  gameSessions.push(newSession);
+  saveStore();
 
   res.status(201).json({
     message: 'Game session saved successfully',
-    session: serializeGameSession(newSess),
+    session: serializeSession(newSession),
   });
 });
 
-app.get('/game-sessions', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const sessions = gameSessions
-    .filter((s) => s.user_id === req.user!.id)
+// ============================================================
+// Recommendation Engine Route
+// ============================================================
+
+const GAME_NAMES = ['Memory Match', 'Sequence Memory', 'Object Recall'];
+
+app.get('/recommendation', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
+  const userSessions = gameSessions
+    .filter((s) => s.user_id === user.id)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
+  const summaries: Record<string, any> = {};
+
+  for (const gameName of GAME_NAMES) {
+    const gameList = userSessions.filter((s) => s.game === gameName);
+
+    if (gameList.length === 0) {
+      summaries[gameName] = {
+        game: gameName,
+        sessions: 0,
+        recent_accuracy: 0,
+        overall_accuracy: 0,
+        average_mistakes: 0,
+        trend: 0,
+        performance_status: 'New',
+        priority_score: 100,
+        confidence: 'low',
+      };
+      continue;
+    }
+
+    const recent = gameList.slice(0, 3);
+    const older = gameList.slice(3, 6);
+
+    const recentAcc = recent.reduce((sum, s) => sum + s.accuracy, 0) / recent.length;
+    const overallAcc = gameList.reduce((sum, s) => sum + s.accuracy, 0) / gameList.length;
+    const avgMistakes = recent.reduce((sum, s) => sum + s.mistakes, 0) / recent.length;
+
+    let trend = 0;
+    if (older.length > 0) {
+      const olderAcc = older.reduce((sum, s) => sum + s.accuracy, 0) / older.length;
+      trend = recentAcc - olderAcc;
+    }
+
+    let status = 'Stable';
+    if (gameList.length < 3) {
+      status = 'Not enough data';
+    } else if (trend >= 7 && recentAcc >= 70) {
+      status = 'Improving';
+    } else if (trend <= -7) {
+      status = 'Declining';
+    }
+
+    const priorityScore = (100 - recentAcc) + avgMistakes * 5 - trend * 2;
+    const confidence = gameList.length >= 6 ? 'high' : gameList.length >= 3 ? 'medium' : 'low';
+
+    summaries[gameName] = {
+      game: gameName,
+      sessions: gameList.length,
+      recent_accuracy: Math.round(recentAcc * 10) / 10,
+      overall_accuracy: Math.round(overallAcc * 10) / 10,
+      average_mistakes: Math.round(avgMistakes * 10) / 10,
+      trend: Math.round(trend * 10) / 10,
+      performance_status: status,
+      priority_score: priorityScore,
+      confidence,
+    };
+  }
+
+  if (userSessions.length === 0) {
+    res.json({
+      recommendation: {
+        game: 'Memory Match',
+        difficulty: 'Standard',
+        reason: 'Start with Memory Match to begin building your personalized performance history.',
+        performance_status: 'New',
+      },
+      based_on_sessions: 0,
+      engine: 'rule-based-v3',
+      personalization: 'performance-based',
+      confidence: 'low',
+      game_summaries: summaries,
+    });
+    return;
+  }
+
+  let recommendedGame = GAME_NAMES[0];
+  let maxScore = -Infinity;
+  for (const name of GAME_NAMES) {
+    if (summaries[name].priority_score > maxScore) {
+      maxScore = summaries[name].priority_score;
+      recommendedGame = name;
+    }
+  }
+
+  const selected = summaries[recommendedGame];
+
+  let recommendedDifficulty = 'Easy';
+  if (recommendedGame === 'Memory Match') {
+    recommendedDifficulty = 'Standard';
+  } else {
+    if (selected.recent_accuracy >= 85 && selected.average_mistakes <= 1) {
+      recommendedDifficulty = 'Hard';
+    } else if (selected.recent_accuracy >= 65) {
+      recommendedDifficulty = 'Medium';
+    } else {
+      recommendedDifficulty = 'Easy';
+    }
+  }
+
+  let reason = `Practice with ${recommendedGame} at ${recommendedDifficulty} difficulty to keep your memory sharp.`;
+  if (selected.sessions === 0) {
+    reason = `Start exploring ${recommendedGame} to build your activity profile.`;
+  } else if (selected.performance_status === 'Declining') {
+    reason = `Your recent scores in ${recommendedGame} dipped slightly. A quick session will help you regain focus.`;
+  } else if (selected.performance_status === 'Improving') {
+    reason = `You are performing strongly in ${recommendedGame}! Keep up your great rhythm.`;
+  }
+
   res.json({
-    count: sessions.length,
-    sessions: sessions.map(serializeGameSession),
+    recommendation: {
+      game: recommendedGame,
+      difficulty: recommendedDifficulty,
+      reason,
+      performance_status: selected.performance_status,
+    },
+    based_on_sessions: userSessions.length,
+    engine: 'rule-based-v3',
+    personalization: 'performance-based',
+    confidence: selected.confidence,
+    game_summaries: summaries,
   });
 });
 
@@ -713,10 +853,10 @@ function buildLinkResponse(link: CaregiverLinkRecord) {
 
   return {
     id: link.id,
-    caregiver_id: caregiver?.id || link.caregiver_id,
+    caregiver_id: link.caregiver_id,
     caregiver_name: caregiver?.full_name || 'Caregiver',
     caregiver_email: caregiver?.email || '',
-    elderly_id: elderly?.id || link.elderly_id,
+    elderly_id: link.elderly_id,
     elderly_name: elderly?.full_name || 'Elderly User',
     elderly_email: elderly?.email || '',
     status: link.status,
@@ -724,133 +864,143 @@ function buildLinkResponse(link: CaregiverLinkRecord) {
   };
 }
 
-app.post('/caregiver-links', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const current_user = req.user!;
-  if (current_user.role !== 'caregiver') {
-    return res.status(403).json({ detail: 'Only caregiver accounts can send link requests.' });
+app.get('/caregiver-links', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
+
+  let links: CaregiverLinkRecord[] = [];
+  if (user.role === 'caregiver') {
+    links = caregiverLinks.filter((l) => l.caregiver_id === user.id);
+  } else if (user.role === 'elderly') {
+    links = caregiverLinks.filter((l) => l.elderly_id === user.id);
   }
 
-  const { elderly_email } = req.body;
+  res.json(links.map(buildLinkResponse));
+});
+
+app.post('/caregiver-links', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
+
+  if (user.role !== 'caregiver') {
+    res.status(403).json({ detail: 'Only caregiver accounts can send link requests.' });
+    return;
+  }
+
+  const { elderly_email } = req.body || {};
   if (!elderly_email) {
-    return res.status(400).json({ detail: 'Elderly email is required.' });
+    res.status(400).json({ detail: 'Elderly user email is required.' });
+    return;
   }
 
-  const elderly = users.find((u) => u.email.toLowerCase() === elderly_email.trim().toLowerCase());
+  const normalized = String(elderly_email).trim().toLowerCase();
+  const elderly = users.find((u) => u.email.toLowerCase() === normalized);
+
   if (!elderly) {
-    return res.status(404).json({ detail: 'No elderly user was found with that email address.' });
+    res.status(404).json({ detail: 'No elderly user was found with that email address.' });
+    return;
   }
 
   if (elderly.role !== 'elderly') {
-    return res.status(400).json({ detail: 'The selected account is not an elderly user account.' });
+    res.status(400).json({ detail: 'The selected account is not an elderly user account.' });
+    return;
   }
 
-  if (elderly.id === current_user.id) {
-    return res.status(400).json({ detail: 'A user cannot link to their own account.' });
+  if (elderly.id === user.id) {
+    res.status(400).json({ detail: 'A user cannot link to their own account.' });
+    return;
   }
 
-  const existingLink = caregiverLinks.find(
-    (l) => l.caregiver_id === current_user.id && l.elderly_id === elderly.id
+  const existing = caregiverLinks.find(
+    (l) => l.caregiver_id === user.id && l.elderly_id === elderly.id,
   );
 
-  if (existingLink) {
-    if (existingLink.status === 'pending') {
-      return res.status(409).json({ detail: 'A link request is already pending.' });
+  if (existing) {
+    if (existing.status === 'pending') {
+      res.status(409).json({ detail: 'A link request is already pending.' });
+      return;
     }
-    if (existingLink.status === 'approved') {
-      return res.status(409).json({ detail: 'This caregiver is already linked to this elderly user.' });
+    if (existing.status === 'approved') {
+      res.status(409).json({ detail: 'This caregiver is already linked to this elderly user.' });
+      return;
     }
-    existingLink.status = 'pending';
-    return res.json(buildLinkResponse(existingLink));
+    existing.status = 'pending';
+    saveStore();
+    res.json(buildLinkResponse(existing));
+    return;
   }
 
   const newLink: CaregiverLinkRecord = {
     id: nextLinkId++,
-    caregiver_id: current_user.id,
+    caregiver_id: user.id,
     elderly_id: elderly.id,
     status: 'pending',
     created_at: new Date().toISOString(),
   };
 
   caregiverLinks.push(newLink);
+  saveStore();
   res.status(201).json(buildLinkResponse(newLink));
 });
 
-app.get('/caregiver-links', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const current_user = req.user!;
-  let links: CaregiverLinkRecord[] = [];
+app.put('/caregiver-links/:id', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
+  const id = Number(req.params.id);
 
-  if (current_user.role === 'caregiver') {
-    links = caregiverLinks.filter((l) => l.caregiver_id === current_user.id);
-  } else if (current_user.role === 'elderly') {
-    links = caregiverLinks.filter((l) => l.elderly_id === current_user.id);
-  } else {
-    return res.status(403).json({ detail: 'Unsupported user role.' });
+  if (user.role !== 'elderly') {
+    res.status(403).json({ detail: 'Only elderly users can approve or reject link requests.' });
+    return;
   }
 
-  links.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  res.json(links.map(buildLinkResponse));
-});
-
-app.put('/caregiver-links/:id', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const current_user = req.user!;
-  if (current_user.role !== 'elderly') {
-    return res.status(403).json({ detail: 'Only elderly users can approve or reject link requests.' });
-  }
-
-  const id = parseInt(req.params.id, 10);
-  const link = caregiverLinks.find((l) => l.id === id && l.elderly_id === current_user.id);
-
+  const link = caregiverLinks.find((l) => l.id === id && l.elderly_id === user.id);
   if (!link) {
-    return res.status(404).json({ detail: 'Caregiver link request not found.' });
+    res.status(404).json({ detail: 'Caregiver link request not found.' });
+    return;
   }
 
   if (link.status !== 'pending') {
-    return res.status(400).json({ detail: 'This link request has already been decided.' });
+    res.status(400).json({ detail: 'This link request has already been decided.' });
+    return;
   }
 
-  const { status } = req.body;
+  const { status } = req.body || {};
   if (status !== 'approved' && status !== 'rejected') {
-    return res.status(400).json({ detail: 'Status must be approved or rejected.' });
+    res.status(400).json({ detail: "Status must be 'approved' or 'rejected'." });
+    return;
   }
 
   link.status = status;
+  saveStore();
   res.json(buildLinkResponse(link));
 });
 
-app.get('/caregiver-links/:id/data', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const current_user = req.user!;
-  if (current_user.role !== 'caregiver') {
-    return res.status(403).json({ detail: 'Only caregiver accounts can access linked elderly data.' });
+app.get('/caregiver-links/:id/data', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
+  const id = Number(req.params.id);
+
+  if (user.role !== 'caregiver') {
+    res.status(403).json({ detail: 'Only caregiver accounts can access linked elderly data.' });
+    return;
   }
 
-  const id = parseInt(req.params.id, 10);
   const link = caregiverLinks.find(
-    (l) => l.id === id && l.caregiver_id === current_user.id && l.status === 'approved'
+    (l) => l.id === id && l.caregiver_id === user.id && l.status === 'approved',
   );
 
   if (!link) {
-    return res.status(404).json({ detail: 'Approved caregiver link not found.' });
+    res.status(404).json({ detail: 'Approved caregiver link not found.' });
+    return;
   }
 
-  const elderly = users.find((u) => u.id === link.elderly_id && u.role === 'elderly' && u.is_active);
+  const elderly = users.find((u) => u.id === link.elderly_id);
   if (!elderly) {
-    return res.status(404).json({ detail: 'Linked elderly user was not found.' });
+    res.status(404).json({ detail: 'Linked elderly user was not found.' });
+    return;
   }
 
   const sessions = gameSessions
     .filter((s) => s.user_id === elderly.id)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 30);
-
-  const elderlyMemories = memories.filter((m) => m.user_id === elderly.id);
-  const elderlyReminders = reminders
-    .filter((r) => r.user_id === elderly.id)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-  res.json({
-    link: { id: link.id, status: link.status },
-    elderly_user: { id: elderly.id, full_name: elderly.full_name },
-    sessions: sessions.map((s) => ({
+    .slice(0, 30)
+    .map((s) => ({
       id: s.id,
       game: s.game,
       difficulty: s.difficulty,
@@ -858,515 +1008,98 @@ app.get('/caregiver-links/:id/data', authMiddleware, (req: AuthenticatedRequest,
       mistakes: s.mistakes,
       time: s.time,
       created_at: s.created_at,
-    })),
-    memory_count: elderlyMemories.length,
-    reminders: elderlyReminders.map((r) => ({
+    }));
+
+  const userMemories = memories.filter((m) => m.user_id === elderly.id);
+  const userReminders = reminders
+    .filter((r) => r.user_id === elderly.id)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .map((r) => ({
       id: r.id,
       title: r.title,
       description: r.description,
       category: r.category,
-      dueDatetime: r.due_datetime,
+      dueDatetime: r.dueDatetime,
       completed: r.completed,
-    })),
+    }));
+
+  res.json({
+    link: { id: link.id, status: link.status },
+    elderly_user: { id: elderly.id, full_name: elderly.full_name },
+    sessions,
+    memory_count: userMemories.length,
+    reminders: userReminders,
   });
 });
 
-app.delete('/caregiver-links/:id', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const current_user = req.user!;
-  const id = parseInt(req.params.id, 10);
-  const index = caregiverLinks.findIndex((l) => l.id === id);
+app.delete('/caregiver-links/:id', authenticate, (req, res) => {
+  const user = (req as any).user as UserRecord;
+  const id = Number(req.params.id);
 
+  const index = caregiverLinks.findIndex((l) => l.id === id);
   if (index === -1) {
-    return res.status(404).json({ detail: 'Caregiver link not found.' });
+    res.status(404).json({ detail: 'Caregiver link not found.' });
+    return;
   }
 
   const link = caregiverLinks[index];
-  if (link.caregiver_id !== current_user.id && link.elderly_id !== current_user.id) {
-    return res.status(403).json({ detail: 'You are not allowed to remove this link.' });
+  if (link.caregiver_id !== user.id && link.elderly_id !== user.id) {
+    res.status(403).json({ detail: 'You are not allowed to remove this link.' });
+    return;
   }
 
   caregiverLinks.splice(index, 1);
+  saveStore();
   res.json({ message: 'Caregiver link removed successfully.' });
 });
 
 // ============================================================
-// Recommendation Engine (ported from Python implementation)
+// System Health Checks
 // ============================================================
 
-const GAME_NAMES = ['Memory Match', 'Sequence Memory', 'Object Recall'];
-const GAME_DIFFICULTIES: Record<string, string[]> = {
-  'Memory Match': ['Standard'],
-  'Sequence Memory': ['Easy', 'Medium', 'Hard'],
-  'Object Recall': ['Easy', 'Medium', 'Hard'],
-};
-const DIFFICULTY_ORDER: Record<string, number> = {
-  Easy: 0,
-  Medium: 1,
-  Hard: 2,
-};
+app.get('/health', (_req, res) => {
+  res.json({ status: 'healthy' });
+});
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(value, max));
-}
+app.get('/db-health', (_req, res) => {
+  res.json({ status: 'connected', database: 'cognicare-store' });
+});
 
-function average(values: number[]): number | null {
-  if (!values.length) return null;
-  return values.reduce((sum, v) => sum + v, 0) / values.length;
-}
-
-interface GameSummary {
-  sessions: number;
-  recent_accuracy: number;
-  overall_accuracy: number;
-  average_mistakes: number;
-  trend: number;
-  recent_time: number | null;
-  time_change_percent: number;
-  consistency_std: number;
-  last_difficulty: string | null;
-  performance_status?: string;
-  priority_score?: number;
-  confidence?: string;
-}
-
-function determinePerformanceStatus(summary: GameSummary): string {
-  const { sessions, trend, recent_accuracy } = summary;
-  if (sessions === 0) return 'New';
-  if (sessions < 3) return 'Not enough data';
-  if (trend >= 7 && recent_accuracy >= 70) return 'Improving';
-  if (trend <= -7) return 'Declining';
-  return 'Stable';
-}
-
-function calculateGameSummary(sessions: GameSessionRecord[]): GameSummary | null {
-  if (!sessions.length) return null;
-
-  const recentSessions = sessions.slice(0, 3);
-  const olderSessions = sessions.slice(3, 6);
-
-  const recentAccuracyValues = recentSessions.map((s) => Number(s.accuracy));
-  const overallAccuracyValues = sessions.map((s) => Number(s.accuracy));
-
-  const recentAccuracy = average(recentAccuracyValues) || 0;
-  const overallAccuracy = average(overallAccuracyValues) || 0;
-  const averageMistakes = average(recentSessions.map((s) => Number(s.mistakes))) || 0;
-
-  let trend = 0.0;
-  if (olderSessions.length) {
-    const olderAccuracy = average(olderSessions.map((s) => Number(s.accuracy))) || recentAccuracy;
-    trend = recentAccuracy - olderAccuracy;
-  }
-
-  const recentTimes = recentSessions.map((s) => Number(s.time)).filter((t) => t > 0);
-  const olderTimes = olderSessions.map((s) => Number(s.time)).filter((t) => t > 0);
-  const recentTime = recentTimes.length ? average(recentTimes) : null;
-  const olderTime = olderTimes.length ? average(olderTimes) : null;
-
-  let timeChangePercent = 0.0;
-  if (recentTime !== null && olderTime !== null && olderTime > 0) {
-    timeChangePercent = ((recentTime - olderTime) / olderTime) * 100;
-  }
-
-  let consistencyStd = 0.0;
-  if (recentAccuracyValues.length >= 2) {
-    const mean = recentAccuracy;
-    const variance =
-      recentAccuracyValues.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) /
-      recentAccuracyValues.length;
-    consistencyStd = Math.sqrt(variance);
-  }
-
-  const lastDifficulty = sessions[0].difficulty;
-
-  return {
-    sessions: sessions.length,
-    recent_accuracy: Math.round(recentAccuracy * 10) / 10,
-    overall_accuracy: Math.round(overallAccuracy * 10) / 10,
-    average_mistakes: Math.round(averageMistakes * 10) / 10,
-    trend: Math.round(trend * 10) / 10,
-    recent_time: recentTime !== null ? Math.round(recentTime * 10) / 10 : null,
-    time_change_percent: Math.round(timeChangePercent * 10) / 10,
-    consistency_std: Math.round(consistencyStd * 10) / 10,
-    last_difficulty: lastDifficulty,
-  };
-}
-
-function calculatePriorityScore(summary: GameSummary): number {
-  const { sessions } = summary;
-  const accuracyNeed = clamp((100 - summary.recent_accuracy) / 100, 0, 1);
-  const trendNeed = clamp(-summary.trend / 20, 0, 1);
-  const mistakeNeed = clamp(summary.average_mistakes / 4, 0, 1);
-  const timeNeed = clamp(summary.time_change_percent / 50, 0, 1);
-  const experienceGap = clamp((5 - sessions) / 5, 0, 1);
-
-  const score =
-    accuracyNeed * 0.45 +
-    trendNeed * 0.25 +
-    mistakeNeed * 0.15 +
-    timeNeed * 0.05 +
-    experienceGap * 0.1;
-
-  return Math.round(score * 10000) / 100;
-}
-
-function chooseDifficulty(game: string, summary: GameSummary): string {
-  const levels = GAME_DIFFICULTIES[game] || ['Easy'];
-  if (levels.length === 1) return levels[0];
-  if (summary.sessions === 0) return 'Easy';
-
-  const currentLevel = levels.includes(summary.last_difficulty || '')
-    ? summary.last_difficulty!
-    : 'Easy';
-  const currentIndex = DIFFICULTY_ORDER[currentLevel] ?? 0;
-
-  const strongPerformance =
-    summary.recent_accuracy >= 85 && summary.trend >= -5 && summary.average_mistakes <= 1;
-
-  const needsSupport =
-    summary.recent_accuracy < 60 ||
-    summary.trend <= -10 ||
-    (summary.time_change_percent >= 25 && summary.recent_accuracy < 80);
-
-  if (needsSupport) {
-    return levels[Math.max(0, currentIndex - 1)];
-  }
-  if (strongPerformance) {
-    return levels[Math.min(levels.length - 1, currentIndex + 1)];
-  }
-  return currentLevel;
-}
-
-function buildReason(game: string, difficulty: string, summary: GameSummary): string {
-  const status = summary.performance_status;
-  const accuracy = summary.recent_accuracy;
-  const trend = summary.trend;
-  const mistakes = summary.average_mistakes;
-
-  if (status === 'New') {
-    return `${game} has not been played yet. Starting with this activity will help Cognicare build a performance history.`;
-  }
-  if (status === 'Not enough data') {
-    return `Your recent ${game} accuracy is ${accuracy}%. More sessions will help Cognicare personalize future activities.`;
-  }
-  if (status === 'Improving') {
-    return `Your recent ${game} accuracy is ${accuracy}% and your performance trend is improving. The recommended level is ${difficulty}.`;
-  }
-  if (status === 'Declining') {
-    const formattedTrend = trend > 0 ? `+${trend}` : `${trend}`;
-    return `Your recent ${game} accuracy is ${accuracy}% with a recent trend of ${formattedTrend} percentage points. The recommended level is ${difficulty} to provide a more comfortable challenge.`;
-  }
-  return `Your recent ${game} accuracy is ${accuracy}% with about ${mistakes} mistakes per session. The recommended level is ${difficulty}.`;
-}
-
-function calculateConfidence(summary: GameSummary): string {
-  if (summary.sessions < 3) return 'low';
-  if (summary.sessions < 6) return 'moderate';
-  return 'high';
-}
-
-app.get('/recommendation', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const current_user = req.user!;
-  const sessions = gameSessions
-    .filter((s) => s.user_id === current_user.id && s.completed && GAME_NAMES.includes(s.game))
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 60);
-
-  const grouped: Record<string, GameSessionRecord[]> = {
-    'Memory Match': [],
-    'Sequence Memory': [],
-    'Object Recall': [],
-  };
-
-  for (const sess of sessions) {
-    if (grouped[sess.game]) {
-      grouped[sess.game].push(sess);
-    }
-  }
-
-  const summaries: Record<string, GameSummary> = {};
-
-  for (const game of GAME_NAMES) {
-    let summary = calculateGameSummary(grouped[game]);
-    if (!summary) {
-      summary = {
-        sessions: 0,
-        recent_accuracy: 0,
-        overall_accuracy: 0,
-        average_mistakes: 0,
-        trend: 0,
-        recent_time: null,
-        time_change_percent: 0,
-        consistency_std: 0,
-        last_difficulty: null,
-      };
-    }
-    summary.performance_status = determinePerformanceStatus(summary);
-    summary.priority_score = calculatePriorityScore(summary);
-    summary.confidence = calculateConfidence(summary);
-    summaries[game] = summary;
-  }
-
-  if (!sessions.length) {
-    return res.json({
-      recommendation: {
-        game: 'Memory Match',
-        difficulty: 'Standard',
-        reason:
-          'Start with Memory Match to begin building your personalized performance history.',
-        performance_status: 'New',
-      },
-      based_on_sessions: 0,
-      engine: 'rule-based-v3',
-      personalization: 'performance-based',
-      confidence: 'low',
-      game_summaries: summaries,
-    });
-  }
-
-  let recommendedGame = GAME_NAMES[0];
-  let maxScore = -1;
-  for (const game of GAME_NAMES) {
-    const score = summaries[game].priority_score ?? 0;
-    if (score > maxScore) {
-      maxScore = score;
-      recommendedGame = game;
-    }
-  }
-
-  const selected = summaries[recommendedGame];
-  const recommendedDifficulty = chooseDifficulty(recommendedGame, selected);
-  const reason = buildReason(recommendedGame, recommendedDifficulty, selected);
-
-  res.json({
-    recommendation: {
-      game: recommendedGame,
-      difficulty: recommendedDifficulty,
-      reason,
-      performance_status: selected.performance_status,
-    },
-    based_on_sessions: sessions.length,
-    engine: 'rule-based-v3',
-    personalization: 'performance-based',
-    confidence: selected.confidence,
-    game_summaries: summaries,
-  });
+app.get('/api-status', (_req, res) => {
+  res.json({ message: 'Cognicare NER API is running', status: 'success' });
 });
 
 // ============================================================
-// Cognitive Companion Routes
-// ============================================================
-
-app.get('/companion/daily-plan', authMiddleware, async (req: AuthenticatedRequest, res) => {
-  try {
-    const user = req.user!;
-    const today = getTodayDateString();
-    const planKey = `${user.id}_${today}`;
-    let plan = dailyPlansStore.get(planKey);
-
-    const userMemories = memories.filter((m) => m.user_id === user.id);
-    const userSess = gameSessions.filter((s) => s.user_id === user.id);
-
-    if (!plan) {
-      plan = await generatePersonalizedDailyPlan(
-        user.id,
-        user.full_name,
-        userSess,
-        userMemories,
-        today,
-        aiClient,
-        false
-      );
-      dailyPlansStore.set(planKey, plan);
-    } else {
-      // Sync any newly completed games from gameSessions today
-      const completedToday = userSess.filter((s) => {
-        const sDate = new Date(s.created_at).toISOString().split('T')[0];
-        return sDate === today && s.completed;
-      });
-
-      for (const act of plan.activities) {
-        const match = completedToday.find(
-          (s) =>
-            s.game.toLowerCase() === act.gameName.toLowerCase() ||
-            (act.gameId === 'ner-cultural-recall' && s.game.toLowerCase().includes('cultural'))
-        );
-        if (match) {
-          act.completed = true;
-          act.completedAt = match.created_at;
-          act.accuracy = match.accuracy;
-        }
-      }
-      plan.completedCount = plan.activities.filter((a) => a.completed).length;
-    }
-
-    res.json(plan);
-  } catch (error) {
-    console.error('[Companion] Error getting daily plan:', error);
-    res.status(500).json({ detail: 'Could not load daily plan.' });
-  }
-});
-
-app.post('/companion/daily-plan/refresh', authMiddleware, async (req: AuthenticatedRequest, res) => {
-  try {
-    const user = req.user!;
-    const today = getTodayDateString();
-    const planKey = `${user.id}_${today}`;
-    const existingPlan = dailyPlansStore.get(planKey);
-
-    const userMemories = memories.filter((m) => m.user_id === user.id);
-    const userSess = gameSessions.filter((s) => s.user_id === user.id);
-
-    const freshPlan = await generatePersonalizedDailyPlan(
-      user.id,
-      user.full_name,
-      userSess,
-      userMemories,
-      today,
-      aiClient,
-      true
-    );
-
-    // Retain completed status for any activities already finished today
-    if (existingPlan) {
-      for (const freshAct of freshPlan.activities) {
-        const prevMatch = existingPlan.activities.find(
-          (a) => a.gameId === freshAct.gameId && a.completed
-        );
-        if (prevMatch) {
-          freshAct.completed = true;
-          freshAct.completedAt = prevMatch.completedAt;
-          freshAct.accuracy = prevMatch.accuracy;
-        }
-      }
-      freshPlan.completedCount = freshPlan.activities.filter((a) => a.completed).length;
-    }
-
-    dailyPlansStore.set(planKey, freshPlan);
-    res.json(freshPlan);
-  } catch (error) {
-    console.error('[Companion] Error refreshing daily plan:', error);
-    res.status(500).json({ detail: 'Could not refresh daily plan.' });
-  }
-});
-
-app.post('/companion/daily-plan/complete', authMiddleware, (req: AuthenticatedRequest, res) => {
-  const { gameId } = req.body;
-  if (!gameId) {
-    return res.status(400).json({ detail: 'gameId is required.' });
-  }
-
-  const today = getTodayDateString();
-  const planKey = `${req.user!.id}_${today}`;
-  const plan = dailyPlansStore.get(planKey);
-
-  if (!plan) {
-    return res.status(404).json({ detail: 'No daily plan found for today.' });
-  }
-
-  const act = plan.activities.find((a) => a.gameId === gameId || a.id === gameId);
-  if (act) {
-    act.completed = true;
-    act.completedAt = new Date().toISOString();
-    plan.completedCount = plan.activities.filter((a) => a.completed).length;
-    plan.updatedAt = new Date().toISOString();
-  }
-
-  res.json({ success: true, plan });
-});
-
-app.get('/companion/caregiver-summary/:elderlyId', authMiddleware, async (req: AuthenticatedRequest, res) => {
-  const current_user = req.user!;
-  if (current_user.role !== 'caregiver') {
-    return res.status(403).json({ detail: 'Only caregiver accounts can access linked elderly companion summaries.' });
-  }
-
-  const targetElderlyId = parseInt(req.params.elderlyId, 10);
-  const approvedLink = caregiverLinks.find(
-    (l) => l.caregiver_id === current_user.id && l.elderly_id === targetElderlyId && l.status === 'approved'
-  );
-
-  if (!approvedLink) {
-    return res.status(403).json({ detail: 'You do not have an approved connection to this elderly user.' });
-  }
-
-  const elderlyUser = users.find((u) => u.id === targetElderlyId && u.is_active && u.role === 'elderly');
-  if (!elderlyUser) {
-    return res.status(404).json({ detail: 'Linked elderly user not found.' });
-  }
-
-  const today = getTodayDateString();
-  const planKey = `${targetElderlyId}_${today}`;
-  let plan = dailyPlansStore.get(planKey);
-
-  const elderlyMemories = memories.filter((m) => m.user_id === targetElderlyId);
-  const elderlySess = gameSessions.filter((s) => s.user_id === targetElderlyId);
-
-  if (!plan) {
-    plan = await generatePersonalizedDailyPlan(
-      elderlyUser.id,
-      elderlyUser.full_name,
-      elderlySess,
-      elderlyMemories,
-      today,
-      aiClient,
-      false
-    );
-    dailyPlansStore.set(planKey, plan);
-  }
-
-  const recentSess = elderlySess.slice(0, 5);
-  const avgAcc = recentSess.length
-    ? Math.round(recentSess.reduce((sum, s) => sum + s.accuracy, 0) / recentSess.length)
-    : null;
-
-  res.json({
-    elderly_user: {
-      id: elderlyUser.id,
-      full_name: elderlyUser.full_name,
-      email: elderlyUser.email,
-    },
-    today_plan: plan,
-    completion_summary: {
-      completed: plan.completedCount,
-      total: plan.totalCount,
-      percent: Math.round((plan.completedCount / plan.totalCount) * 100),
-    },
-    recent_trends: {
-      totalSessions: elderlySess.length,
-      recentAccuracy: avgAcc,
-      lastPlayedAt: elderlySess[0]?.created_at || null,
-    },
-    caregiver_guidance: {
-      observation: `${elderlyUser.full_name} has completed ${plan.completedCount} of ${plan.totalCount} brain wellness exercises today.`,
-      suggestion: 'Encourage gentle practice at a relaxed pace. Offer reassuring words and celebrate every completed milestone.',
-    },
-  });
-});
-
-// ============================================================
-// Static Serving / Vite Dev Middleware
+// Vite Dev Server / Static Production Server
 // ============================================================
 
 async function startServer() {
   const isProduction = process.env.NODE_ENV === 'production';
 
   if (!isProduction) {
-    const { createServer: createViteServer } = await import('vite');
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
+    const { createServer } = await import('vite');
+    const vite = await createServer({
+      server: {
+        middlewareMode: true,
+        host: '0.0.0.0',
+        port: 3000,
+        hmr: false,
+        ws: false,
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.resolve(process.cwd(), 'dist');
+    const distPath = path.resolve(__dirname, 'dist');
     app.use(express.static(distPath));
     app.get('*', (_req, res) => {
       res.sendFile(path.resolve(distPath, 'index.html'));
     });
   }
 
+  const PORT = parseInt(process.env.PORT || '3000', 10);
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Cognicare server listening on http://0.0.0.0:${PORT}`);
+    console.log(`Cognicare server running on http://0.0.0.0:${PORT} (${isProduction ? 'production' : 'development'})`);
   });
 }
 

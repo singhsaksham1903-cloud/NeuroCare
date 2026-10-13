@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || ''
+const API_URL = ''
 
 const TOKEN_KEY = 'cognicare-access-token'
 const USER_KEY = 'cognicare-current-user'
@@ -154,6 +154,18 @@ export async function registerUser(
     throw new Error(
       data.detail || 'Registration failed.',
     )
+  }
+
+  if (data.access_token) {
+    saveAccessToken(data.access_token)
+    saveStoredUser({
+      id: data.id,
+      full_name: data.full_name,
+      email: data.email,
+      role: data.role,
+      is_active: data.is_active,
+      created_at: data.created_at,
+    })
   }
 
   return data

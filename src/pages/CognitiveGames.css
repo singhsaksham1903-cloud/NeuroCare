@@ -499,3 +499,25 @@
     font-size: 1.3rem;
   }
 }
+
+.games-voice-companion-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent, #7357c7);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--btn-radius, 14px);
+  padding: 10px 18px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(115, 87, 199, 0.25);
+  transition: transform 0.15s ease, background 0.15s ease;
+  min-height: 48px;
+}
+
+.games-voice-companion-btn:hover {
+  background: var(--accent-hover, #5f46ae);
+  transform: translateY(-2px);
+}

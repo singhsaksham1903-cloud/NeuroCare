@@ -152,7 +152,6 @@ const CATEGORY_LABELS = {
 
 function NERCulturalRecall({
     language = 'en-IN',
-    initialDifficulty = 'Easy',
     readAloudLabel = 'Read Aloud',
     stopReadingLabel = 'Stop Reading',
     onBack,
@@ -420,7 +419,7 @@ function NERCulturalRecall({
                     game:
                         'NER Cultural Recall',
                     difficulty:
-                        initialDifficulty || 'Regional',
+                        'Regional',
                     targetCount:
                         questions.length,
                     correct:

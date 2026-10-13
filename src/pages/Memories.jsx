@@ -6,6 +6,7 @@ import {
 
 import './Memories.css'
 import VoiceReadAloud from '../Components/VoiceReadAloud'
+import VoiceMemoryRecorderModal from '../Components/VoiceCompanion/VoiceMemoryRecorderModal'
 
 import {
   apiDelete,
@@ -261,6 +262,9 @@ function Memories({
 
   const [imageSavingId, setImageSavingId] =
     useState(null)
+
+  const [isVoiceRecordOpen, setIsVoiceRecordOpen] =
+    useState(false)
 
   const imageText = getImageText(language)
 
@@ -665,12 +669,28 @@ function Memories({
         </div>
 
 
-        <VoiceReadAloud
-          text={`${text.memoriesTitle}. ${text.memoriesDescription}`}
-          language={language}
-          label={readAloudLabel}
-          stopLabel={stopReadingLabel}
-        />
+        <div className="memories-header-actions" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="memories-voice-record-launcher-btn"
+            onClick={() => setIsVoiceRecordOpen(true)}
+            aria-label="Record a personal memory with voice"
+          >
+            <span aria-hidden="true">🎙️</span>
+            {language.startsWith('hi')
+              ? 'आवाज़ से याद जोड़ें'
+              : language.startsWith('as')
+              ? 'কণ্ঠেৰে স্মৃতি যোগ কৰক'
+              : 'Record a Memory'}
+          </button>
+
+          <VoiceReadAloud
+            text={`${text.memoriesTitle}. ${text.memoriesDescription}`}
+            language={language}
+            label={readAloudLabel}
+            stopLabel={stopReadingLabel}
+          />
+        </div>
 
       </header>
 
@@ -1146,6 +1166,15 @@ function Memories({
         </section>
 
       </main>
+
+      <VoiceMemoryRecorderModal
+        isOpen={isVoiceRecordOpen}
+        onClose={() => setIsVoiceRecordOpen(false)}
+        language={language.slice(0, 2)}
+        onMemorySaved={() => {
+          loadMemories();
+        }}
+      />
 
     </div>
   )

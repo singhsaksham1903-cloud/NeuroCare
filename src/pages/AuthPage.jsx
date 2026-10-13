@@ -130,19 +130,22 @@ function AuthPage({
 
     try {
       if (mode === 'register') {
-        await registerUser(
+        const user = await registerUser(
           fullName,
           email,
           password,
           role,
         )
 
-        setMessage(
-          text.accountCreated,
-        )
-
-        setMode('login')
-        setPassword('')
+        if (user && user.access_token) {
+          onAuthenticated(user)
+        } else {
+          setMessage(
+            text.accountCreated,
+          )
+          setMode('login')
+          setPassword('')
+        }
       } else {
         const user = await loginUser(
           email,

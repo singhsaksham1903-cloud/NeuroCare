@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import './CognitiveGames.css'
 import VoiceReadAloud from '../Components/VoiceReadAloud'
+import { speakMessage, COMPANION_RESPONSES } from '../utils/voiceCompanion'
 
 import MemoryMatch from './MemoryMatch'
 import SequenceMemory from './SequenceMemory'
@@ -383,17 +384,6 @@ function CognitiveGames({
     const [launchDifficulty, setLaunchDifficulty] =
         useState(initialDifficulty)
 
-    useEffect(() => {
-        if (!initialGame) return
-        const timer = window.setTimeout(() => {
-            setSelectedGame(initialGame)
-            setLaunchDifficulty(initialDifficulty)
-        }, 0)
-        return () => {
-            window.clearTimeout(timer)
-        }
-    }, [initialGame, initialDifficulty])
-
 
 
     // ==========================================
@@ -494,9 +484,6 @@ function CognitiveGames({
         return (
             <NERCulturalRecall
                 language={language}
-                initialDifficulty={
-                    launchDifficulty || 'Easy'
-                }
                 readAloudLabel={
                     readAloudLabel
                 }
@@ -672,12 +659,28 @@ function CognitiveGames({
                         {text.subtitle}
                     </p>
 
-                    <VoiceReadAloud
-                        text={`${text.title}. ${text.subtitle}`}
-                        language={language}
-                        label={readAloudLabel}
-                        stopLabel={stopReadingLabel}
-                    />
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginTop: '12px' }}>
+                        <button
+                            type="button"
+                            className="games-voice-companion-btn"
+                            onClick={() => {
+                                const langKey = language.slice(0, 2);
+                                const dialogs = COMPANION_RESPONSES[langKey] || COMPANION_RESPONSES.en;
+                                const fullIntro = `${dialogs.gameInstructionsHeader} ${dialogs.games['memory-match']} ${dialogs.games['sequence-memory']} ${dialogs.games['object-recall']}`;
+                                speakMessage({ text: fullIntro, language: langKey });
+                            }}
+                            aria-label="Hear all game instructions spoken aloud"
+                        >
+                            🎙️ {language.startsWith('hi') ? 'खेल के नियम सुनें' : language.startsWith('as') ? 'খেলৰ নিয়ম শুনক' : 'Hear Game Instructions'}
+                        </button>
+
+                        <VoiceReadAloud
+                            text={`${text.title}. ${text.subtitle}`}
+                            language={language}
+                            label={readAloudLabel}
+                            stopLabel={stopReadingLabel}
+                        />
+                    </div>
 
                 </div>
 

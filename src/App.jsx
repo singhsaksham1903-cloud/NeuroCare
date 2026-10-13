@@ -12,9 +12,11 @@ import Reminders from './pages/Reminders'
 import UserBar from './pages/UserBar'
 import OfflineStatus from './Components/OfflineStatus'
 import VoiceReadAloud from './Components/VoiceReadAloud'
+import VoiceCompanionModal from './Components/VoiceCompanion/VoiceCompanionModal'
+import VoiceCompanionWidget from './Components/VoiceCompanion/VoiceCompanionWidget'
+import VoiceMemoryRecorderModal from './Components/VoiceCompanion/VoiceMemoryRecorderModal'
 import LanguageSelector from './Components/LanguageSelector'
 import TimeScenery from './Components/TimeScenery'
-import DailyBrainActivities from './Components/DailyBrainActivities'
 import { syncPendingOfflineData } from './utils/offlineData'
 import { syncPendingGameSessions } from './utils/performanceStorage'
 
@@ -189,6 +191,12 @@ function App() {
     setRecommendedDifficulty,
   ] = useState(null)
 
+  const [isVoiceCompanionOpen, setIsVoiceCompanionOpen] =
+    useState(false)
+
+  const [isVoiceMemoryModalOpen, setIsVoiceMemoryModalOpen] =
+    useState(false)
+
   // ==========================================
   // Current date/time
   // ==========================================
@@ -335,6 +343,17 @@ function App() {
     )
 
     setPage('games')
+  }
+
+  const handleVoiceNavigate = (targetPage, game = null) => {
+    setIsVoiceCompanionOpen(false)
+    if (targetPage === 'games') {
+      openGames(game)
+    } else {
+      setRecommendedGame(null)
+      setRecommendedDifficulty(null)
+      setPage(targetPage)
+    }
   }
 
 
@@ -719,17 +738,6 @@ function App() {
         id="main-content"
         className="dashboard"
       >
-
-        {/* AI-Powered Personalized Daily Brain Activities */}
-        <DailyBrainActivities
-          user={currentUser}
-          language={languageCode}
-          readAloudLabel={currentText.readAloud}
-          stopReadingLabel={currentText.stopReading}
-          onStartActivity={(gameId, difficulty) => {
-            openGames(gameId, difficulty)
-          }}
-        />
 
         {/* Recommendation */}
 
