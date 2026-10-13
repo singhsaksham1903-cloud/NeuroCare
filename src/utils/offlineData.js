@@ -572,7 +572,7 @@ function replaceLocalItemWithServerItem(
 }
 
 
-function removeCachedItem(
+export function removeCachedItem(
   resource,
   id,
 ) {
@@ -588,6 +588,21 @@ function removeCachedItem(
     getCacheKey(resource),
     next,
   )
+}
+
+
+export function removeQueuedMutation(
+  resource,
+  id,
+) {
+  const queue = getQueue()
+  const next = queue.filter(
+    (mutation) =>
+      !(mutation.resource === resource &&
+        (String(mutation.id) === String(id) ||
+         String(mutation.localId) === String(id))),
+  )
+  saveQueue(next)
 }
 
 

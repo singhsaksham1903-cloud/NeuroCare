@@ -12,9 +12,6 @@ import Reminders from './pages/Reminders'
 import UserBar from './pages/UserBar'
 import OfflineStatus from './Components/OfflineStatus'
 import VoiceReadAloud from './Components/VoiceReadAloud'
-import VoiceCompanionModal from './Components/VoiceCompanion/VoiceCompanionModal'
-import VoiceCompanionWidget from './Components/VoiceCompanion/VoiceCompanionWidget'
-import VoiceMemoryRecorderModal from './Components/VoiceCompanion/VoiceMemoryRecorderModal'
 import LanguageSelector from './Components/LanguageSelector'
 import TimeScenery from './Components/TimeScenery'
 import { syncPendingOfflineData } from './utils/offlineData'
@@ -168,6 +165,9 @@ function App() {
   const [page, setPage] =
     useState('dashboard')
 
+  const [memoriesInitialTab, setMemoriesInitialTab] =
+    useState('vault')
+
   const [currentUser, setCurrentUser] =
     useState(null)
 
@@ -190,12 +190,6 @@ function App() {
     recommendedDifficulty,
     setRecommendedDifficulty,
   ] = useState(null)
-
-  const [isVoiceCompanionOpen, setIsVoiceCompanionOpen] =
-    useState(false)
-
-  const [isVoiceMemoryModalOpen, setIsVoiceMemoryModalOpen] =
-    useState(false)
 
   // ==========================================
   // Current date/time
@@ -345,15 +339,13 @@ function App() {
     setPage('games')
   }
 
-  const handleVoiceNavigate = (targetPage, game = null) => {
-    setIsVoiceCompanionOpen(false)
-    if (targetPage === 'games') {
-      openGames(game)
-    } else {
-      setRecommendedGame(null)
-      setRecommendedDifficulty(null)
-      setPage(targetPage)
-    }
+  // ==========================================
+  // Open Memories
+  // ==========================================
+
+  const openMemories = (tab = 'vault') => {
+    setMemoriesInitialTab(tab)
+    setPage('memories')
   }
 
 
@@ -560,9 +552,11 @@ function App() {
   // Memories
   // ==========================================
 
-  if (page === 'memories') {
+  if (page === 'memories' || page === 'add-memory') {
+    const targetTab = page === 'add-memory' ? 'add' : memoriesInitialTab
     return (
       <Memories
+        key={targetTab}
         text={currentText.memoriesPage}
         language={languageCode}
         readAloudLabel={
@@ -571,9 +565,12 @@ function App() {
         stopReadingLabel={
           currentText.stopReading
         }
-        onBack={() =>
+        onBack={() => {
+          setMemoriesInitialTab('vault')
           setPage('dashboard')
-        }
+        }}
+        user={currentUser}
+        initialTab={targetTab}
       />
     )
   }
@@ -855,23 +852,139 @@ function App() {
         />
 
 
-        {/* Memories */}
+        {/* AI Memory Vault */}
 
         <DashboardCard
           icon="/illustrations/memories.svg"
           title={
-            currentText.memories
+            currentText.memoriesPage?.vaultTitle || currentText.memories
           }
           description={
-            currentText.memoriesDescription
+            currentText.memoriesPage?.vaultSubtitle || currentText.memoriesDescription
           }
           buttonLabel={
             currentText.openMemories
           }
           onClick={() =>
-            setPage('memories')
+            openMemories('vault')
           }
-        />
+        >
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', margin: '10px 0 16px 0' }}>
+            <button
+              type="button"
+              className="quick-action-btn quick-action-btn--add"
+              style={{
+                minHeight: '44px',
+                padding: '8px 12px',
+                borderRadius: '12px',
+                background: '#f0ebff',
+                color: '#7357c7',
+                border: '1.5px solid #7357c7',
+                fontSize: '14px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                boxShadow: '0 2px 6px rgba(115, 87, 199, 0.12)',
+                transition: 'all 0.15s ease',
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+                openMemories('add')
+              }}
+              title={currentText.memoriesPage?.addMemory || 'Add a Memory'}
+              aria-label={currentText.memoriesPage?.addMemory || 'Add a Memory'}
+            >
+              ➕ {currentText.memoriesPage?.addMemory || 'Add a Memory'}
+            </button>
+            <button
+              type="button"
+              className="quick-action-btn"
+              style={{
+                minHeight: '44px',
+                padding: '8px 12px',
+                borderRadius: '12px',
+                background: '#fff0eb',
+                color: '#d77a62',
+                border: '1.5px solid #d77a62',
+                fontSize: '14px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                transition: 'all 0.15s ease',
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+                openMemories('add')
+              }}
+              title={currentText.memoriesPage?.recordVoice || 'Record Voice Memory'}
+              aria-label={currentText.memoriesPage?.recordVoice || 'Record Voice Memory'}
+            >
+              🎤 {currentText.memoriesPage?.voiceSearch || 'Voice Add'}
+            </button>
+            <button
+              type="button"
+              className="quick-action-btn"
+              style={{
+                minHeight: '44px',
+                padding: '8px 12px',
+                borderRadius: '12px',
+                background: '#eaf3fb',
+                color: '#4c7fb8',
+                border: '1.5px solid #4c7fb8',
+                fontSize: '14px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                transition: 'all 0.15s ease',
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+                openMemories('search')
+              }}
+              title="Search Memories"
+              aria-label="Search Memories"
+            >
+              🔍 Search
+            </button>
+            <button
+              type="button"
+              className="quick-action-btn"
+              style={{
+                minHeight: '44px',
+                padding: '8px 12px',
+                borderRadius: '12px',
+                background: '#f2f4f8',
+                color: '#344054',
+                border: '1.5px solid #d9dfe8',
+                fontSize: '14px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                transition: 'all 0.15s ease',
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+                openMemories('timeline')
+              }}
+              title={currentText.memoriesPage?.tabs?.timeline || 'Timeline'}
+              aria-label={currentText.memoriesPage?.tabs?.timeline || 'Timeline'}
+            >
+              📅 {currentText.memoriesPage?.tabs?.timeline || 'Timeline'}
+            </button>
+          </div>
+        </DashboardCard>
 
 
         {/* Reminders */}

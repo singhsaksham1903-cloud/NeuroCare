@@ -3,6 +3,8 @@ import {
   cacheServerCollection,
   getCachedCollection,
   handleOfflineMutation,
+  removeCachedItem,
+  removeQueuedMutation,
   syncPendingOfflineData,
 } from './offlineData'
 
@@ -26,7 +28,7 @@ function getMethod(options) {
 
 
 function getOfflineResource(path) {
-  if (path === '/memories') {
+  if (path === '/memories' || (path && path.startsWith('/memories/vault'))) {
     return 'memories'
   }
 
@@ -117,7 +119,7 @@ function getLocalPerformanceResponse() {
 
 function getMutationPathInfo(path) {
   const match = path.match(
-    /^\/(memories|reminders)(?:\/([^/]+))?$/,
+    /^\/(memories(?:\/vault)?|reminders)(?:\/([^/]+))?$/,
   )
 
   if (!match) {
@@ -125,7 +127,7 @@ function getMutationPathInfo(path) {
   }
 
   return {
-    resource: match[1],
+    resource: match[1].startsWith('memories') ? 'memories' : 'reminders',
     itemId: match[2] || null,
   }
 }
@@ -366,7 +368,17 @@ export async function apiPut(
 
 
 export async function apiDelete(path) {
-  return apiRequest(path, {
+  const mutationInfo = getMutationPathInfo(path)
+  if (mutationInfo) {
+    removeCachedItem(mutationInfo.resource, mutationInfo.itemId)
+    removeQueuedMutation(mutationInfo.resource, mutationInfo.itemId)
+  }
+  const result = await apiRequest(path, {
     method: 'DELETE',
   })
+  if (mutationInfo) {
+    removeCachedItem(mutationInfo.resource, mutationInfo.itemId)
+    removeQueuedMutation(mutationInfo.resource, mutationInfo.itemId)
+  }
+  return result
 }

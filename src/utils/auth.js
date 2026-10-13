@@ -156,17 +156,5 @@ export async function registerUser(
     )
   }
 
-  if (data.access_token) {
-    saveAccessToken(data.access_token)
-    saveStoredUser({
-      id: data.id,
-      full_name: data.full_name,
-      email: data.email,
-      role: data.role,
-      is_active: data.is_active,
-      created_at: data.created_at,
-    })
-  }
-
   return data
 }

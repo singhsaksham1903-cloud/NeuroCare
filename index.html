@@ -2,6 +2,48 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function () {
+        if (typeof window !== 'undefined' && window.WebSocket) {
+          const OriginalWebSocket = window.WebSocket;
+          window.WebSocket = function (url, protocols) {
+            const isViteHmr =
+              protocols === 'vite-hmr' ||
+              (Array.isArray(protocols) && protocols.includes('vite-hmr')) ||
+              (typeof url === 'string' && (url.includes('/vite-hmr') || url.includes('@vite')));
+            if (isViteHmr) {
+              const fakeWs = new EventTarget();
+              fakeWs.readyState = 1;
+              fakeWs.url = url;
+              fakeWs.protocol = 'vite-hmr';
+              fakeWs.send = function () {};
+              fakeWs.close = function () {};
+              setTimeout(function () {
+                fakeWs.dispatchEvent(new Event('open'));
+              }, 10);
+              return fakeWs;
+            }
+            return new OriginalWebSocket(url, protocols);
+          };
+          window.WebSocket.prototype = OriginalWebSocket.prototype;
+          window.WebSocket.CONNECTING = OriginalWebSocket.CONNECTING;
+          window.WebSocket.OPEN = OriginalWebSocket.OPEN;
+          window.WebSocket.CLOSING = OriginalWebSocket.CLOSING;
+          window.WebSocket.CLOSED = OriginalWebSocket.CLOSED;
+        }
+        window.confirm = function () {
+          return true;
+        };
+        window.alert = function () {};
+        window.addEventListener('error', function (event) {
+          if (event && event.message && event.message.includes('WebSocket')) {
+            event.stopImmediatePropagation();
+            event.preventDefault();
+            return true;
+          }
+        }, true);
+      })();
+    </script>
 
     <link
       rel="icon"
@@ -21,7 +63,15 @@
 
     <meta
       name="description"
-      content="Cognicare NER — Cognitive gaming and memory assistance platform for elderly users."
+      content="Cognitive gaming and memory assistance platform for elderly users."
+    />
+    <meta
+      property="og:title"
+      content="Cognicare NER"
+    />
+    <meta
+      property="og:description"
+      content="Cognitive gaming and memory assistance platform for elderly users."
     />
 
     <meta

@@ -1,7 +1,6 @@
 {
   "name": "Cognicare NER",
   "description": "Cognitive gaming and memory assistance platform for elderly users.",
-  "permissions": [],
   "capabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
   ]

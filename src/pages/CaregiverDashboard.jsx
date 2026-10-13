@@ -323,6 +323,15 @@ function CaregiverDashboard({
     useState('')
 
 
+  const [vaultMemories, setVaultMemories] = useState([])
+  const [vaultPermissionGranted, setVaultPermissionGranted] = useState(false)
+  const [vaultEmergencyAllowed, setVaultEmergencyAllowed] = useState(false)
+  const [isEmergencyMode, setIsEmergencyMode] = useState(false)
+  const [showEmergencyModal, setShowEmergencyModal] = useState(false)
+  const [emergencyReason, setEmergencyReason] = useState('')
+  const [activeLinkId, setActiveLinkId] = useState(null)
+  const [narratingId, setNarratingId] = useState(null)
+
   // ==========================================
   // Load Caregiver Data
   // ==========================================
@@ -337,6 +346,7 @@ function CaregiverDashboard({
         setMemoryCount(0)
         setReminders([])
         setLinkedElderly(null)
+        setVaultMemories([])
 
         setError(
           text.caregiverOnlyError,
@@ -367,9 +377,12 @@ function CaregiverDashboard({
         setMemoryCount(0)
         setReminders([])
         setLinkedElderly(null)
+        setVaultMemories([])
 
         return
       }
+
+      setActiveLinkId(approvedLink.id)
 
       const linkedData =
         await apiGet(
@@ -396,6 +409,20 @@ function CaregiverDashboard({
         linkedData.reminders ||
         [],
       )
+
+      // Fetch Memory Vault if permitted
+      try {
+        const vaultRes = await apiGet(`/caregiver-links/${approvedLink.id}/vault`)
+        setVaultMemories(vaultRes?.memories || [])
+        setVaultPermissionGranted(true)
+        setIsEmergencyMode(Boolean(vaultRes?.is_emergency))
+      } catch (vaultErr) {
+        setVaultPermissionGranted(false)
+        setVaultMemories([])
+        if (vaultErr?.data?.emergency_allowed) {
+          setVaultEmergencyAllowed(true)
+        }
+      }
     } catch (err) {
       setError(
         err.message ||
@@ -1241,6 +1268,230 @@ function CaregiverDashboard({
               )}
 
             </section>
+
+
+            {/* AI Personal Memory Vault for Caregivers */}
+
+            <section className="caregiver-panel">
+              <div className="caregiver-section-heading">
+                <div>
+                  <span className="caregiver-section-label">
+                    Memory Care & Reminiscence
+                  </span>
+                  <h2>
+                    AI-Assisted Personal Memory Vault
+                  </h2>
+                </div>
+                <div>
+                  {vaultPermissionGranted ? (
+                    <span style={{ padding: '6px 14px', borderRadius: '20px', background: '#dcfce7', color: '#166534', fontWeight: '700', fontSize: '14px' }}>
+                      🟢 Permission Granted {isEmergencyMode ? '• 🚨 EMERGENCY MODE' : ''}
+                    </span>
+                  ) : (
+                    <span style={{ padding: '6px 14px', borderRadius: '20px', background: '#fee2e2', color: '#991b1b', fontWeight: '700', fontSize: '14px' }}>
+                      🔒 Access Restricted by User
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {!vaultPermissionGranted ? (
+                <div className="caregiver-empty caregiver-empty--small" style={{ padding: '32px' }}>
+                  <div style={{ fontSize: '36px', marginBottom: '8px' }}>🛡️</div>
+                  <h3 style={{ fontSize: '18px', color: '#1f2937', margin: '0 0 6px 0' }}>
+                    Access Restricted
+                  </h3>
+                  <p style={{ maxWidth: '480px', margin: '0 auto 16px auto', color: '#64748b' }}>
+                    {linkedElderly.full_name} has not granted memory vault viewing permissions to this caregiver account. The user's privacy and dignity are protected.
+                  </p>
+                  {vaultEmergencyAllowed && (
+                    <button
+                      type="button"
+                      style={{
+                        padding: '10px 20px',
+                        borderRadius: '12px',
+                        background: '#dc2626',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontWeight: '700',
+                        fontSize: '15px',
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => setShowEmergencyModal(true)}
+                    >
+                      🚨 Unlock Emergency Mode (Audit Logged)
+                    </button>
+                  )}
+                </div>
+              ) : vaultMemories.length === 0 ? (
+                <div className="caregiver-empty caregiver-empty--small">
+                  <p>No memories saved in the vault yet.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginTop: '16px' }}>
+                  {vaultMemories.slice(0, 4).map((mem) => (
+                    <article
+                      key={mem.id}
+                      style={{
+                        background: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '16px',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                      }}
+                    >
+                      {(mem.images?.[0] || mem.image_data) && (
+                        <img
+                          src={mem.images?.[0] || mem.image_data}
+                          alt={mem.title}
+                          style={{ width: '100%', height: '160px', objectFit: 'cover' }}
+                        />
+                      )}
+                      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '12px', fontWeight: '700', background: '#f0ebff', color: '#7357c7', padding: '3px 8px', borderRadius: '6px' }}>
+                            {mem.category}
+                          </span>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>{mem.memory_date}</span>
+                        </div>
+                        <h4 style={{ fontSize: '17px', fontWeight: '700', margin: 0, color: '#1f2937' }}>
+                          {mem.title}
+                        </h4>
+                        <p style={{ fontSize: '14px', color: '#4b5563', margin: 0, lineClamp: 2, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          {mem.description}
+                        </p>
+                        {mem.summary && (
+                          <div style={{ fontSize: '13px', color: '#166534', background: '#f0fdf4', padding: '6px 10px', borderRadius: '6px', fontStyle: 'italic' }}>
+                            💡 {mem.summary}
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          style={{
+                            marginTop: 'auto',
+                            minHeight: '38px',
+                            padding: '6px 12px',
+                            borderRadius: '10px',
+                            background: '#eaf3fb',
+                            color: '#4c7fb8',
+                            border: '1px solid #4c7fb8',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => {
+                            if (!window.speechSynthesis) return
+                            if (narratingId === mem.id) {
+                              window.speechSynthesis.cancel()
+                              setNarratingId(null)
+                              return
+                            }
+                            window.speechSynthesis.cancel()
+                            const u = new SpeechSynthesisUtterance(`${mem.title}. ${mem.description}. Reflection: ${mem.summary || ''}`)
+                            u.rate = 0.9
+                            u.onend = () => setNarratingId(null)
+                            window.speechSynthesis.speak(u)
+                            setNarratingId(mem.id)
+                          }}
+                        >
+                          🔊 {narratingId === mem.id ? 'Stop Narration' : 'Listen to Story'}
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ marginTop: '16px', padding: '10px 14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '13px', color: '#64748b' }}>
+                🛡️ <strong>Privacy & Audit Protection:</strong> All memory vault views by caregivers are logged in the elderly user's permanent security audit trail.
+              </div>
+            </section>
+
+            {/* Emergency Unlock Modal */}
+            {showEmergencyModal && (
+              <div
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  background: 'rgba(0,0,0,0.6)',
+                  zIndex: 1000,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '20px',
+                }}
+              >
+                <div
+                  style={{
+                    background: '#ffffff',
+                    borderRadius: '20px',
+                    padding: '28px',
+                    maxWidth: '480px',
+                    width: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '16px',
+                  }}
+                >
+                  <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: '#dc2626' }}>
+                    🚨 Emergency Memory Vault Access
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '14px', color: '#4b5563' }}>
+                    Emergency access is strictly intended for health, medical, or safety situations. This access will be permanently logged in {linkedElderly.full_name}'s audit trail.
+                  </p>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '700', marginBottom: '6px' }}>
+                      Reason for Emergency Access:
+                    </label>
+                    <textarea
+                      style={{
+                        width: '100%',
+                        minHeight: '80px',
+                        padding: '10px',
+                        borderRadius: '10px',
+                        border: '2px solid #cbd5e1',
+                        fontSize: '15px',
+                        boxSizing: 'border-box',
+                      }}
+                      placeholder="e.g. Assisting medical personnel with family background and medication history"
+                      value={emergencyReason}
+                      onChange={(e) => setEmergencyReason(e.target.value)}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                    <button
+                      type="button"
+                      style={{ padding: '8px 16px', borderRadius: '10px', background: '#f1f5f9', border: '1px solid #cbd5e1', cursor: 'pointer' }}
+                      onClick={() => setShowEmergencyModal(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      style={{ padding: '8px 16px', borderRadius: '10px', background: '#dc2626', color: '#ffffff', border: 'none', fontWeight: '700', cursor: 'pointer' }}
+                      onClick={async () => {
+                        if (!emergencyReason.trim()) {
+                          alert('Please provide a reason for emergency access.')
+                          return
+                        }
+                        try {
+                          const res = await apiGet(`/caregiver-links/${activeLinkId}/vault?emergency=true&reason=${encodeURIComponent(emergencyReason.trim())}`)
+                          setVaultMemories(res?.memories || [])
+                          setVaultPermissionGranted(true)
+                          setIsEmergencyMode(true)
+                          setShowEmergencyModal(false)
+                        } catch (err) {
+                          alert(err.message || 'Emergency unlock failed.')
+                        }
+                      }}
+                    >
+                      Confirm Emergency Access
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
 
             {/* Recent Activity */}
