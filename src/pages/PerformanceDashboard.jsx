@@ -233,7 +233,6 @@ function PerformanceDashboard({
   readAloudLabel = 'Read Aloud',
   stopReadingLabel = 'Stop Reading',
   onBack,
-  onOpenInsights,
 }) {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
@@ -992,24 +991,6 @@ function PerformanceDashboard({
 
       {!loading && !error && (
         <>
-          {onOpenInsights && (
-            <div className="performance-insights-cta">
-              <div className="performance-insights-cta-body">
-                <span className="performance-insights-cta-badge">New Analytics</span>
-                <h3>Cognitive Progress Insights & Personal Baseline</h3>
-                <p>
-                  Compare recent game performance with your historical baseline, detect sustained trends, and view detailed progress charts.
-                </p>
-              </div>
-              <button
-                type="button"
-                className="performance-insights-cta-button"
-                onClick={onOpenInsights}
-              >
-                View Progress Insights →
-              </button>
-            </div>
-          )}
 
           {/* ==================================
               Overview

@@ -2936,7 +2936,7 @@ const translations = {
         back: 'Back',
 
         footer:
-            'Cognicare NER — SIH 2026 Prototype',
+            'Cognicare NER — Prototype',
 
         gamesPage: {
             icon: '🧠',
@@ -3765,7 +3765,7 @@ const translations = {
         back: 'वापस',
 
         footer:
-            'Cognicare NER — SIH 2026 प्रोटोटाइप',
+            'Cognicare NER — प्रोटोटाइप',
 
         gamesPage: {
             icon: '🧠',
@@ -4610,7 +4610,7 @@ const translations = {
         back: 'উভতি যাওক',
 
         footer:
-            'Cognicare NER — SIH 2026 প্ৰট’টাইপ',
+            'Cognicare NER — প্ৰট’টাইপ',
 
         gamesPage: {
             icon: '🧠',

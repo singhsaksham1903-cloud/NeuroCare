@@ -1,0 +1,102 @@
+/* ============================================================
+   Cognicare NER — Voice Companion Widget
+   Elderly-accessible floating entry point
+   ============================================================ */
+
+.voice-companion-widget-container {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+}
+
+.voice-companion-widget-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 12px 22px;
+  border-radius: 36px;
+  border: 2px solid #ffffff;
+  background: linear-gradient(135deg, #187762 0%, #115747 100%);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow:
+    0 10px 28px rgba(17, 87, 71, 0.35),
+    0 3px 8px rgba(0, 0, 0, 0.12);
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.voice-companion-widget-btn:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow:
+    0 14px 34px rgba(17, 87, 71, 0.42),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #1d8870 0%, #146251 100%);
+}
+
+.voice-companion-widget-btn:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+.voice-companion-widget-btn:focus-visible {
+  outline: 4px solid rgba(24, 119, 98, 0.45);
+  outline-offset: 4px;
+}
+
+.voice-companion-widget-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 1.35rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.voice-companion-widget-text {
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.voice-companion-widget-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 7px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 600px) {
+  .voice-companion-widget-container {
+    bottom: 20px;
+    right: 20px;
+  }
+
+  .voice-companion-widget-btn {
+    min-height: 52px;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-companion-widget-btn {
+    transition: none;
+    transform: none !important;
+  }
+}
+

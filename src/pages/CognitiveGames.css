@@ -499,3 +499,112 @@
     font-size: 1.3rem;
   }
 }
+
+/* --------------------------------------------
+   Game Voice Companion Bar
+   -------------------------------------------- */
+
+.games-companion-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 900px;
+  width: 100%;
+  margin: 10px auto 20px;
+  padding: 18px 24px;
+  box-sizing: border-box;
+  border-radius: 20px;
+  border: 1.5px solid #d4ebe2;
+  background: #f5fbf8;
+  box-shadow: 0 4px 16px rgba(49, 91, 114, 0.05);
+}
+
+.games-companion-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.games-companion-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #1b7a66;
+  color: #ffffff;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.games-companion-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #174e41;
+}
+
+.games-companion-subtitle {
+  margin: 3px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #4b6b61;
+}
+
+.games-companion-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.games-companion-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1.5px solid #cadfd6;
+  background: #ffffff;
+  color: #1f574a;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s, border-color 0.15s;
+}
+
+.games-companion-btn:hover {
+  background: #eef7f3;
+  border-color: #1b7a66;
+  transform: translateY(-1px);
+}
+
+.games-companion-btn--primary {
+  background: linear-gradient(135deg, #1b7a66, #146252);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(27, 122, 102, 0.22);
+}
+
+.games-companion-btn--primary:hover {
+  background: linear-gradient(135deg, #156957, #105043);
+}
+
+.games-companion-btn--stop {
+  background: #fff1f2;
+  border-color: #fecdd3;
+  color: #be123c;
+}
+
+.games-companion-btn--stop:hover {
+  background: #ffe4e6;
+  border-color: #fda4af;
+}
+
+.games-companion-btn:focus-visible {
+  outline: 3px solid rgba(27, 122, 102, 0.35);
+  outline-offset: 2px;
+}

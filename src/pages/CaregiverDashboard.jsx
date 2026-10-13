@@ -5,11 +5,9 @@ import {
 } from 'react'
 
 import './CaregiverDashboard.css'
-import './CognitiveProgressInsights.css'
 import VoiceReadAloud from '../Components/VoiceReadAloud'
 
 import { apiGet } from '../utils/api'
-import { ProgressTrendChart } from './CognitiveProgressInsights'
 
 
 // ============================================
@@ -324,27 +322,6 @@ function CaregiverDashboard({
   const [error, setError] =
     useState('')
 
-  const [activeTab, setActiveTab] =
-    useState('overview') // 'overview' | 'progress-report'
-  const [approvedLinkId, setApprovedLinkId] =
-    useState(null)
-  const [reportPeriod, setReportPeriod] =
-    useState('30d')
-  const [reportGame, setReportGame] =
-    useState('all')
-  const [reportDifficulty, setReportDifficulty] =
-    useState('all')
-  const [progressReport, setProgressReport] =
-    useState(null)
-  const [reportLoading, setReportLoading] =
-    useState(false)
-  const [reportError, setReportError] =
-    useState('')
-  const [reportMetric, setReportMetric] =
-    useState('accuracy')
-  const [selectedPoint, setSelectedPoint] =
-    useState(null)
-
 
   // ==========================================
   // Load Caregiver Data
@@ -390,13 +367,9 @@ function CaregiverDashboard({
         setMemoryCount(0)
         setReminders([])
         setLinkedElderly(null)
-        setApprovedLinkId(null)
-        setProgressReport(null)
 
         return
       }
-
-      setApprovedLinkId(approvedLink.id)
 
       const linkedData =
         await apiGet(
@@ -447,48 +420,6 @@ function CaregiverDashboard({
       window.clearTimeout(timer)
     }
   }, [loadData])
-
-  useEffect(() => {
-    if (!approvedLinkId) return
-
-    let active = true
-    const fetchReport = async () => {
-      try {
-        setReportLoading(true)
-        setReportError('')
-        const queryParams = new URLSearchParams({ period: reportPeriod })
-        if (reportGame !== 'all') {
-          queryParams.set('game', reportGame)
-        }
-        if (reportDifficulty !== 'all') {
-          queryParams.set('difficulty', reportDifficulty)
-        }
-        const res = await apiGet(
-          `/caregiver-links/${approvedLinkId}/progress-report?${queryParams.toString()}`
-        )
-        if (active) {
-          setProgressReport(res)
-          if (res.trendPoints && res.trendPoints.length > 0) {
-            setSelectedPoint(res.trendPoints[res.trendPoints.length - 1])
-          }
-        }
-      } catch (err) {
-        if (active) {
-          setReportError(err.message || 'Could not load cognitive progress report.')
-        }
-      } finally {
-        if (active) {
-          setReportLoading(false)
-        }
-      }
-    }
-
-    void fetchReport()
-
-    return () => {
-      active = false
-    }
-  }, [approvedLinkId, reportPeriod, reportGame, reportDifficulty])
 
 
   // ==========================================
@@ -976,403 +907,10 @@ function CaregiverDashboard({
         !error &&
         linkedElderly && (
           <>
-            {/* View Switcher Tabs */}
-            <div className="caregiver-tab-bar" role="tablist" aria-label="Dashboard Views">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeTab === 'overview'}
-                className={`caregiver-tab ${activeTab === 'overview' ? 'caregiver-tab--active' : ''}`}
-                onClick={() => setActiveTab('overview')}
-              >
-                📊 Activity Overview & Details
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={activeTab === 'progress-report'}
-                className={`caregiver-tab ${activeTab === 'progress-report' ? 'caregiver-tab--active' : ''}`}
-                onClick={() => setActiveTab('progress-report')}
-              >
-                🧠 Cognitive Progress Report
-              </button>
-            </div>
 
-            {activeTab === 'progress-report' ? (
-              <div className="caregiver-progress-report-view">
-                {/* Period selection */}
-                <div
-                  className="cpi-controls-bar"
-                  style={{
-                    background: '#ffffff',
-                    padding: '16px 20px',
-                    borderRadius: '18px',
-                    border: '1px solid var(--border-light)',
-                    marginBottom: '20px',
-                  }}
-                >
-                  <div className="cpi-period-tabs" role="tablist" aria-label="Reporting Period">
-                    {[
-                      { id: '7d', label: '7 Days' },
-                      { id: '30d', label: '30 Days' },
-                      { id: '90d', label: '90 Days' },
-                      { id: 'all', label: 'All History' },
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        role="tab"
-                        aria-selected={reportPeriod === tab.id}
-                        className={`cpi-period-tab ${reportPeriod === tab.id ? 'cpi-period-tab--active' : ''}`}
-                        onClick={() => setReportPeriod(tab.id)}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
+            {/* Overview */}
 
-                  <div className="cpi-filter-group" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-                    <div className="cpi-game-filter">
-                      <label htmlFor="cg-game-select" className="cpi-filter-label">Activity:</label>
-                      <select
-                        id="cg-game-select"
-                        value={reportGame}
-                        onChange={(e) => setReportGame(e.target.value)}
-                        className="cpi-select"
-                      >
-                        <option value="all">All Activities</option>
-                        <option value="Memory Match">Memory Match</option>
-                        <option value="Sequence Memory">Sequence Memory</option>
-                        <option value="Object Recall">Object Recall</option>
-                        <option value="NER Cultural Recall">NER Cultural Recall</option>
-                        <option value="Personal Memory Recall">Personal Memory Recall</option>
-                      </select>
-                    </div>
-
-                    <div className="cpi-game-filter">
-                      <label htmlFor="cg-diff-select" className="cpi-filter-label">Difficulty:</label>
-                      <select
-                        id="cg-diff-select"
-                        value={reportDifficulty}
-                        onChange={(e) => setReportDifficulty(e.target.value)}
-                        className="cpi-select"
-                      >
-                        <option value="all">All Difficulties</option>
-                        <option value="Easy">Easy</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Hard">Hard</option>
-                        <option value="Standard">Standard</option>
-                      </select>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="cpi-print-btn"
-                      onClick={() => window.print()}
-                      aria-label="Print or save caregiver progress report"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: '16px', height: '16px' }}>
-                        <polyline points="6 9 6 2 18 2 18 9" />
-                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                        <rect x="6" y="14" width="12" height="8" />
-                      </svg>
-                      <span>Print / Save</span>
-                    </button>
-                  </div>
-                </div>
-
-                {reportLoading && (
-                  <div className="cpi-loading-state">
-                    <div className="cpi-spinner" />
-                    <p>Generating progress report for {linkedElderly.full_name}...</p>
-                  </div>
-                )}
-
-                {reportError && (
-                  <div className="cpi-error-state" role="alert">
-                    <p className="cpi-error-text">{reportError}</p>
-                  </div>
-                )}
-
-                {!reportLoading && !reportError && progressReport && (
-                  <div className="cpi-content">
-                    {/* Hero Caregiver Summary */}
-                    <div
-                      style={{
-                        background: 'linear-gradient(135deg, #f0f7ff 0%, #e8f4fc 100%)',
-                        border: '1.5px solid #bcdbf7',
-                        borderRadius: '20px',
-                        padding: '24px 28px',
-                        boxShadow: '0 4px 18px rgba(0,0,0,0.05)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '10px',
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: '12px',
-                          fontWeight: 800,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.6px',
-                          background: '#4c7fb8',
-                          color: '#ffffff',
-                          padding: '3px 10px',
-                          borderRadius: '6px',
-                          alignSelf: 'flex-start',
-                        }}
-                      >
-                        Plain-Language Caregiver Summary
-                      </span>
-                      <h3 style={{ fontSize: '19px', fontWeight: 700, color: '#1e3a5f', margin: 0, lineHeight: 1.5 }}>
-                        {progressReport.plain_language_summary}
-                      </h3>
-                      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '13.5px', color: '#4a6b8f' }}>
-                        <span>Connected: <strong>{progressReport.elderly_user.full_name}</strong></span>
-                        <span>Window: <strong>{reportPeriod === '7d' ? 'Last 7 Days' : reportPeriod === '30d' ? 'Last 30 Days' : reportPeriod === '90d' ? 'Last 90 Days' : 'All History'}</strong></span>
-                        <span>Evaluated Sessions: <strong>{progressReport.overview.totalCompleted}</strong></span>
-                      </div>
-                    </div>
-
-                    {/* Overview Stats */}
-                    <div className="cpi-stats-grid">
-                      <article className="cpi-stat-card">
-                        <div className="cpi-stat-icon cpi-stat-icon--purple" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                            <rect x="3" y="4" width="18" height="18" rx="4" />
-                            <path d="M16 2v4M8 2v4M3 10h18" />
-                          </svg>
-                        </div>
-                        <div className="cpi-stat-body">
-                          <span className="cpi-stat-val">{progressReport.overview.totalCompleted}</span>
-                          <span className="cpi-stat-label">Total Sessions</span>
-                          <span className="cpi-stat-sub">{progressReport.overview.sessionsPerWeek} sessions / week</span>
-                        </div>
-                      </article>
-
-                      <article className="cpi-stat-card">
-                        <div className="cpi-stat-icon cpi-stat-icon--teal" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                            <polyline points="22 4 12 14.01 9 11.01" />
-                          </svg>
-                        </div>
-                        <div className="cpi-stat-body">
-                          <span className="cpi-stat-val">{progressReport.overview.avgAccuracy}%</span>
-                          <span className="cpi-stat-label">Average Accuracy</span>
-                          <span className="cpi-stat-sub">
-                            {progressReport.baselineComparison.isReliable
-                              ? `${progressReport.baselineComparison.accuracyDiff >= 0 ? '+' : ''}${progressReport.baselineComparison.accuracyDiff}% vs baseline`
-                              : 'Baseline accumulating'}
-                          </span>
-                        </div>
-                      </article>
-
-                      <article className="cpi-stat-card">
-                        <div className="cpi-stat-icon cpi-stat-icon--peach" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="15" y1="9" x2="9" y2="15" />
-                            <line x1="9" y1="9" x2="15" y2="15" />
-                          </svg>
-                        </div>
-                        <div className="cpi-stat-body">
-                          <span className="cpi-stat-val">{progressReport.overview.avgMistakes}</span>
-                          <span className="cpi-stat-label">Mistakes / Session</span>
-                          <span className="cpi-stat-sub">Across completed activities</span>
-                        </div>
-                      </article>
-
-                      <article className="cpi-stat-card">
-                        <div className="cpi-stat-icon cpi-stat-icon--blue" aria-hidden="true">
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                            <circle cx="12" cy="12" r="10" />
-                            <polyline points="12 6 12 12 16 14" />
-                          </svg>
-                        </div>
-                        <div className="cpi-stat-body">
-                          <span className="cpi-stat-val">{progressReport.overview.avgTime > 0 ? `${progressReport.overview.avgTime}s` : '—'}</span>
-                          <span className="cpi-stat-label">Average Duration</span>
-                          <span className="cpi-stat-sub">Most active: {progressReport.overview.mostPlayedGame}</span>
-                        </div>
-                      </article>
-                    </div>
-
-                    {/* Baseline Comparison Card */}
-                    <div className="cpi-baseline-card">
-                      <div className="cpi-section-header">
-                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>Personal Baseline Comparison</h3>
-                        {progressReport.baselineComparison.isReliable && (
-                          <span className={`cpi-status-badge cpi-status-badge--${progressReport.baselineComparison.overallStatus}`}>
-                            {progressReport.baselineComparison.overallStatus === 'improving' ? '📈 Improving' : progressReport.baselineComparison.overallStatus === 'declining' ? '📉 Differing from Baseline' : '⚖️ Broadly Stable'}
-                          </span>
-                        )}
-                      </div>
-
-                      {progressReport.baselineComparison.isReliable ? (
-                        <>
-                          <div className="cpi-baseline-grid">
-                            <div className="cpi-baseline-col">
-                              <span className="cpi-baseline-metric-label">Accuracy Comparison</span>
-                              <div className="cpi-baseline-vals">
-                                <div>
-                                  <span className="cpi-b-label">Baseline</span>
-                                  <strong className="cpi-b-val">{progressReport.baselineComparison.baselineAccuracy}%</strong>
-                                </div>
-                                <span className="cpi-arrow">→</span>
-                                <div>
-                                  <span className="cpi-b-label">Recent</span>
-                                  <strong className="cpi-b-val">{progressReport.baselineComparison.recentAccuracy}%</strong>
-                                </div>
-                              </div>
-                              <div className={`cpi-diff-pill ${progressReport.baselineComparison.accuracyDiff >= 0 ? 'cpi-diff-pill--pos' : 'cpi-diff-pill--neg'}`}>
-                                {progressReport.baselineComparison.accuracyDiff >= 0 ? '+' : ''}{progressReport.baselineComparison.accuracyDiff}% points
-                              </div>
-                            </div>
-
-                            <div className="cpi-baseline-col">
-                              <span className="cpi-baseline-metric-label">Mistake Frequency</span>
-                              <div className="cpi-baseline-vals">
-                                <div>
-                                  <span className="cpi-b-label">Baseline</span>
-                                  <strong className="cpi-b-val">{progressReport.baselineComparison.baselineMistakes}</strong>
-                                </div>
-                                <span className="cpi-arrow">→</span>
-                                <div>
-                                  <span className="cpi-b-label">Recent</span>
-                                  <strong className="cpi-b-val">{progressReport.baselineComparison.recentMistakes}</strong>
-                                </div>
-                              </div>
-                              <div className={`cpi-diff-pill ${progressReport.baselineComparison.mistakesDiff <= 0 ? 'cpi-diff-pill--pos' : 'cpi-diff-pill--neg'}`}>
-                                {progressReport.baselineComparison.mistakesDiff <= 0 ? '' : '+'}{progressReport.baselineComparison.mistakesDiff} mistakes / game
-                              </div>
-                            </div>
-
-                            <div className="cpi-baseline-col">
-                              <span className="cpi-baseline-metric-label">Completion Duration</span>
-                              <div className="cpi-baseline-vals">
-                                <div>
-                                  <span className="cpi-b-label">Baseline</span>
-                                  <strong className="cpi-b-val">{progressReport.baselineComparison.baselineTime}s</strong>
-                                </div>
-                                <span className="cpi-arrow">→</span>
-                                <div>
-                                  <span className="cpi-b-label">Recent</span>
-                                  <strong className="cpi-b-val">{progressReport.baselineComparison.recentTime}s</strong>
-                                </div>
-                              </div>
-                              <div className="cpi-diff-pill cpi-diff-pill--neutral">
-                                {progressReport.baselineComparison.timeDiff <= 0 ? '' : '+'}{progressReport.baselineComparison.timeDiff}s duration
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="cpi-baseline-footer">
-                            <p className="cpi-baseline-evidence"><strong>Evidence:</strong> {progressReport.baselineComparison.evidenceText}</p>
-                          </div>
-                        </>
-                      ) : (
-                        <p className="cpi-empty-text">{progressReport.baselineComparison.reason}</p>
-                      )}
-                    </div>
-
-                    {/* Sustained Changes Area */}
-                    {progressReport.sustainedChanges && progressReport.sustainedChanges.length > 0 && (
-                      <div className="cpi-sustained-list">
-                        {progressReport.sustainedChanges.map((alert) => (
-                          <article key={alert.id} className={`cpi-sustained-card cpi-sustained-card--${alert.type}`}>
-                            <div className="cpi-sustained-header">
-                              <span className="cpi-sustained-badge">{alert.type === 'positive' ? '✨ Positive Trend' : '🔍 Caregiver Observation'}</span>
-                              <span className="cpi-sustained-sessions">Observed across {alert.sessionCount} sessions</span>
-                            </div>
-                            <h3 className="cpi-sustained-title">{alert.title}</h3>
-                            <p className="cpi-sustained-desc">{alert.description}</p>
-                            <div className="cpi-sustained-context"><strong>Caregiver Note:</strong> {alert.contextNote}</div>
-                          </article>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Trend Chart */}
-                    <div className="cpi-chart-container">
-                      <div className="cpi-section-header">
-                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>Activity Trend Chart</h3>
-                        <div className="cpi-chart-tabs" role="tablist">
-                          {[
-                            { id: 'accuracy', label: 'Accuracy (%)' },
-                            { id: 'mistakes', label: 'Mistakes' },
-                            { id: 'time', label: 'Duration (s)' },
-                            { id: 'participation', label: 'Weekly Rhythm' },
-                          ].map((m) => (
-                            <button
-                              key={m.id}
-                              type="button"
-                              role="tab"
-                              aria-selected={reportMetric === m.id}
-                              className={`cpi-chart-tab ${reportMetric === m.id ? 'cpi-chart-tab--active' : ''}`}
-                              onClick={() => {
-                                setReportMetric(m.id)
-                                setSelectedPoint(null)
-                              }}
-                            >
-                              {m.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <ProgressTrendChart
-                        points={progressReport.trendPoints}
-                        metric={reportMetric}
-                        baselineValue={
-                          reportMetric === 'accuracy'
-                            ? progressReport.baselineComparison.baselineAccuracy
-                            : reportMetric === 'mistakes'
-                            ? progressReport.baselineComparison.baselineMistakes
-                            : reportMetric === 'time'
-                            ? progressReport.baselineComparison.baselineTime
-                            : null
-                        }
-                        weeklyData={progressReport.weeklyParticipation}
-                        onSelectPoint={(p) => setSelectedPoint(p)}
-                        selectedPoint={selectedPoint}
-                      />
-                    </div>
-
-                    {/* Activity Breakdown */}
-                    <div className="cpi-games-grid">
-                      {progressReport.gameBreakdown && progressReport.gameBreakdown.map((g) => (
-                        <article key={g.game} className="cpi-game-card">
-                          <div className="cpi-game-card-top">
-                            <h3 className="cpi-game-name">{g.game}</h3>
-                            <span className={`cpi-status-badge cpi-status-badge--${g.status}`}>{g.status}</span>
-                          </div>
-                          <div className="cpi-game-card-metrics">
-                            <div className="cpi-g-metric"><span className="cpi-g-label">Sessions</span><strong className="cpi-g-val">{g.sessionCount}</strong></div>
-                            <div className="cpi-g-metric"><span className="cpi-g-label">Avg Accuracy</span><strong className="cpi-g-val">{g.avgAccuracy}%</strong></div>
-                            <div className="cpi-g-metric"><span className="cpi-g-label">Avg Mistakes</span><strong className="cpi-g-val">{g.avgMistakes}</strong></div>
-                            <div className="cpi-g-metric"><span className="cpi-g-label">Avg Duration</span><strong className="cpi-g-val">{g.avgTime > 0 ? `${g.avgTime}s` : '—'}</strong></div>
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-
-                    {/* Medical Disclaimer */}
-                    <div className="cpi-disclaimer-box">
-                      <div className="cpi-disclaimer-icon">🛡️</div>
-                      <div>
-                        <h4 className="cpi-disclaimer-title">Assistive Caregiver Tracking Notice</h4>
-                        <p className="cpi-disclaimer-text">{progressReport.disclaimer}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <>
-                {/* Overview */}
-
-                <section className="caregiver-overview">
+            <section className="caregiver-overview">
 
               <div className="caregiver-overview-heading">
 
@@ -1838,10 +1376,9 @@ function CaregiverDashboard({
               )}
 
             </section>
+
           </>
         )}
-      </>
-    )}
 
     </div>
   )
