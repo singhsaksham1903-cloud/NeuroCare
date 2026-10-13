@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import './CognitiveGames.css'
 import VoiceReadAloud from '../Components/VoiceReadAloud'
@@ -383,6 +383,17 @@ function CognitiveGames({
     const [launchDifficulty, setLaunchDifficulty] =
         useState(initialDifficulty)
 
+    useEffect(() => {
+        if (!initialGame) return
+        const timer = window.setTimeout(() => {
+            setSelectedGame(initialGame)
+            setLaunchDifficulty(initialDifficulty)
+        }, 0)
+        return () => {
+            window.clearTimeout(timer)
+        }
+    }, [initialGame, initialDifficulty])
+
 
 
     // ==========================================
@@ -483,6 +494,9 @@ function CognitiveGames({
         return (
             <NERCulturalRecall
                 language={language}
+                initialDifficulty={
+                    launchDifficulty || 'Easy'
+                }
                 readAloudLabel={
                     readAloudLabel
                 }

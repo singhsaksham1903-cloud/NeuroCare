@@ -1229,3 +1229,140 @@
     flex-direction: column;
   }
 }
+
+/* --------------------------------------------
+   Caregiver Companion Panel
+   -------------------------------------------- */
+
+.caregiver-companion-panel {
+  width: min(1120px, 100%);
+  margin: 0 auto 28px;
+  background: #ffffff;
+  border: 2px solid #e8ebf0;
+  border-radius: 22px;
+  padding: 28px;
+  box-shadow: 0 6px 20px rgba(31, 41, 55, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.caregiver-companion-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #7357c7, #438f7b, #4c7fb8);
+}
+
+.caregiver-companion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.caregiver-companion-title-area {
+  flex: 1 1 300px;
+}
+
+.caregiver-companion-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f0ebff;
+  color: #5f46ae;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+
+.caregiver-companion-heading {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 6px 0;
+}
+
+.caregiver-companion-focus {
+  display: inline-block;
+  background: #fff7e6;
+  color: #9c6c18;
+  border: 1px solid #fed7aa;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.caregiver-companion-progress {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.caregiver-companion-progress-bar {
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.caregiver-companion-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #438f7b, #59b29b);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.caregiver-companion-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.caregiver-companion-activity-card {
+  background: #fafbfc;
+  border: 1.5px solid #e8ebf0;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.caregiver-companion-activity-card--completed {
+  background: #fbfdfc;
+  border-color: #a7d9cb;
+}
+
+.caregiver-guidance-box {
+  background: #f0f7f5;
+  border-left: 4px solid #438f7b;
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-top: 16px;
+}
+
+.caregiver-guidance-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2e6957;
+  margin: 0 0 4px 0;
+}
+
+.caregiver-guidance-text {
+  font-size: 14px;
+  color: #334155;
+  margin: 0;
+  line-height: 1.5;
+}

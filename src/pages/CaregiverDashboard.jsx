@@ -312,6 +312,7 @@ function CaregiverDashboard({
   const [sessions, setSessions] = useState([])
   const [memoryCount, setMemoryCount] = useState(0)
   const [reminders, setReminders] = useState([])
+  const [companionSummary, setCompanionSummary] = useState(null)
 
   const [linkedElderly, setLinkedElderly] =
     useState(null)
@@ -336,6 +337,7 @@ function CaregiverDashboard({
         setSessions([])
         setMemoryCount(0)
         setReminders([])
+        setCompanionSummary(null)
         setLinkedElderly(null)
 
         setError(
@@ -366,6 +368,7 @@ function CaregiverDashboard({
         setSessions([])
         setMemoryCount(0)
         setReminders([])
+        setCompanionSummary(null)
         setLinkedElderly(null)
 
         return
@@ -396,6 +399,16 @@ function CaregiverDashboard({
         linkedData.reminders ||
         [],
       )
+
+      try {
+        const companionData = await apiGet(
+          `/companion/caregiver-summary/${approvedLink.elderly_id}`,
+        )
+        setCompanionSummary(companionData)
+      } catch (compErr) {
+        console.warn('Companion data error:', compErr)
+        setCompanionSummary(null)
+      }
     } catch (err) {
       setError(
         err.message ||
@@ -907,6 +920,112 @@ function CaregiverDashboard({
         !error &&
         linkedElderly && (
           <>
+
+            {/* AI Cognitive Companion Daily Plan & Caregiver Insights */}
+            {companionSummary && companionSummary.today_plan && (
+              <section className="caregiver-companion-panel" aria-labelledby="caregiver-companion-heading">
+                <div className="caregiver-companion-header">
+                  <div className="caregiver-companion-title-area">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
+                      <span className="caregiver-companion-badge">
+                        ✨ Cognitive Companion
+                      </span>
+                      <span className="caregiver-companion-focus">
+                        {companionSummary.today_plan.aiPowered ? '🤖 Gemini AI Personalized' : '📐 Clinical Adaptive Rules'}
+                      </span>
+                    </div>
+
+                    <h2 id="caregiver-companion-heading" className="caregiver-companion-heading">
+                      Today's Recommended Activities for {linkedElderly.full_name}
+                    </h2>
+
+                    {companionSummary.today_plan.focusTitle && (
+                      <p style={{ margin: '0 0 6px 0', fontWeight: 600, color: '#6e5b87' }}>
+                        🎯 Daily Focus: {companionSummary.today_plan.focusTitle}
+                      </p>
+                    )}
+
+                    {companionSummary.today_plan.encouragementNote && (
+                      <p style={{ margin: 0, fontSize: 14.5, color: '#64748b' }}>
+                        {companionSummary.today_plan.encouragementNote}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Completion Progress */}
+                <div className="caregiver-companion-progress">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 14, fontWeight: 700 }}>
+                    <span style={{ color: '#1f2937' }}>Daily Activity Progress</span>
+                    <span style={{ color: '#438f7b' }}>
+                      {companionSummary.completion_summary?.completed || 0} of {companionSummary.completion_summary?.total || 3} Completed ({companionSummary.completion_summary?.percent || 0}%)
+                    </span>
+                  </div>
+                  <div className="caregiver-companion-progress-bar">
+                    <div
+                      className="caregiver-companion-progress-fill"
+                      style={{ width: `${companionSummary.completion_summary?.percent || 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Activity List */}
+                <div className="caregiver-companion-cards">
+                  {companionSummary.today_plan.activities.map((act, index) => (
+                    <div
+                      key={act.id || act.gameId || index}
+                      className={`caregiver-companion-activity-card ${
+                        act.completed ? 'caregiver-companion-activity-card--completed' : ''
+                      }`}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: '#7357c7', background: '#f0ebff', padding: '2px 8px', borderRadius: 8 }}>
+                          Activity {index + 1}
+                        </span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#3d699b', background: '#eaf3fb', padding: '2px 8px', borderRadius: 6 }}>
+                          Level: {act.recommendedDifficulty}
+                        </span>
+                      </div>
+
+                      <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 4px 0', color: '#1f2937' }}>
+                        {act.gameName}
+                      </h3>
+                      <span style={{ fontSize: 12.5, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>
+                        {act.category} • ⏱️ {act.estimatedDuration}
+                      </span>
+
+                      <p style={{ fontSize: 13.5, color: '#475467', lineHeight: 1.45, margin: '0 0 12px 0', flex: 1 }}>
+                        <strong>Why recommended:</strong> {act.reason}
+                      </p>
+
+                      <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: '1px solid #eef2f6' }}>
+                        {act.completed ? (
+                          <span style={{ fontSize: 13, fontWeight: 700, color: '#2e6957', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            ✅ Completed today {act.accuracy !== null && act.accuracy !== undefined ? `(${act.accuracy}% accuracy)` : ''}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>
+                            ⏳ Pending today
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Caregiver Observation & Guidance Note */}
+                {companionSummary.caregiver_guidance && (
+                  <div className="caregiver-guidance-box">
+                    <p className="caregiver-guidance-title">
+                      💡 Caregiver Observation & Wellness Suggestion
+                    </p>
+                    <p className="caregiver-guidance-text">
+                      {companionSummary.caregiver_guidance.observation} {companionSummary.caregiver_guidance.suggestion}
+                    </p>
+                  </div>
+                )}
+              </section>
+            )}
 
             {/* Overview */}
 

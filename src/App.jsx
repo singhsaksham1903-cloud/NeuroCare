@@ -14,6 +14,7 @@ import OfflineStatus from './Components/OfflineStatus'
 import VoiceReadAloud from './Components/VoiceReadAloud'
 import LanguageSelector from './Components/LanguageSelector'
 import TimeScenery from './Components/TimeScenery'
+import DailyBrainActivities from './Components/DailyBrainActivities'
 import { syncPendingOfflineData } from './utils/offlineData'
 import { syncPendingGameSessions } from './utils/performanceStorage'
 
@@ -718,6 +719,17 @@ function App() {
         id="main-content"
         className="dashboard"
       >
+
+        {/* AI-Powered Personalized Daily Brain Activities */}
+        <DailyBrainActivities
+          user={currentUser}
+          language={languageCode}
+          readAloudLabel={currentText.readAloud}
+          stopReadingLabel={currentText.stopReading}
+          onStartActivity={(gameId, difficulty) => {
+            openGames(gameId, difficulty)
+          }}
+        />
 
         {/* Recommendation */}
 
