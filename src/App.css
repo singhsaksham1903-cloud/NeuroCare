@@ -926,32 +926,3 @@ body {
       rgba(255, 255, 255, 0.90);
   }
 }
-
-/* --------------------------------------------
-   Quick Action Buttons in Dashboard Cards
-   -------------------------------------------- */
-
-.quick-action-btn {
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
-  user-select: none;
-}
-
-.quick-action-btn:hover {
-  transform: translateY(-2px);
-  filter: brightness(0.97);
-}
-
-.quick-action-btn:active {
-  transform: translateY(0);
-  filter: brightness(0.92);
-}
-
-.quick-action-btn--add:hover {
-  box-shadow: 0 4px 12px rgba(115, 87, 199, 0.25) !important;
-  background: #e8dffc !important;
-}
-
-.quick-action-btn:focus-visible {
-  outline: 3px solid #7357c7;
-  outline-offset: 2px;
-}

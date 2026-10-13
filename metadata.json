@@ -1,6 +1,7 @@
 {
   "name": "Cognicare NER",
-  "description": "Cognitive gaming and memory assistance platform for elderly users.",
+  "description": "Elder-friendly cognitive gaming and memory assistance platform with cultural recall, sequence memory, reminders, and caregiver links.",
+  "permissions": [],
   "capabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
   ]

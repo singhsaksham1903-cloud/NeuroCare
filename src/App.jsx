@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import AuthPage from './pages/AuthPage'
 import CognitiveGames from './pages/CognitiveGames'
 import PerformanceDashboard from './pages/PerformanceDashboard'
+import CognitiveProgressInsights from './pages/CognitiveProgressInsights'
 import CaregiverDashboard from './pages/CaregiverDashboard'
 import CaregiverLinks from './pages/CaregiverLinks'
 import RecommendationCard from './pages/RecommendationCard'
@@ -164,9 +165,6 @@ function DashboardCard({
 function App() {
   const [page, setPage] =
     useState('dashboard')
-
-  const [memoriesInitialTab, setMemoriesInitialTab] =
-    useState('vault')
 
   const [currentUser, setCurrentUser] =
     useState(null)
@@ -339,15 +337,6 @@ function App() {
     setPage('games')
   }
 
-  // ==========================================
-  // Open Memories
-  // ==========================================
-
-  const openMemories = (tab = 'vault') => {
-    setMemoriesInitialTab(tab)
-    setPage('memories')
-  }
-
 
   // ==========================================
   // Dashboard information
@@ -493,6 +482,33 @@ function App() {
         onBack={() =>
           setPage('dashboard')
         }
+        onOpenInsights={() =>
+          setPage('progress-insights')
+        }
+      />
+    )
+  }
+
+
+  // ==========================================
+  // Cognitive Progress Insights
+  // ==========================================
+
+  if (page === 'progress-insights') {
+    return (
+      <CognitiveProgressInsights
+        user={currentUser}
+        text={currentText.progressInsightsPage || currentText.performancePage}
+        language={languageCode}
+        readAloudLabel={
+          currentText.readAloud
+        }
+        stopReadingLabel={
+          currentText.stopReading
+        }
+        onBack={() =>
+          setPage('dashboard')
+        }
       />
     )
   }
@@ -552,11 +568,9 @@ function App() {
   // Memories
   // ==========================================
 
-  if (page === 'memories' || page === 'add-memory') {
-    const targetTab = page === 'add-memory' ? 'add' : memoriesInitialTab
+  if (page === 'memories') {
     return (
       <Memories
-        key={targetTab}
         text={currentText.memoriesPage}
         language={languageCode}
         readAloudLabel={
@@ -565,12 +579,9 @@ function App() {
         stopReadingLabel={
           currentText.stopReading
         }
-        onBack={() => {
-          setMemoriesInitialTab('vault')
+        onBack={() =>
           setPage('dashboard')
-        }}
-        user={currentUser}
-        initialTab={targetTab}
+        }
       />
     )
   }
@@ -803,6 +814,28 @@ function App() {
         />
 
 
+        {/* Cognitive Progress Insights */}
+
+        <DashboardCard
+          icon="/illustrations/performance.svg"
+          title={
+            currentText.progressInsights ||
+            'Cognitive Progress Insights'
+          }
+          description={
+            currentText.progressInsightsDescription ||
+            'Analyze changes against your personal baseline and review activity consistency over time.'
+          }
+          buttonLabel={
+            currentText.viewInsights ||
+            'View Progress Insights'
+          }
+          onClick={() =>
+            setPage('progress-insights')
+          }
+        />
+
+
         {/* Caregiver Dashboard */}
 
         <DashboardCard
@@ -852,139 +885,23 @@ function App() {
         />
 
 
-        {/* AI Memory Vault */}
+        {/* Memories */}
 
         <DashboardCard
           icon="/illustrations/memories.svg"
           title={
-            currentText.memoriesPage?.vaultTitle || currentText.memories
+            currentText.memories
           }
           description={
-            currentText.memoriesPage?.vaultSubtitle || currentText.memoriesDescription
+            currentText.memoriesDescription
           }
           buttonLabel={
             currentText.openMemories
           }
           onClick={() =>
-            openMemories('vault')
+            setPage('memories')
           }
-        >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', margin: '10px 0 16px 0' }}>
-            <button
-              type="button"
-              className="quick-action-btn quick-action-btn--add"
-              style={{
-                minHeight: '44px',
-                padding: '8px 12px',
-                borderRadius: '12px',
-                background: '#f0ebff',
-                color: '#7357c7',
-                border: '1.5px solid #7357c7',
-                fontSize: '14px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                boxShadow: '0 2px 6px rgba(115, 87, 199, 0.12)',
-                transition: 'all 0.15s ease',
-              }}
-              onClick={(e) => {
-                e.stopPropagation()
-                openMemories('add')
-              }}
-              title={currentText.memoriesPage?.addMemory || 'Add a Memory'}
-              aria-label={currentText.memoriesPage?.addMemory || 'Add a Memory'}
-            >
-              ➕ {currentText.memoriesPage?.addMemory || 'Add a Memory'}
-            </button>
-            <button
-              type="button"
-              className="quick-action-btn"
-              style={{
-                minHeight: '44px',
-                padding: '8px 12px',
-                borderRadius: '12px',
-                background: '#fff0eb',
-                color: '#d77a62',
-                border: '1.5px solid #d77a62',
-                fontSize: '14px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                transition: 'all 0.15s ease',
-              }}
-              onClick={(e) => {
-                e.stopPropagation()
-                openMemories('add')
-              }}
-              title={currentText.memoriesPage?.recordVoice || 'Record Voice Memory'}
-              aria-label={currentText.memoriesPage?.recordVoice || 'Record Voice Memory'}
-            >
-              🎤 {currentText.memoriesPage?.voiceSearch || 'Voice Add'}
-            </button>
-            <button
-              type="button"
-              className="quick-action-btn"
-              style={{
-                minHeight: '44px',
-                padding: '8px 12px',
-                borderRadius: '12px',
-                background: '#eaf3fb',
-                color: '#4c7fb8',
-                border: '1.5px solid #4c7fb8',
-                fontSize: '14px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                transition: 'all 0.15s ease',
-              }}
-              onClick={(e) => {
-                e.stopPropagation()
-                openMemories('search')
-              }}
-              title="Search Memories"
-              aria-label="Search Memories"
-            >
-              🔍 Search
-            </button>
-            <button
-              type="button"
-              className="quick-action-btn"
-              style={{
-                minHeight: '44px',
-                padding: '8px 12px',
-                borderRadius: '12px',
-                background: '#f2f4f8',
-                color: '#344054',
-                border: '1.5px solid #d9dfe8',
-                fontSize: '14px',
-                fontWeight: '700',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                transition: 'all 0.15s ease',
-              }}
-              onClick={(e) => {
-                e.stopPropagation()
-                openMemories('timeline')
-              }}
-              title={currentText.memoriesPage?.tabs?.timeline || 'Timeline'}
-              aria-label={currentText.memoriesPage?.tabs?.timeline || 'Timeline'}
-            >
-              📅 {currentText.memoriesPage?.tabs?.timeline || 'Timeline'}
-            </button>
-          </div>
-        </DashboardCard>
+        />
 
 
         {/* Reminders */}

@@ -5,7 +5,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   server: {
-    hmr: false,
+    host: '0.0.0.0',
+    port: 3000,
+    allowedHosts: true,
   },
   plugins: [
     react(),

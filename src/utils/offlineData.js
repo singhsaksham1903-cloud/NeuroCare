@@ -5,7 +5,7 @@ import {
 } from './auth'
 
 
-const API_URL = ''
+const API_URL = 'http://127.0.0.1:8000'
 
 const RESOURCE_CONFIG = {
   memories: {
@@ -572,7 +572,7 @@ function replaceLocalItemWithServerItem(
 }
 
 
-export function removeCachedItem(
+function removeCachedItem(
   resource,
   id,
 ) {
@@ -588,21 +588,6 @@ export function removeCachedItem(
     getCacheKey(resource),
     next,
   )
-}
-
-
-export function removeQueuedMutation(
-  resource,
-  id,
-) {
-  const queue = getQueue()
-  const next = queue.filter(
-    (mutation) =>
-      !(mutation.resource === resource &&
-        (String(mutation.id) === String(id) ||
-         String(mutation.localId) === String(id))),
-  )
-  saveQueue(next)
 }
 
 

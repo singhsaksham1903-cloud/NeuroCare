@@ -1320,3 +1320,76 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* --------------------------------------------
+   Cognitive Progress Insights CTA Banner
+   -------------------------------------------- */
+
+.performance-insights-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  background: linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 100%);
+  border: 1.5px solid #c7d2fe;
+  border-radius: 20px;
+  padding: 22px 28px;
+  box-shadow: 0 4px 18px rgba(115, 87, 199, 0.08);
+  margin-bottom: 20px;
+}
+
+.performance-insights-cta-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 650px;
+}
+
+.performance-insights-cta-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  background: #7357c7;
+  color: #ffffff;
+  padding: 3px 10px;
+  border-radius: 6px;
+  align-self: flex-start;
+}
+
+.performance-insights-cta-body h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e1b4b;
+  margin: 0;
+}
+
+.performance-insights-cta-body p {
+  font-size: 15px;
+  color: #4338ca;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.performance-insights-cta-button {
+  min-height: 48px;
+  padding: 10px 24px;
+  border-radius: 12px;
+  background: #7357c7;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.performance-insights-cta-button:hover {
+  background: #5f46ae;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(115, 87, 199, 0.25);
+}
