@@ -39,7 +39,7 @@
 ## Cognicare NER Working Prototype
 ## 🎥 Demo Video
 
-**▶️ [Watch the Cognicare NER Demo](Cognicare-Care_video_demo.mp4)**
+**▶️ https://drive.google.com/file/d/1aEfKCu7Lr1CzWn1sOwtelEKGDN5us72f/view?usp=sharing**
 
 The demonstration is intended to showcase the working prototype, including the elderly dashboard, cognitive games, personalized recommendations, voice interaction, memories, reminders, caregiver functionality, and NER-focused cognitive content.
 
@@ -901,7 +901,7 @@ The project is intended for:
 
 ## 🎥 Demo Video
 
-**▶️ [Watch the Cognicare NER Demo](Cognicare-Care_video_demo.mp4)**
+**▶️ https://drive.google.com/file/d/1aEfKCu7Lr1CzWn1sOwtelEKGDN5us72f/view?usp=sharing**
 
 ## 📊 Hackathon Presentation
 
