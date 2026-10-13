@@ -67,5 +67,5 @@ PHASE 7 — TEST CHECKLIST
 
    All three queries should return 0 rows.
 
-9. Important limitation for SIH demo
+9. Important limitation for demo
    Offline changes are stored in the browser's local storage until synchronization. If the site data is manually cleared before reconnecting, those unsynced local changes are lost. This prototype does not implement encrypted offline storage or background push synchronization while the app is completely closed.

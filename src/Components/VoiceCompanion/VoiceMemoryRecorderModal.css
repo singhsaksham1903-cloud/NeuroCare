@@ -1,0 +1,406 @@
+/* ============================================================
+   Cognicare NER — Voice Memory Recorder Modal
+   Warm, elderly-accessible styling for personal memories
+   ============================================================ */
+
+.voice-memory-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(30, 26, 24, 0.65);
+  backdrop-filter: blur(4px);
+  animation: vmr-fade-in 0.25s ease-out;
+}
+
+.voice-memory-modal {
+  position: relative;
+  width: 100%;
+  max-width: 650px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 26px;
+  border: 2px solid #edd5ce;
+  box-shadow:
+    0 20px 48px rgba(78, 46, 38, 0.22),
+    0 4px 14px rgba(78, 46, 38, 0.1);
+  overflow-y: auto;
+  color: #3b302d;
+  font-family: inherit;
+  animation: vmr-slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ------------------------------------------------------------
+   Header
+   ------------------------------------------------------------ */
+
+.voice-memory-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 26px;
+  border-bottom: 1.5px solid #f6e8e4;
+  background: #fffbfa;
+  border-radius: 24px 24px 0 0;
+}
+
+.voice-memory-header-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.voice-memory-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #d77a62, #bd5a40);
+  color: #ffffff;
+  font-size: 1.45rem;
+  flex-shrink: 0;
+}
+
+.voice-memory-title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #6d3326;
+  line-height: 1.25;
+}
+
+.voice-memory-subtitle {
+  margin: 3px 0 0;
+  font-size: 0.88rem;
+  color: #8c5b50;
+}
+
+.voice-memory-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid #ebd0c8;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #664138;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.voice-memory-close-btn:hover {
+  background: #fdf2ef;
+}
+
+.voice-memory-close-btn:focus-visible {
+  outline: 3px solid rgba(215, 122, 98, 0.35);
+}
+
+/* ------------------------------------------------------------
+   Body
+   ------------------------------------------------------------ */
+
+.voice-memory-body {
+  padding: 24px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.voice-memory-privacy-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: #fdf5f2;
+  border: 1.5px solid #f6ded7;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: #794437;
+}
+
+.voice-memory-privacy-notice-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* ------------------------------------------------------------
+   Recording Controls Box
+   ------------------------------------------------------------ */
+
+.voice-memory-rec-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 22px;
+  border-radius: 18px;
+  background: #faf7f6;
+  border: 1.5px dashed #dfc1b8;
+  text-align: center;
+}
+
+.voice-memory-rec-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.voice-memory-rec-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 12px 26px;
+  border-radius: 28px;
+  border: none;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.voice-memory-rec-btn--start {
+  background: linear-gradient(135deg, #d77a62, #bd5a40);
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(215, 122, 98, 0.32);
+}
+
+.voice-memory-rec-btn--start:hover {
+  background: linear-gradient(135deg, #c7674d, #aa4b33);
+  transform: translateY(-2px);
+}
+
+.voice-memory-rec-btn--stop {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.3);
+  animation: vmr-pulse 1.8s infinite;
+}
+
+.voice-memory-rec-btn:focus-visible {
+  outline: 4px solid rgba(215, 122, 98, 0.4);
+  outline-offset: 3px;
+}
+
+.voice-memory-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1.5px solid #d4b5ac;
+  background: #ffffff;
+  color: #714136;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.voice-memory-retry-btn:hover {
+  background: #fbf1ee;
+}
+
+.voice-memory-status-text {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #7d493d;
+}
+
+/* ------------------------------------------------------------
+   Editable Review Form
+   ------------------------------------------------------------ */
+
+.voice-memory-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.voice-memory-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.voice-memory-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #55342c;
+}
+
+.voice-memory-input,
+.voice-memory-textarea,
+.voice-memory-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1.5px solid #dfc3ba;
+  font-family: inherit;
+  font-size: 1rem;
+  color: #2b201d;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.voice-memory-input:focus-visible,
+.voice-memory-textarea:focus-visible,
+.voice-memory-select:focus-visible {
+  border-color: #d77a62;
+  box-shadow: 0 0 0 3px rgba(215, 122, 98, 0.22);
+}
+
+.voice-memory-textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.voice-memory-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 550px) {
+  .voice-memory-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ------------------------------------------------------------
+   Footer / Submission Actions
+   ------------------------------------------------------------ */
+
+.voice-memory-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  padding-top: 10px;
+  border-top: 1.5px solid #f6e8e4;
+}
+
+.voice-memory-cancel-btn {
+  min-height: 48px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 1.5px solid #d8b8b0;
+  background: #ffffff;
+  color: #6a443a;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.voice-memory-cancel-btn:hover {
+  background: #fbf3f0;
+}
+
+.voice-memory-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 12px 28px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #1b7a66, #146252);
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(27, 122, 102, 0.25);
+  transition: transform 0.15s, background 0.15s;
+}
+
+.voice-memory-save-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #156957, #0f4f42);
+  transform: translateY(-2px);
+}
+
+.voice-memory-save-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.voice-memory-save-btn:focus-visible {
+  outline: 4px solid rgba(27, 122, 102, 0.35);
+  outline-offset: 3px;
+}
+
+.voice-memory-msg {
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.voice-memory-msg--error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.voice-memory-msg--success {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+/* ------------------------------------------------------------
+   Animations & Accessibility
+   ------------------------------------------------------------ */
+
+@keyframes vmr-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes vmr-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vmr-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-memory-modal-overlay,
+  .voice-memory-modal,
+  .voice-memory-rec-btn--stop {
+    animation: none;
+    transition: none;
+  }
+}
+

@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import AuthPage from './pages/AuthPage'
 import CognitiveGames from './pages/CognitiveGames'
 import PerformanceDashboard from './pages/PerformanceDashboard'
-import CognitiveProgressInsights from './pages/CognitiveProgressInsights'
 import CaregiverDashboard from './pages/CaregiverDashboard'
 import CaregiverLinks from './pages/CaregiverLinks'
 import RecommendationCard from './pages/RecommendationCard'
@@ -15,6 +14,7 @@ import OfflineStatus from './Components/OfflineStatus'
 import VoiceReadAloud from './Components/VoiceReadAloud'
 import LanguageSelector from './Components/LanguageSelector'
 import TimeScenery from './Components/TimeScenery'
+import VoiceCompanionWidget from './Components/VoiceCompanion/VoiceCompanionWidget'
 import { syncPendingOfflineData } from './utils/offlineData'
 import { syncPendingGameSessions } from './utils/performanceStorage'
 
@@ -419,12 +419,14 @@ function App() {
   }
 
 
+  let content
+
   // ==========================================
   // Cognitive Games
   // ==========================================
 
   if (page === 'games') {
-    return (
+    content = (
       <CognitiveGames
         text={currentText.gamesPage}
         memoryMatchText={
@@ -461,15 +463,8 @@ function App() {
         }}
       />
     )
-  }
-
-
-  // ==========================================
-  // Performance Dashboard
-  // ==========================================
-
-  if (page === 'performance') {
-    return (
+  } else if (page === 'performance') {
+    content = (
       <PerformanceDashboard
         text={currentText.performancePage}
         language={languageCode}
@@ -482,44 +477,10 @@ function App() {
         onBack={() =>
           setPage('dashboard')
         }
-        onOpenInsights={() =>
-          setPage('progress-insights')
-        }
       />
     )
-  }
-
-
-  // ==========================================
-  // Cognitive Progress Insights
-  // ==========================================
-
-  if (page === 'progress-insights') {
-    return (
-      <CognitiveProgressInsights
-        user={currentUser}
-        text={currentText.progressInsightsPage || currentText.performancePage}
-        language={languageCode}
-        readAloudLabel={
-          currentText.readAloud
-        }
-        stopReadingLabel={
-          currentText.stopReading
-        }
-        onBack={() =>
-          setPage('dashboard')
-        }
-      />
-    )
-  }
-
-
-  // ==========================================
-  // Caregiver Dashboard
-  // ==========================================
-
-  if (page === 'caregiver') {
-    return (
+  } else if (page === 'caregiver') {
+    content = (
       <CaregiverDashboard
         user={currentUser}
         text={currentText.caregiverPage}
@@ -535,15 +496,8 @@ function App() {
         }
       />
     )
-  }
-
-
-  // ==========================================
-  // Caregiver Connections
-  // ==========================================
-
-  if (page === 'caregiver-links') {
-    return (
+  } else if (page === 'caregiver-links') {
+    content = (
       <CaregiverLinks
         user={currentUser}
         text={
@@ -561,15 +515,8 @@ function App() {
         }
       />
     )
-  }
-
-
-  // ==========================================
-  // Memories
-  // ==========================================
-
-  if (page === 'memories') {
-    return (
+  } else if (page === 'memories') {
+    content = (
       <Memories
         text={currentText.memoriesPage}
         language={languageCode}
@@ -584,15 +531,8 @@ function App() {
         }
       />
     )
-  }
-
-
-  // ==========================================
-  // Reminders
-  // ==========================================
-
-  if (page === 'reminders') {
-    return (
+  } else if (page === 'reminders') {
+    content = (
       <Reminders
         text={currentText.remindersPage}
         language={languageCode}
@@ -607,17 +547,11 @@ function App() {
         }
       />
     )
-  }
-
-
-  // ==========================================
-  // Main Dashboard
-  // ==========================================
-
-  return (
-    <div
-      className={`dashboard-app dashboard-app--${timeOfDay}`}
-    >
+  } else {
+    content = (
+      <div
+        className={`dashboard-app dashboard-app--${timeOfDay}`}
+      >
 
       {/* ----------------------------------------
           Time-based scenery
@@ -814,28 +748,6 @@ function App() {
         />
 
 
-        {/* Cognitive Progress Insights */}
-
-        <DashboardCard
-          icon="/illustrations/performance.svg"
-          title={
-            currentText.progressInsights ||
-            'Cognitive Progress Insights'
-          }
-          description={
-            currentText.progressInsightsDescription ||
-            'Analyze changes against your personal baseline and review activity consistency over time.'
-          }
-          buttonLabel={
-            currentText.viewInsights ||
-            'View Progress Insights'
-          }
-          onClick={() =>
-            setPage('progress-insights')
-          }
-        />
-
-
         {/* Caregiver Dashboard */}
 
         <DashboardCard
@@ -934,6 +846,27 @@ function App() {
       </footer>
 
     </div>
+    )
+  }
+
+  return (
+    <>
+      {content}
+      <VoiceCompanionWidget
+        language={languageCode}
+        onLanguageChange={(newLangCode) => {
+          const short = newLangCode.split('-')[0]
+          setLanguage(short)
+        }}
+        onNavigate={(targetPage, gameId = null) => {
+          if (targetPage === 'games') {
+            openGames(gameId || null)
+          } else {
+            setPage(targetPage)
+          }
+        }}
+      />
+    </>
   )
 }
 

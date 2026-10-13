@@ -6,6 +6,7 @@ import {
 
 import './Memories.css'
 import VoiceReadAloud from '../Components/VoiceReadAloud'
+import VoiceMemoryRecorderModal from '../Components/VoiceCompanion/VoiceMemoryRecorderModal'
 
 import {
   apiDelete,
@@ -261,6 +262,9 @@ function Memories({
 
   const [imageSavingId, setImageSavingId] =
     useState(null)
+
+  const [isVoiceModalOpen, setIsVoiceModalOpen] =
+    useState(false)
 
   const imageText = getImageText(language)
 
@@ -707,7 +711,7 @@ function Memories({
               <MemoryIcon />
             </div>
 
-            <div>
+            <div style={{ flex: 1 }}>
 
               <span>
                 {editingId !== null
@@ -722,6 +726,28 @@ function Memories({
               </h2>
 
             </div>
+
+            <button
+              type="button"
+              className="memory-voice-record-btn"
+              onClick={() => setIsVoiceModalOpen(true)}
+              aria-label={
+                language.startsWith('hi')
+                  ? 'आवाज से याद दर्ज करें'
+                  : language.startsWith('as')
+                    ? 'কণ্ঠৰে স্মৃতি ৰেকৰ্ড কৰক'
+                    : 'Record Memory with Voice'
+              }
+            >
+              <span aria-hidden="true" style={{ fontSize: '1.2rem' }}>🎙️</span>
+              <span>
+                {language.startsWith('hi')
+                  ? 'आवाज से दर्ज करें'
+                  : language.startsWith('as')
+                    ? 'কণ্ঠৰে ৰেকৰ্ড কৰক'
+                    : 'Record with Voice'}
+              </span>
+            </button>
 
           </div>
 
@@ -1146,6 +1172,16 @@ function Memories({
         </section>
 
       </main>
+
+      <VoiceMemoryRecorderModal
+        isOpen={isVoiceModalOpen}
+        onClose={() => setIsVoiceModalOpen(false)}
+        language={language}
+        onMemorySaved={async () => {
+          setMessage(text.saveSuccess || 'Memory saved successfully')
+          await loadMemories()
+        }}
+      />
 
     </div>
   )

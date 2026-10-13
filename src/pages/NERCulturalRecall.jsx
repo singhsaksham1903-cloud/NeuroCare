@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import './NERCulturalRecall.css'
 
 import VoiceReadAloud from '../Components/VoiceReadAloud'
+import VoiceInput from '../Components/VoiceInput'
 
 import {
     NER_CULTURAL_CONTENT,
@@ -369,6 +370,44 @@ function NERCulturalRecall({
             setMessage(text.incorrect)
         }
 
+    }
+
+
+    // ----------------------------------------
+    // Voice Answer Handling
+    // ----------------------------------------
+
+    const handleVoiceAnswer = (transcript) => {
+        if (
+            phase !== 'playing' ||
+            selectedAnswer !== null ||
+            !currentQuestion ||
+            !transcript
+        ) {
+            return
+        }
+
+        const clean = String(transcript).toLowerCase().trim()
+
+        const matchedOption = currentQuestion.optionStates.find(
+            (state) => {
+                const nameEn = String(state.name_en || state.name || '').toLowerCase()
+                const nameHi = String(state.name_hi || '').toLowerCase()
+                const nameAs = String(state.name_as || '').toLowerCase()
+                const stateId = String(state.id || '').toLowerCase()
+
+                return (
+                    (nameEn && clean.includes(nameEn)) ||
+                    (nameHi && clean.includes(nameHi)) ||
+                    (nameAs && clean.includes(nameAs)) ||
+                    (stateId && clean.includes(stateId))
+                )
+            },
+        )
+
+        if (matchedOption) {
+            handleAnswer(matchedOption.id)
+        }
     }
 
 
@@ -780,6 +819,29 @@ function NERCulturalRecall({
                     )}
 
                 </section>
+
+                {selectedAnswer === null && (
+                    <div style={{ display: 'flex', justifyContent: 'center', margin: '14px 0' }}>
+                        <VoiceInput
+                            language={language}
+                            onResult={handleVoiceAnswer}
+                            label={
+                                language.startsWith('hi')
+                                    ? 'आवाज से उत्तर दें'
+                                    : language.startsWith('as')
+                                      ? 'কণ্ঠৰে উত্তৰ দিয়ক'
+                                      : 'Speak Answer'
+                            }
+                            listeningLabel={
+                                language.startsWith('hi')
+                                    ? 'सुन रहे हैं...'
+                                    : language.startsWith('as')
+                                      ? 'শুনি থকা হৈছে...'
+                                      : 'Listening...'
+                            }
+                        />
+                    </div>
+                )}
 
 
                 {selectedAnswer !== null && (

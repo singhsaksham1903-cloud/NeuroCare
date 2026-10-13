@@ -24,41 +24,6 @@ const translations = {
             'View your recent cognitive game performance.',
         viewPerformance: 'View Performance',
 
-        progressInsights: 'Cognitive Progress Insights',
-        progressInsightsDescription:
-            'Analyze changes against your personal baseline and review activity consistency over time.',
-        viewInsights: 'View Progress Insights',
-
-        progressInsightsPage: {
-            title: 'Cognitive Progress Insights',
-            subtitle: 'Understand changes in your activity performance, rhythm, and baseline over time.',
-            backToDashboard: 'Back to Dashboard',
-            period7d: '7 Days',
-            period30d: '30 Days',
-            period90d: '90 Days',
-            periodAll: 'All History',
-            allActivities: 'All Activities',
-            allDifficulties: 'All Difficulties',
-            activityLabel: 'Activity:',
-            difficultyLabel: 'Difficulty:',
-            overview: 'Progress Overview',
-            completedSessions: 'Completed Sessions',
-            sessionsPerWeek: 'sessions / week',
-            averageAccuracy: 'Average Accuracy',
-            vsBaseline: 'vs baseline',
-            mistakesPerSession: 'Mistakes / Session',
-            averageTime: 'Average Time',
-            mostPlayed: 'Most played',
-            personalBaseline: 'Personal Baseline Comparison',
-            sustainedObservations: 'Sustained-Change Observations',
-            trendCharts: 'Performance Trend Charts',
-            activityBreakdown: 'Activity Breakdown',
-            difficultyConsistency: 'Difficulty Consistency',
-            personalizedInsights: 'Personalized Insights',
-            disclaimerTitle: 'Assistive Tracking Disclaimer',
-            printSave: 'Print / Save',
-        },
-
         caregiverDashboard: 'Caregiver Dashboard',
         caregiverDashboardDescription:
             'Review recent cognitive activity and performance.',
@@ -109,7 +74,7 @@ const translations = {
         back: 'Back',
 
         footer:
-            'Cognicare NER — SIH 2026 Prototype',
+            'Cognicare NER — Prototype',
 
         gamesPage: {
             icon: '🧠',
@@ -889,41 +854,6 @@ const translations = {
             'अपने हाल के मानसिक खेल के प्रदर्शन को देखें।',
         viewPerformance: 'प्रदर्शन देखें',
 
-        progressInsights: 'संज्ञानात्मक प्रगति अंतर्दृष्टि',
-        progressInsightsDescription:
-            'समय के साथ अपनी गतिविधि प्रदर्शन, गति और व्यक्तिगत बेसलाइन में बदलाव को समझें।',
-        viewInsights: 'प्रगति अंतर्दृष्टि देखें',
-
-        progressInsightsPage: {
-            title: 'संज्ञानात्मक प्रगति अंतर्दृष्टि',
-            subtitle: 'समय के साथ अपनी गतिविधि प्रदर्शन, गति और व्यक्तिगत बेसलाइन में बदलाव को समझें।',
-            backToDashboard: 'डैशबोर्ड पर वापस जाएँ',
-            period7d: '7 दिन',
-            period30d: '30 दिन',
-            period90d: '90 दिन',
-            periodAll: 'सम्पूर्ण इतिहास',
-            allActivities: 'सभी गतिविधियाँ',
-            allDifficulties: 'सभी कठिनाई स्तर',
-            activityLabel: 'गतिविधि:',
-            difficultyLabel: 'कठिनाई स्तर:',
-            overview: 'प्रगति अवलोकन',
-            completedSessions: 'पूर्ण सत्र',
-            sessionsPerWeek: 'सत्र / सप्ताह',
-            averageAccuracy: 'औसत सटीकता',
-            vsBaseline: 'बेसलाइन की तुलना में',
-            mistakesPerSession: 'गलतियाँ / सत्र',
-            averageTime: 'औसत समय',
-            mostPlayed: 'सर्वाधिक खेला गया',
-            personalBaseline: 'व्यक्तिगत बेसलाइन तुलना',
-            sustainedObservations: 'दीर्घकालिक बदलाव अवलोकन',
-            trendCharts: 'प्रदर्शन रुझान चार्ट',
-            activityBreakdown: 'गतिविधि विश्लेषण',
-            difficultyConsistency: 'कठिनाई स्तर स्थिरता',
-            personalizedInsights: 'व्यक्तिगत सुझाव',
-            disclaimerTitle: 'सहायक ट्रैकिंग अस्वीकरण',
-            printSave: 'प्रिंट / सेव करें',
-        },
-
         caregiverDashboard: 'देखभालकर्ता डैशबोर्ड',
         caregiverDashboardDescription:
             'हाल की मानसिक गतिविधि और प्रदर्शन की समीक्षा करें।',
@@ -973,7 +903,7 @@ const translations = {
         back: 'वापस',
 
         footer:
-            'Cognicare NER — SIH 2026 प्रोटोटाइप',
+            'Cognicare NER — प्रोटोटाइप',
 
         gamesPage: {
             icon: '🧠',
@@ -1769,41 +1699,6 @@ const translations = {
             'আপোনাৰ শেহতীয়া জ্ঞানীয় খেলৰ প্ৰদৰ্শন চাওক।',
         viewPerformance: 'প্ৰদৰ্শন চাওক',
 
-        progressInsights: 'জ্ঞানীয় অগ্ৰগতি অন্তৰ্দৃষ্টি',
-        progressInsightsDescription:
-            'সময়ৰ লগে লগে আপোনাৰ কাৰ্যকলাপৰ প্ৰদৰ্শন, ছন্দ আৰু ব্যক্তিগত বেচলাইনৰ পৰিৱৰ্তন বুজি লওক।',
-        viewInsights: 'অগ্ৰগতি অন্তৰ্দৃষ্টি চাওক',
-
-        progressInsightsPage: {
-            title: 'জ্ঞানীয় অগ্ৰগতি অন্তৰ্দৃষ্টি',
-            subtitle: 'সময়ৰ লগে লগে আপোনাৰ কাৰ্যকলাপৰ প্ৰদৰ্শন, ছন্দ আৰু ব্যক্তিগত বেচলাইনৰ পৰিৱৰ্তন বুজি লওক।',
-            backToDashboard: 'ডেশ্বব’ৰ্ডলৈ উভতি যাওক',
-            period7d: '৭ দিন',
-            period30d: '৩০ দিন',
-            period90d: '৯০ দিন',
-            periodAll: 'সকলো ইতিহাস',
-            allActivities: 'সকলো কাৰ্যকলাপ',
-            allDifficulties: 'সকলো স্তৰ',
-            activityLabel: 'কাৰ্যকলাপ:',
-            difficultyLabel: 'কঠিনতাৰ স্তৰ:',
-            overview: 'অগ্ৰগতিৰ আভাস',
-            completedSessions: 'সম্পূৰ্ণ কৰা সত্ৰ',
-            sessionsPerWeek: 'সত্ৰ / সপ্তাহ',
-            averageAccuracy: 'গড় নিখুঁততা',
-            vsBaseline: 'বেচলাইনৰ তুলনাত',
-            mistakesPerSession: 'ভুল / সত্ৰ',
-            averageTime: 'গড় সময়',
-            mostPlayed: 'সৰ্বাধিক খেলা',
-            personalBaseline: 'ব্যক্তিগত বেচলাইন তুলনা',
-            sustainedObservations: 'ধাৰাবাহিক পৰিৱৰ্তনৰ নিৰীক্ষণ',
-            trendCharts: 'প্ৰদৰ্শন ধাৰা চাৰ্ট',
-            activityBreakdown: 'কাৰ্যকলাপ বিভাজন',
-            difficultyConsistency: 'কঠিনতাৰ সুস্থিৰতা',
-            personalizedInsights: 'ব্যক্তিগত পৰামৰ্শ',
-            disclaimerTitle: 'সহায়ক ট্ৰেকিং সতৰ্কবাৰ্তা',
-            printSave: 'প্ৰিণ্ট / সংৰক্ষণ',
-        },
-
         caregiverDashboard: 'যত্ন লওঁতাৰ ডেশ্বব’ৰ্ড',
         caregiverDashboardDescription:
             'শেহতীয়া জ্ঞানীয় কাৰ্যকলাপ আৰু প্ৰদৰ্শন পৰ্যালোচনা কৰক।',
@@ -1853,7 +1748,7 @@ const translations = {
         back: 'উভতি যাওক',
 
         footer:
-            'Cognicare NER — SIH 2026 প্ৰট’টাইপ',
+            'Cognicare NER — প্ৰট’টাইপ',
 
         gamesPage: {
             icon: '🧠',

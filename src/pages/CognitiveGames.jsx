@@ -11,6 +11,47 @@ import NERCulturalRecall from './NERCulturalRecall'
 import {
     getAdaptiveDifficulty,
 } from '../utils/adaptiveDifficulty'
+import {
+    speakText,
+    stopSpeaking,
+    toShortLanguageCode,
+} from '../utils/voiceCompanion'
+
+const GAME_VOICE_ASSISTANT_TEXT = {
+    en: {
+        title: 'Voice Game Companion',
+        instructions:
+            'Welcome to Cognitive Games. You can play Memory Match to pair cards, Sequence Memory to recall patterns, Object Recall to remember items, NER Cultural Recall to identify North-Eastern traditions, or Personal Memory Recall with your own stories. Choose any game to begin.',
+        gentleFeedback:
+            'Take your time and enjoy each game. There is no time limit or pressure. Exercising your memory helps your mind stay vibrant and healthy.',
+        readGuide: 'Listen to Game Instructions',
+        repeatGuide: 'Repeat Instructions',
+        encourage: 'Gentle Encouragement',
+        stop: 'Stop Speaking',
+    },
+    hi: {
+        title: 'आवाज खेल सहायक',
+        instructions:
+            'संज्ञानात्मक खेलों में आपका स्वागत है। आप पत्तों की जोड़ी बनाने के लिए मेमोरी मैच, पैटर्न याद रखने के लिए अनुक्रम स्मृति, वस्तु स्मरण, पूर्वोत्तर सांस्कृतिक स्मरण, या अपनी यादों का अभ्यास खेल सकते हैं। शुरू करने के लिए कोई भी खेल चुनें।',
+        gentleFeedback:
+            'आराम से खेलें और आनंद लें। कोई समय सीमा या दबाव नहीं है। अपनी याददाश्त का अभ्यास करने से मस्तिष्क सक्रिय और स्वस्थ रहता है।',
+        readGuide: 'खेल के निर्देश सुनें',
+        repeatGuide: 'निर्देश दोहराएँ',
+        encourage: 'प्रोत्साहन',
+        stop: 'आवाज रोकें',
+    },
+    as: {
+        title: 'কণ্ঠ খেল সংগী',
+        instructions:
+            'কগনিটিভ খেললৈ স্বাগতম। আপুনি মেমৰি মেচ, ক্ৰমিক স্মৃতি, বস্তু স্মৰণ, উত্তৰ-পূব সাংস্কৃতিক স্মৰণ বা নিজৰ স্মৃতিৰ অনুশীলন খেল খেলিব পাৰে। আৰম্ভ কৰিবলৈ যিকোনো এটা খেল বাছনি কৰক।',
+        gentleFeedback:
+            'ধৈৰ্য্যেৰে খেলক আৰু উপভোগ কৰক। কোনো সময়ৰ সীমা নাই। স্মৃতিশক্তিৰ চৰ্চা কৰিলে মন সজীৱ আৰু সুস্থ হৈ থাকে।',
+        readGuide: 'খেলৰ নিৰ্দেশনা শুনক',
+        repeatGuide: 'নিৰ্দেশ পুনৰ শুনক',
+        encourage: 'উৎসুকতা',
+        stop: 'কণ্ঠ বন্ধ কৰক',
+    },
+}
 
 
 // ============================================
@@ -383,6 +424,39 @@ function CognitiveGames({
     const [launchDifficulty, setLaunchDifficulty] =
         useState(initialDifficulty)
 
+    const [isSpeakingGuide, setIsSpeakingGuide] =
+        useState(false)
+
+    const [lastSpokenGuide, setLastSpokenGuide] =
+        useState('')
+
+    const shortLang = toShortLanguageCode(language)
+    const voiceText =
+        GAME_VOICE_ASSISTANT_TEXT[shortLang] ||
+        GAME_VOICE_ASSISTANT_TEXT.en
+
+    const handleSpeakGuide = (contentToSpeak) => {
+        const textToRead = contentToSpeak || voiceText.instructions
+        setLastSpokenGuide(textToRead)
+        setIsSpeakingGuide(true)
+        speakText(textToRead, {
+            language,
+            rate: 0.85,
+            onStart: () => setIsSpeakingGuide(true),
+            onEnd: () => setIsSpeakingGuide(false),
+            onError: () => setIsSpeakingGuide(false),
+        })
+    }
+
+    const handleRepeatGuide = () => {
+        handleSpeakGuide(lastSpokenGuide || voiceText.instructions)
+    }
+
+    const handleStopGuide = () => {
+        stopSpeaking()
+        setIsSpeakingGuide(false)
+    }
+
 
 
     // ==========================================
@@ -669,6 +743,60 @@ function CognitiveGames({
 
             </header>
 
+            {/* Game Voice Companion Bar */}
+            <section className="games-companion-bar" aria-label={voiceText.title}>
+                <div className="games-companion-info">
+                    <span className="games-companion-icon" aria-hidden="true">🎙️</span>
+                    <div>
+                        <h2 className="games-companion-title">{voiceText.title}</h2>
+                        <p className="games-companion-subtitle">{voiceText.gentleFeedback}</p>
+                    </div>
+                </div>
+
+                <div className="games-companion-buttons">
+                    <button
+                        type="button"
+                        className="games-companion-btn games-companion-btn--primary"
+                        onClick={() => handleSpeakGuide(voiceText.instructions)}
+                        aria-label={voiceText.readGuide}
+                    >
+                        <span aria-hidden="true">🔊</span>
+                        <span>{voiceText.readGuide}</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        className="games-companion-btn"
+                        onClick={handleRepeatGuide}
+                        aria-label={voiceText.repeatGuide}
+                    >
+                        <span aria-hidden="true">🔄</span>
+                        <span>{voiceText.repeatGuide}</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        className="games-companion-btn"
+                        onClick={() => handleSpeakGuide(voiceText.gentleFeedback)}
+                        aria-label={voiceText.encourage}
+                    >
+                        <span aria-hidden="true">💚</span>
+                        <span>{voiceText.encourage}</span>
+                    </button>
+
+                    {isSpeakingGuide && (
+                        <button
+                            type="button"
+                            className="games-companion-btn games-companion-btn--stop"
+                            onClick={handleStopGuide}
+                            aria-label={voiceText.stop}
+                        >
+                            <span aria-hidden="true">🔇</span>
+                            <span>{voiceText.stop}</span>
+                        </button>
+                    )}
+                </div>
+            </section>
 
             {/* Game Cards */}
 

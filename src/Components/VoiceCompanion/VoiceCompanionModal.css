@@ -1,0 +1,491 @@
+/* ============================================================
+   Cognicare NER — Voice Companion Modal
+   Calm, polished, high-contrast & elderly-accessible styling
+   ============================================================ */
+
+.voice-companion-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(18, 30, 42, 0.65);
+  backdrop-filter: blur(4px);
+  animation: vc-fade-in 0.25s ease-out;
+}
+
+.voice-companion-modal {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 24px;
+  border: 2px solid #e0ece7;
+  box-shadow:
+    0 16px 40px rgba(18, 48, 64, 0.2),
+    0 4px 12px rgba(18, 48, 64, 0.1);
+  overflow-y: auto;
+  color: #243542;
+  font-family: inherit;
+  animation: vc-slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ------------------------------------------------------------
+   Header
+   ------------------------------------------------------------ */
+
+.voice-companion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1.5px solid #eef3f1;
+  background: #fafdfc;
+  border-radius: 22px 22px 0 0;
+}
+
+.voice-companion-title-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.voice-companion-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1b7a66, #2d9d83);
+  color: #ffffff;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.voice-companion-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a4339;
+  line-height: 1.3;
+}
+
+.voice-companion-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: #55726a;
+}
+
+.voice-companion-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.voice-companion-lang-select {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #c9ded7;
+  background: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a4339;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.voice-companion-lang-select:focus-visible {
+  border-color: #1b7a66;
+  outline: 3px solid rgba(27, 122, 102, 0.25);
+}
+
+.voice-companion-close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid #dce8e4;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #4b635b;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.voice-companion-close-button:hover {
+  background: #f1f7f5;
+  border-color: #b7d1c8;
+}
+
+.voice-companion-close-button:focus-visible {
+  outline: 3px solid rgba(27, 122, 102, 0.3);
+}
+
+/* ------------------------------------------------------------
+   Body & State Indicators
+   ------------------------------------------------------------ */
+
+.voice-companion-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.voice-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.voice-status-banner--idle {
+  background: #edf6f3;
+  color: #195245;
+  border: 1px solid #d2eae2;
+}
+
+.voice-status-banner--listening {
+  background: #fff4e8;
+  color: #92400e;
+  border: 1px solid #fed7aa;
+  animation: vc-soft-pulse 1.8s infinite ease-in-out;
+}
+
+.voice-status-banner--speaking {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.voice-status-banner--error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* ------------------------------------------------------------
+   Live Speech Box
+   ------------------------------------------------------------ */
+
+.voice-transcript-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  border-radius: 16px;
+  background: #f8faf9;
+  border: 1.5px solid #e2ebe8;
+  min-height: 90px;
+}
+
+.voice-card-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: #617b73;
+}
+
+.voice-transcript-text {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.5;
+  color: #1c352f;
+  word-break: break-word;
+}
+
+.voice-transcript-text--interim {
+  color: #728c83;
+  font-style: italic;
+}
+
+.voice-transcript-placeholder {
+  color: #8fa59e;
+  font-style: italic;
+}
+
+/* ------------------------------------------------------------
+   Response Card
+   ------------------------------------------------------------ */
+
+.voice-response-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 16px;
+  background: #edf7f4;
+  border: 1.5px solid #c2e2d7;
+}
+
+.voice-response-text {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #0d4638;
+}
+
+.voice-response-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.voice-replay-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #9ad0bf;
+  background: #ffffff;
+  color: #135d4b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.voice-replay-button:hover {
+  background: #e2f4ed;
+  transform: translateY(-1px);
+}
+
+.voice-replay-button:focus-visible {
+  outline: 3px solid rgba(27, 122, 102, 0.3);
+}
+
+/* ------------------------------------------------------------
+   Primary Interaction Controls
+   ------------------------------------------------------------ */
+
+.voice-companion-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.voice-mic-main-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-width: 220px;
+  min-height: 58px;
+  padding: 12px 28px;
+  border-radius: 30px;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.voice-mic-main-button--start {
+  background: linear-gradient(135deg, #1b7a66, #146252);
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(27, 122, 102, 0.28);
+}
+
+.voice-mic-main-button--start:hover {
+  background: linear-gradient(135deg, #156957, #105043);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(27, 122, 102, 0.35);
+}
+
+.voice-mic-main-button--stop {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.28);
+  animation: vc-soft-pulse 1.8s infinite;
+}
+
+.voice-mic-main-button--stop:hover {
+  background: linear-gradient(135deg, #b91c1c, #991b1b);
+}
+
+.voice-mic-main-button:focus-visible {
+  outline: 4px solid rgba(27, 122, 102, 0.4);
+  outline-offset: 3px;
+}
+
+.voice-stop-speech-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 52px;
+  padding: 10px 18px;
+  border-radius: 14px;
+  border: 1.5px solid #d3e2dc;
+  background: #ffffff;
+  color: #435e55;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.voice-stop-speech-button:hover {
+  background: #f1f7f4;
+}
+
+/* ------------------------------------------------------------
+   Suggested Commands Chips
+   ------------------------------------------------------------ */
+
+.voice-suggested-commands {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.voice-suggested-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #3b564e;
+}
+
+.voice-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.voice-command-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #cfe0d9;
+  background: #ffffff;
+  color: #1e5246;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.voice-command-chip:hover {
+  background: #f0f8f5;
+  border-color: #1b7a66;
+  transform: translateY(-1px);
+}
+
+.voice-command-chip:focus-visible {
+  outline: 3px solid rgba(27, 122, 102, 0.3);
+}
+
+/* ------------------------------------------------------------
+   Text Fallback / Alternative Input
+   ------------------------------------------------------------ */
+
+.voice-text-fallback {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1.5px solid #edf4f1;
+}
+
+.voice-fallback-form {
+  display: flex;
+  gap: 10px;
+}
+
+.voice-fallback-input {
+  flex: 1;
+  min-height: 48px;
+  padding: 10px 16px;
+  border: 1.5px solid #c9ded6;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  color: #223730;
+  background: #ffffff;
+  outline: none;
+}
+
+.voice-fallback-input:focus-visible {
+  border-color: #1b7a66;
+  box-shadow: 0 0 0 3px rgba(27, 122, 102, 0.2);
+}
+
+.voice-fallback-submit {
+  min-height: 48px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 12px;
+  background: #1b7a66;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.voice-fallback-submit:hover {
+  background: #156252;
+}
+
+.voice-fallback-submit:focus-visible {
+  outline: 3px solid rgba(27, 122, 102, 0.4);
+}
+
+/* ------------------------------------------------------------
+   Animations & Accessibility
+   ------------------------------------------------------------ */
+
+@keyframes vc-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes vc-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vc-soft-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-companion-overlay,
+  .voice-companion-modal,
+  .voice-status-banner--listening,
+  .voice-mic-main-button--stop {
+    animation: none;
+    transition: none;
+  }
+}
+
