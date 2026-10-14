@@ -319,8 +319,15 @@ function CaregiverDashboard({
     can_view: true,
   })
 
-  const [linkedElderly, setLinkedElderly] =
-    useState(null)
+  const [linkedElderly, setLinkedElderly] = useState(null)
+  const [approvedLinkId, setApprovedLinkId] = useState(null)
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+  const [reportPeriod, setReportPeriod] = useState('30d')
+  const [progressReport, setProgressReport] = useState(null)
+  const [reportLoading, setReportLoading] = useState(false)
+  const [reportError, setReportError] = useState('')
+  const [reportRevoked, setReportRevoked] = useState(false)
+  const [copiedReport, setCopiedReport] = useState(false)
 
   const [loading, setLoading] =
     useState(true)
@@ -344,6 +351,7 @@ function CaregiverDashboard({
         setReminders([])
         setElderlyMemories([])
         setLinkedElderly(null)
+        setApprovedLinkId(null)
 
         setError(
           text.caregiverOnlyError,
@@ -375,9 +383,12 @@ function CaregiverDashboard({
         setReminders([])
         setElderlyMemories([])
         setLinkedElderly(null)
+        setApprovedLinkId(null)
 
         return
       }
+
+      setApprovedLinkId(approvedLink.id)
 
       const linkedData =
         await apiGet(
@@ -436,6 +447,68 @@ function CaregiverDashboard({
       window.clearTimeout(timer)
     }
   }, [loadData])
+
+  // ==========================================
+  // Cognitive Progress Report Helpers
+  // ==========================================
+
+  const fetchProgressReport = async (period = '30d') => {
+    if (!approvedLinkId) return
+    try {
+      setReportLoading(true)
+      setReportError('')
+      setReportRevoked(false)
+      const data = await apiGet(`/caregiver-links/${approvedLinkId}/progress-report?period=${period}`)
+      setProgressReport(data)
+    } catch (err) {
+      if (err.message && (err.message.includes('not been granted') || err.message.includes('403') || err.message.includes('revoked'))) {
+        setReportRevoked(true)
+      } else {
+        setReportError(err.message || 'Could not load cognitive progress report.')
+      }
+    } finally {
+      setReportLoading(false)
+    }
+  }
+
+  const openReportModal = (period = '30d') => {
+    setReportPeriod(period)
+    setIsReportModalOpen(true)
+    void fetchProgressReport(period)
+  }
+
+  const handleCopyReport = () => {
+    if (!progressReport) return
+    const textToCopy = `NeuroCare Cognitive Progress Report for Caregivers
+Patient: ${progressReport.elderly_user?.full_name || linkedElderly?.full_name || 'Patient'}
+Period: ${reportPeriod}
+Generated: ${new Date().toLocaleDateString()}
+
+Summary:
+${progressReport.plain_language_summary}
+
+Clinical Insights:
+${progressReport.ai_analysis?.summary || 'N/A'}
+
+Observed Strengths:
+${(progressReport.ai_analysis?.strengths || []).map((s) => `• ${s}`).join('\n')}
+
+Practice Focus:
+${(progressReport.ai_analysis?.areas_to_practice || []).map((a) => `• ${a}`).join('\n')}
+
+Recommended Next Activity:
+${progressReport.recommendation?.game} (${progressReport.recommendation?.difficulty} level) - ${progressReport.recommendation?.reason}
+
+Disclaimer:
+${progressReport.disclaimer}`
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        setCopiedReport(true)
+        setTimeout(() => setCopiedReport(false), 2500)
+      })
+    }
+  }
 
 
   // ==========================================
@@ -928,15 +1001,42 @@ function CaregiverDashboard({
 
             <section className="caregiver-overview">
 
-              <div className="caregiver-overview-heading">
+              <div className="caregiver-overview-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
 
-                <span>
-                  {text.connectedUser}
-                </span>
+                <div>
+                  <span>
+                    {text.connectedUser}
+                  </span>
 
-                <h2>
-                  {linkedElderly.full_name}
-                </h2>
+                  <h2>
+                    {linkedElderly.full_name}
+                  </h2>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => openReportModal('30d')}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '11px 20px',
+                    borderRadius: '14px',
+                    background: '#7357c7',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '0.94rem',
+                    boxShadow: '0 4px 14px rgba(115, 87, 199, 0.28)',
+                    transition: 'transform 0.15s ease, background 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = '#5f46ae'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = '#7357c7'; e.currentTarget.style.transform = 'translateY(0)' }}
+                  aria-label="View Cognitive Progress Report"
+                >
+                  📄 <span>View Cognitive Progress Report</span>
+                </button>
 
               </div>
 
@@ -1461,6 +1561,216 @@ function CaregiverDashboard({
 
           </>
         )}
+
+      {/* ----------------------------------------
+          Caregiver Cognitive Progress Report Modal
+          ---------------------------------------- */}
+      {isReportModalOpen && (
+        <div
+          className="perf-modal-backdrop"
+          onClick={() => setIsReportModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="perf-modal-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '780px', width: '92%' }}
+          >
+            <div className="perf-modal-header">
+              <div>
+                <span className="perf-modal-tag">Approved Caregiver View</span>
+                <h2 className="perf-modal-title">Cognitive Progress Report</h2>
+                <p className="perf-modal-subtitle">
+                  Patient: {linkedElderly?.full_name || 'Linked Patient'} · Period: {reportPeriod === '7d' ? '7 Days' : reportPeriod === '30d' ? '30 Days' : reportPeriod === '90d' ? '90 Days' : 'All History'}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'inline-flex', background: '#f3f4f6', borderRadius: '10px', padding: '3px' }}>
+                  {['7d', '30d', '90d', 'all'].map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => {
+                        setReportPeriod(p)
+                        void fetchProgressReport(p)
+                      }}
+                      style={{
+                        border: 'none',
+                        background: reportPeriod === p ? '#ffffff' : 'transparent',
+                        fontWeight: reportPeriod === p ? 700 : 500,
+                        padding: '4px 10px',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '0.8rem',
+                        boxShadow: reportPeriod === p ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+                      }}
+                    >
+                      {p === 'all' ? 'All' : p}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  className="perf-modal-close"
+                  onClick={() => setIsReportModalOpen(false)}
+                  aria-label="Close modal"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="perf-modal-body">
+              {reportLoading && (
+                <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                  <div className="perf-spinner" style={{ margin: '0 auto 16px' }} />
+                  <p style={{ color: '#4b5563' }}>Loading approved cognitive progress report...</p>
+                </div>
+              )}
+
+              {!reportLoading && reportRevoked && (
+                <div style={{ background: '#fff5f5', border: '1px solid #fecaca', borderRadius: '14px', padding: '24px', textAlign: 'center' }}>
+                  <span style={{ fontSize: '2.4rem' }}>🔒</span>
+                  <h3 style={{ color: '#991b1b', marginTop: '10px' }}>Report Access Revoked by Patient</h3>
+                  <p style={{ color: '#7f1d1d', maxWidth: '500px', margin: '8px auto 0', lineHeight: 1.5 }}>
+                    {linkedElderly?.full_name || 'The patient'} has currently paused progress report sharing with your caregiver account. Consent and privacy settings are controlled directly by the patient from their My Performance dashboard.
+                  </p>
+                </div>
+              )}
+
+              {!reportLoading && reportError && !reportRevoked && (
+                <div style={{ background: '#fff5f5', border: '1px solid #fecaca', borderRadius: '14px', padding: '20px', color: '#991b1b' }}>
+                  <p>{reportError}</p>
+                  <button
+                    type="button"
+                    className="perf-btn perf-btn--outline"
+                    onClick={() => fetchProgressReport(reportPeriod)}
+                    style={{ marginTop: '10px' }}
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              {!reportLoading && !reportRevoked && !reportError && progressReport && (
+                <>
+                  {/* Summary Callout */}
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '16px', marginBottom: '18px' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Plain-Language Summary
+                    </span>
+                    <p style={{ margin: '6px 0 0', color: '#1e293b', fontSize: '0.98rem', lineHeight: 1.5 }}>
+                      {progressReport.plain_language_summary}
+                    </p>
+                  </div>
+
+                  {/* Core Metrics Bar */}
+                  <div className="perf-modal-metrics">
+                    <div className="perf-m-box">
+                      <span>Completed</span>
+                      <strong>{progressReport.overview.totalCompleted}</strong>
+                    </div>
+                    <div className="perf-m-box">
+                      <span>Avg Accuracy</span>
+                      <strong>{progressReport.overview.avgAccuracy}%</strong>
+                    </div>
+                    <div className="perf-m-box">
+                      <span>Mistakes / Round</span>
+                      <strong>{progressReport.overview.avgMistakes}</strong>
+                    </div>
+                    <div className="perf-m-box">
+                      <span>Baseline Trend</span>
+                      <strong className={`perf-status-txt--${progressReport.baselineComparison.overallStatus}`}>
+                        {progressReport.baselineComparison.isReliable
+                          ? progressReport.baselineComparison.overallStatus === 'improving'
+                            ? '+ Improving'
+                            : progressReport.baselineComparison.overallStatus === 'declining'
+                            ? 'Variation Noted'
+                            : 'Steady'
+                          : 'Establishing'}
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* Clinical AI Insights */}
+                  <div className="perf-modal-section">
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <h3 className="perf-modal-sect-title" style={{ margin: 0 }}>✨ AI Performance Analysis</h3>
+                      <span style={{ fontSize: '0.78rem', background: '#f3e8ff', color: '#6b21a8', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                        {progressReport.ai_analysis?.is_ai_powered ? '🤖 Gemini 3.8 Flash' : '🛡️ Assistive Clinical Engine'}
+                      </span>
+                    </div>
+
+                    <p className="perf-modal-summary-text">
+                      {progressReport.ai_analysis?.summary}
+                    </p>
+
+                    {progressReport.ai_analysis?.strengths && progressReport.ai_analysis.strengths.length > 0 && (
+                      <div className="perf-modal-subbox">
+                        <strong>Observed Strengths:</strong>
+                        <ul>
+                          {progressReport.ai_analysis.strengths.map((str, idx) => (
+                            <li key={idx}>{str}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {progressReport.ai_analysis?.areas_to_practice && progressReport.ai_analysis.areas_to_practice.length > 0 && (
+                      <div className="perf-modal-subbox">
+                        <strong>Suggested Practice Focus:</strong>
+                        <ul>
+                          {progressReport.ai_analysis.areas_to_practice.map((area, idx) => (
+                            <li key={idx}>{area}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Recommended Activity */}
+                  <div className="perf-modal-section">
+                    <h3 className="perf-modal-sect-title">🎯 Algorithmic Game Recommendation</h3>
+                    <div className="perf-modal-rec-box">
+                      <div>
+                        <strong>{progressReport.recommendation?.game}</strong> ({progressReport.recommendation?.difficulty} Level)
+                        <p>{progressReport.recommendation?.reason}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Disclaimer */}
+                  <div className="perf-modal-disclaimer">
+                    <small>🛡️ {progressReport.disclaimer}</small>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="perf-modal-footer">
+              <button
+                type="button"
+                className="perf-btn perf-btn--outline"
+                onClick={handleCopyReport}
+                disabled={!progressReport || reportRevoked}
+              >
+                {copiedReport ? '✓ Copied to Clipboard' : '📋 Copy Report Text'}
+              </button>
+              <button
+                type="button"
+                className="perf-btn perf-btn--primary"
+                onClick={() => window.print()}
+                disabled={!progressReport || reportRevoked}
+              >
+                🖨️ Print / Save PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )

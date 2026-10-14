@@ -131,7 +131,7 @@ export function findBestVoice(langCode = 'en-IN') {
 }
 
 /**
- * Stops any ongoing speech synthesis playback.
+ * Stops any ongoing speech synthesis playback safely.
  */
 export function stopSpeaking() {
   if (isSpeechSynthesisSupported()) {
@@ -140,11 +140,15 @@ export function stopSpeaking() {
     } catch {
       // Ignored
     }
+    if (typeof window !== 'undefined' && window.__activeUtterance) {
+      delete window.__activeUtterance
+    }
   }
 }
 
 /**
  * Speak text aloud using browser text-to-speech with elder-friendly pacing.
+ * Prevents garbage-collection freezing and double speech.
  */
 export function speakText(text, options = {}) {
   const {
@@ -162,11 +166,12 @@ export function speakText(text, options = {}) {
     return () => {}
   }
 
-  // Stop any active utterance first to prevent overlap
+  // Stop any active utterance first to prevent overlap and clear the browser queue
   stopSpeaking()
 
   const normLang = normalizeLanguageCode(language)
-  const utterance = new SpeechSynthesisUtterance(text.trim())
+  const cleanText = text.trim()
+  const utterance = new SpeechSynthesisUtterance(cleanText)
   utterance.lang = normLang
   utterance.rate = rate
   utterance.pitch = pitch
@@ -177,27 +182,65 @@ export function speakText(text, options = {}) {
     utterance.voice = bestVoice
   }
 
+  // Store globally to prevent V8 GC from dropping utterance mid-sentence
+  if (typeof window !== 'undefined') {
+    window.__activeUtterance = utterance
+  }
+
+  let completed = false
+  let watchdogTimer = null
+
+  const finish = (isErr = false, errObj = null) => {
+    if (completed) return
+    completed = true
+    if (watchdogTimer) {
+      clearTimeout(watchdogTimer)
+      watchdogTimer = null
+    }
+    if (typeof window !== 'undefined' && window.__activeUtterance === utterance) {
+      delete window.__activeUtterance
+    }
+    if (isErr) {
+      onError?.(errObj)
+    } else {
+      onEnd?.()
+    }
+  }
+
   utterance.onstart = () => {
     onStart?.()
+    // Chromium freeze-prevention heartbeat: pulse resume every 5 seconds
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      try {
+        window.speechSynthesis.resume()
+      } catch {
+        // Ignored
+      }
+    }
   }
 
   utterance.onend = () => {
-    onEnd?.()
+    finish(false)
   }
 
   utterance.onerror = (event) => {
-    // Interrupted or canceled by user is expected when stopping
     if (event.error === 'canceled' || event.error === 'interrupted') {
-      onEnd?.()
+      finish(false)
       return
     }
-    onError?.(event)
+    finish(true, event)
   }
+
+  // Safety watchdog: ensure completion within estimated duration + 4s buffer
+  const estimatedSeconds = Math.max(4, Math.ceil(cleanText.length / 10))
+  watchdogTimer = setTimeout(() => {
+    finish(false)
+  }, estimatedSeconds * 1000)
 
   try {
     window.speechSynthesis.speak(utterance)
   } catch (err) {
-    onError?.(err)
+    finish(true, err)
   }
 
   return () => {
@@ -206,8 +249,8 @@ export function speakText(text, options = {}) {
 }
 
 /**
- * Explicit navigation command mapping for Hindi, Assamese, and English.
- * Returns { targetPage, gameId, matchedText, confirmationText } or null.
+ * Explicit navigation and activity command mapping for Hindi, Assamese, and English.
+ * Returns { action, targetPage, gameId, response } or null.
  */
 export function parseVoiceNavigationCommand(rawTranscript) {
   if (!rawTranscript || typeof rawTranscript !== 'string') return null
@@ -216,122 +259,151 @@ export function parseVoiceNavigationCommand(rawTranscript) {
   const clean = rawTranscript
     .toLowerCase()
     .replace(/[?.!,।]/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim()
 
   if (!clean) return null
 
-  // Target routes allowlist in Cognicare NER:
-  // - 'dashboard'
-  // - 'games'
-  // - 'performance'
-  // - 'memories'
-  // - 'reminders'
-  // - 'caregiver'
-  // - 'caregiver-links'
-
   // ==========================================
-  // 1. HINDI COMMANDS
+  // 1. SPECIFIC COGNITIVE GAMES (High Priority)
   // ==========================================
-  // Examples: होम खोलो, मुख्य पृष्ठ, मेमोरी गेम शुरू करो, मेरी प्रगति दिखाओ, मेरी यादें खोलो, रिमाइंडर दिखाओ
-  if (
-    clean.includes('होम खोलो') ||
-    clean.includes('होम पर जाओ') ||
-    clean.includes('मुख्य पृष्ठ') ||
-    clean.includes('डैशबोर्ड खोलो') ||
-    clean.includes('डैशबोर्ड पर जाओ') ||
-    clean === 'होम'
-  ) {
-    return {
-      action: 'navigate',
-      targetPage: 'dashboard',
-      response: {
-        en: 'Taking you to the Home Dashboard.',
-        hi: 'आपको मुख्य डैशबोर्ड पर ले जाया जा रहा है।',
-        as: 'আপোনাক মুখ্য ডেচবৰ্ডলৈ লৈ যোৱা হৈছে।',
-      },
-    }
-  }
 
+  // Memory Match
   if (
-    clean.includes('मेमोरी गेम शुरू करो') ||
-    clean.includes('मेमोरी गेम खोलो') ||
-    clean.includes('खेल खोलो') ||
-    clean.includes('गेम खोलो') ||
-    clean.includes('गेम शुरू करो') ||
-    clean.includes('संज्ञानात्मक खेल')
+    clean.includes('memory match') ||
+    clean.includes('card match') ||
+    clean.includes('pair match') ||
+    clean.includes('cards') ||
+    clean.includes('कार्ड मैच') ||
+    clean.includes('मेमोरी मैच') ||
+    clean.includes('जोड़े मिलाओ') ||
+    clean.includes('মেমৰি মেচ') ||
+    clean.includes('কাৰ্ড মেচ')
   ) {
     return {
       action: 'navigate',
       targetPage: 'games',
+      gameId: 'memory-match',
       response: {
-        en: 'Opening Cognitive Games.',
-        hi: 'संज्ञानात्मक खेल खोले जा रहे हैं।',
-        as: 'কগনিটিভ খেলসমূহ খোলা হৈছে।',
+        en: 'Opening Memory Match card pair activity.',
+        hi: 'मेमोरी मैच कार्ड गेम शुरू किया जा रहा है।',
+        as: 'মেমৰি মেচ কাৰ্ড খেল খোলা হৈছে।',
       },
     }
   }
 
+  // Sequence Memory
   if (
-    clean.includes('मेरी प्रगति दिखाओ') ||
-    clean.includes('प्रगति दिखाओ') ||
-    clean.includes('मेरा प्रदर्शन दिखाओ') ||
-    clean.includes('प्रदर्शन खोलो')
+    clean.includes('sequence memory') ||
+    clean.includes('sequence game') ||
+    clean.includes('pattern memory') ||
+    clean.includes('flashing sequence') ||
+    clean.includes('सीक्वेंस मेमोरी') ||
+    clean.includes('क्रम स्मृति') ||
+    clean.includes('क्रम खेल') ||
+    clean.includes('ক্ৰম স্মৃতি') ||
+    clean.includes('ছিকুৱেন্স মেমৰি')
   ) {
     return {
       action: 'navigate',
-      targetPage: 'performance',
+      targetPage: 'games',
+      gameId: 'sequence-memory',
       response: {
-        en: 'Showing your progress and performance.',
-        hi: 'आपकी प्रगति और प्रदर्शन दिखाया जा रहा है।',
-        as: 'আপোনাৰ অগ্ৰগতি আৰু প্ৰদৰ্শন দেখুওৱা হৈছে।',
+        en: 'Starting Sequence Memory pattern exercise.',
+        hi: 'सीक्वेंस मेमोरी खेल शुरू किया जा रहा है।',
+        as: 'ক্ৰম স্মৃতি খেল আৰম্ভ কৰা হৈছে।',
       },
     }
   }
 
+  // Object Recall
   if (
-    clean.includes('मेरी यादें खोलो') ||
-    clean.includes('मेरी यादें दिखाओ') ||
-    clean.includes('यादें खोलो') ||
-    clean.includes('यादें दिखाओ') ||
-    clean.includes('याद खोलो')
+    clean.includes('object recall') ||
+    clean.includes('object game') ||
+    clean.includes('remember objects') ||
+    clean.includes('वस्तु स्मरण') ||
+    clean.includes('ऑब्जेक्ट रिकॉल') ||
+    clean.includes('वस्तु खेल') ||
+    clean.includes('বস্তু মনত পেলোৱা') ||
+    clean.includes('বস্তু স্মৃতি')
   ) {
     return {
       action: 'navigate',
-      targetPage: 'memories',
+      targetPage: 'games',
+      gameId: 'object-recall',
       response: {
-        en: 'Opening your personal memories.',
-        hi: 'आपकी यादें खोली जा रही हैं।',
-        as: 'আপোনাৰ স্মৃতিসমূহ খোলা হৈছে।',
+        en: 'Opening Object Recall recognition game.',
+        hi: 'ऑब्जेक्ट रिकॉल खेल खोला जा रहा है।',
+        as: 'বস্তু মনত পেলোৱা খেল খোলা হৈছে।',
       },
     }
   }
 
+  // NER Cultural Recall
   if (
-    clean.includes('रिमाइंडर दिखाओ') ||
-    clean.includes('रिमाइंडर खोलो') ||
-    clean.includes('मेरे रिमाइंडर') ||
-    clean.includes('दवा रिमाइंडर')
+    clean.includes('cultural recall') ||
+    clean.includes('cultural game') ||
+    clean.includes('north east') ||
+    clean.includes('assam recall') ||
+    clean.includes('সাংস্কৃতিক') ||
+    clean.includes('সাংস্কৃতিক খেল') ||
+    clean.includes('নৰ্থ ইষ্ট') ||
+    clean.includes('सांस्कृतिक खेल') ||
+    clean.includes('पूर्वोत्तर खेल')
   ) {
     return {
       action: 'navigate',
-      targetPage: 'reminders',
+      targetPage: 'games',
+      gameId: 'ner-cultural-recall',
       response: {
-        en: 'Opening your reminders.',
-        hi: 'आपके रिमाइंडर खोले जा रहे हैं।',
-        as: 'আপোনাৰ ৰিমাইণ্ডাৰসমূহ খোলা হৈছে।',
+        en: 'Opening Cultural Recall of North East India traditions.',
+        hi: 'पूर्वोत्तर भारत की सांस्कृतिक यादों का खेल शुरू किया जा रहा है।',
+        as: 'উত্তৰ-পূব ভাৰতৰ সাংস্কৃতিক স্মৃতিৰ খেল খোলা হৈছে।',
+      },
+    }
+  }
+
+  // Personal Memory Recall
+  if (
+    clean.includes('personal memory recall') ||
+    clean.includes('personal recall') ||
+    clean.includes('my memory game') ||
+    clean.includes('व्यक्तिगत यादें खेल') ||
+    clean.includes('ব্যক্তিগত স্মৃতি খেল')
+  ) {
+    return {
+      action: 'navigate',
+      targetPage: 'games',
+      gameId: 'personal-memory',
+      response: {
+        en: 'Opening your personal Memory Recall reflections.',
+        hi: 'आपकी व्यक्तिगत यादों का खेल खोला जा रहा है।',
+        as: 'আপোনাৰ ব্যক্তিগত স্মৃতিৰ খেল খোলা হৈছে।',
       },
     }
   }
 
   // ==========================================
-  // 2. ASSAMESE COMMANDS
+  // 2. PAGES NAVIGATION
   // ==========================================
-  // Examples: হোম খোলা, মেমৰি গেম আৰম্ভ কৰা, মোৰ অগ্ৰগতি দেখুওৱা, মোৰ স্মৃতিবোৰ খোলা, ৰিমাইণ্ডাৰ দেখুওৱা
+
+  // Dashboard / Home
   if (
+    clean.includes('open home') ||
+    clean.includes('go home') ||
+    clean.includes('go to home') ||
+    clean.includes('back home') ||
+    clean.includes('dashboard') ||
+    clean === 'home' ||
+    clean.includes('होम खोलो') ||
+    clean.includes('होम पर जाओ') ||
+    clean.includes('मुख्य पृष्ठ') ||
+    clean.includes('डैशबोर्ड') ||
+    clean === 'होम' ||
     clean.includes('হোম খোলা') ||
     clean.includes('হোমলৈ যোৱা') ||
     clean.includes('মুখ্য পৃষ্ঠা') ||
-    clean.includes('ডেচবৰ্ড খোলা') ||
+    clean.includes('ডেচবৰ্ড') ||
     clean === 'হোম'
   ) {
     return {
@@ -345,12 +417,17 @@ export function parseVoiceNavigationCommand(rawTranscript) {
     }
   }
 
+  // All Cognitive Games
   if (
-    clean.includes('মেমৰি গেম আৰম্ভ কৰা') ||
-    clean.includes('মেমৰি গেম খোলা') ||
-    clean.includes('খেল আৰম্ভ কৰা') ||
-    clean.includes('খেলবোৰ খোলা') ||
-    clean.includes('কগনিটিভ খেল')
+    clean.includes('game') ||
+    clean.includes('play') ||
+    clean.includes('activities') ||
+    clean.includes('puzzles') ||
+    clean.includes('खेल') ||
+    clean.includes('गेम') ||
+    clean.includes('खेलो') ||
+    clean.includes('খেল') ||
+    clean.includes('কগনিটিভ')
   ) {
     return {
       action: 'navigate',
@@ -363,11 +440,21 @@ export function parseVoiceNavigationCommand(rawTranscript) {
     }
   }
 
+  // Performance / Progress
   if (
-    clean.includes('মোৰ অগ্ৰগতি দেখুওৱা') ||
-    clean.includes('অগ্ৰগতি দেখুওৱা') ||
-    clean.includes('প্ৰদৰ্শন দেখুওৱা') ||
-    clean.includes('মোৰ প্ৰদৰ্শন')
+    clean.includes('progress') ||
+    clean.includes('performance') ||
+    clean.includes('score') ||
+    clean.includes('accuracy') ||
+    clean.includes('insights') ||
+    clean.includes('charts') ||
+    clean.includes('प्रगति') ||
+    clean.includes('प्रदर्शन') ||
+    clean.includes('स्कोर') ||
+    clean.includes('अंक') ||
+    clean.includes('অগ্ৰগতি') ||
+    clean.includes('প্ৰদৰ্শন') ||
+    clean.includes('স্কোৰ')
   ) {
     return {
       action: 'navigate',
@@ -380,27 +467,43 @@ export function parseVoiceNavigationCommand(rawTranscript) {
     }
   }
 
+  // Memories / Memory Vault
   if (
-    clean.includes('মোৰ স্মৃতিবোৰ খোলা') ||
-    clean.includes('স্মৃতিবোৰ খোলা') ||
-    clean.includes('স্মৃতি দেখুওৱা') ||
-    clean.includes('মোৰ স্মৃতি')
+    clean.includes('memories') ||
+    clean.includes('memory vault') ||
+    clean.includes('photos') ||
+    clean.includes('stories') ||
+    clean.includes('story') ||
+    clean.includes('यादें') ||
+    clean.includes('याद') ||
+    clean.includes('तस्वीरें') ||
+    clean.includes('स्मृति') ||
+    clean.includes('ছবি') ||
+    clean.includes('কাহিনী')
   ) {
     return {
       action: 'navigate',
       targetPage: 'memories',
       response: {
-        en: 'Opening your personal memories.',
-        hi: 'आपकी यादें खोली जा रही हैं।',
+        en: 'Opening your personal Memory Vault.',
+        hi: 'आपकी यादों का खजाना खोला जा रहा है।',
         as: 'আপোনাৰ স্মৃতিসমূহ খোলা হৈছে।',
       },
     }
   }
 
+  // Reminders
   if (
-    clean.includes('ৰিমাইণ্ডাৰ দেখুওৱা') ||
-    clean.includes('ৰিমাইণ্ডাৰ খোলা') ||
-    clean.includes('মোৰ ৰিমাইণ্ডাৰ') ||
+    clean.includes('reminder') ||
+    clean.includes('remind') ||
+    clean.includes('medicine') ||
+    clean.includes('pills') ||
+    clean.includes('schedule') ||
+    clean.includes('रिमाइंडर') ||
+    clean.includes('दवा') ||
+    clean.includes('काम') ||
+    clean.includes('ৰিমাইণ্ডাৰ') ||
+    clean.includes('ঔষধ') ||
     clean.includes('মনত পেলোৱা')
   ) {
     return {
@@ -414,107 +517,18 @@ export function parseVoiceNavigationCommand(rawTranscript) {
     }
   }
 
-  // ==========================================
-  // 3. ENGLISH COMMANDS
-  // ==========================================
-  // Examples: Open home, Start the memory game, Show my progress, Open my memories, Show reminders
+  // Caregiver Dashboard & Connections
   if (
-    clean.includes('open home') ||
-    clean.includes('go to home') ||
-    clean.includes('open dashboard') ||
-    clean.includes('back to home') ||
-    clean === 'home' ||
-    clean === 'dashboard'
-  ) {
-    return {
-      action: 'navigate',
-      targetPage: 'dashboard',
-      response: {
-        en: 'Taking you to the Home Dashboard.',
-        hi: 'आपको मुख्य डैशबोर्ड पर ले जाया जा रहा है।',
-        as: 'আপোনাক মুখ্য ডেচবৰ্ডলৈ লৈ যোৱা হৈছে।',
-      },
-    }
-  }
-
-  if (
-    clean.includes('start the memory game') ||
-    clean.includes('start memory game') ||
-    clean.includes('open games') ||
-    clean.includes('open game') ||
-    clean.includes('play game') ||
-    clean.includes('play games') ||
-    clean.includes('cognitive games')
-  ) {
-    return {
-      action: 'navigate',
-      targetPage: 'games',
-      response: {
-        en: 'Opening Cognitive Games.',
-        hi: 'संज्ञानात्मक खेल खोले जा रहे हैं।',
-        as: 'কগনিটিভ খেলসমূহ খোলা হৈছে।',
-      },
-    }
-  }
-
-  if (
-    clean.includes('show my progress') ||
-    clean.includes('show progress') ||
-    clean.includes('view performance') ||
-    clean.includes('open performance') ||
-    clean.includes('my progress') ||
-    clean.includes('my performance')
-  ) {
-    return {
-      action: 'navigate',
-      targetPage: 'performance',
-      response: {
-        en: 'Showing your progress and performance.',
-        hi: 'आपकी प्रगति और प्रदर्शन दिखाया जा रहा है।',
-        as: 'আপোনাৰ অগ্ৰগতি আৰু প্ৰদৰ্শন দেখুওৱা হৈছে।',
-      },
-    }
-  }
-
-  if (
-    clean.includes('open my memories') ||
-    clean.includes('open memories') ||
-    clean.includes('show memories') ||
-    clean.includes('view memories') ||
-    clean.includes('my memories')
-  ) {
-    return {
-      action: 'navigate',
-      targetPage: 'memories',
-      response: {
-        en: 'Opening your personal memories.',
-        hi: 'आपकी यादें खोली जा रही हैं।',
-        as: 'আপোনাৰ স্মৃতিসমূহ খোলা হৈছে।',
-      },
-    }
-  }
-
-  if (
-    clean.includes('show reminders') ||
-    clean.includes('open reminders') ||
-    clean.includes('view reminders') ||
-    clean.includes('my reminders') ||
-    clean === 'reminders'
-  ) {
-    return {
-      action: 'navigate',
-      targetPage: 'reminders',
-      response: {
-        en: 'Opening your reminders.',
-        hi: 'आपके रिमाइंडर खोले जा रहे हैं।',
-        as: 'আপোনাৰ ৰিমাইণ্ডাৰসমূহ খোলা হৈছে।',
-      },
-    }
-  }
-
-  if (
-    clean.includes('caregiver dashboard') ||
-    clean.includes('open caregiver')
+    clean.includes('caregiver') ||
+    clean.includes('doctor') ||
+    clean.includes('family link') ||
+    clean.includes('connections') ||
+    clean.includes('requests') ||
+    clean.includes('केयरगिवर') ||
+    clean.includes('डॉक्टर') ||
+    clean.includes('केयर') ||
+    clean.includes('কেয়াৰগিভাৰ') ||
+    clean.includes('চিকিৎসক')
   ) {
     return {
       action: 'navigate',
@@ -527,40 +541,55 @@ export function parseVoiceNavigationCommand(rawTranscript) {
     }
   }
 
-  // ==========================================
-  // 4. HELP COMMANDS
-  // ==========================================
+  // Help & Information
   if (
     clean.includes('help') ||
-    clean.includes('मदद') ||
-    clean.includes('সহায়') ||
     clean.includes('what can you do') ||
-    clean.includes('तुम क्या कर सकते हो')
+    clean.includes('instructions') ||
+    clean.includes('मदद') ||
+    clean.includes('सहायता') ||
+    clean.includes('तुम क्या कर सकते हो') ||
+    clean.includes('সহায়') ||
+    clean.includes('আপুনি কি কৰিব পাৰে')
   ) {
     return {
       action: 'help',
       response: {
-        en: "I can help you navigate Cognicare. Try saying: 'Open home', 'Start the memory game', 'Show my progress', 'Open my memories', or 'Show reminders'.",
-        hi: "मैं Cognicare में आपकी मदद कर सकता हूँ। आप कह सकते हैं: 'होम खोलो', 'मेमोरी गेम शुरू करो', 'मेरी प्रगति दिखाओ', 'मेरी यादें खोलो', या 'रिमाइंडर दिखाओ'।",
+        en: "I can help you navigate Cognicare. Try saying: 'Open home', 'Start memory game', 'Show my progress', 'Open my memories', or 'Show reminders'.",
+        hi: "मैं कॉग्निकेयर में आपकी मदद कर सकता हूँ। आप कह सकते हैं: 'होम खोलो', 'मेमोरी गेम शुरू करो', 'मेरी प्रगति दिखाओ', 'मेरी यादें खोलो', या 'रिमाइंडर दिखाओ'।",
         as: "মই Cognicare ব্যৱহাৰত আপোনাক সহায় কৰিব পাৰোঁ। আপুনি ক’ব পাৰে: 'হোম খোলা', 'মেমৰি গেম আৰম্ভ কৰা', 'মোৰ অগ্ৰগতি দেখুওৱা', 'মোৰ স্মৃতিবোৰ খোলা', বা 'ৰিমাইণ্ডাৰ দেখুওৱা'।",
       },
     }
   }
 
-  // Unrecognized command
-  return {
-    action: 'unknown',
-    transcript: clean,
-    response: {
-      en: `I didn't recognize that command. Try saying 'Open home', 'Start the memory game', 'Show my progress', 'Open my memories', or 'Show reminders'.`,
-      hi: `मुझे यह निर्देश समझ नहीं आया। आप कह सकते हैं: 'होम खोलो', 'मेमोरी गेम शुरू करो', 'मेरी प्रगति दिखाओ', 'मेरी यादें खोलो', या 'रिमाइंडर दिखाओ'।`,
-      as: `মই এই নিৰ্দেশটো বুজি নাপালোঁ। আপুনি ক’ব পাৰে: 'হোম খোলা', 'মেমৰি গেম আৰম্ভ কৰা', 'মোৰ অগ্ৰগতি দেখুওৱা', 'মোৰ স্মৃতিবোৰ খোলা', বা 'ৰিমাইণ্ডাৰ দেখুওৱা'।`,
-    },
+  // Greetings
+  if (
+    clean.includes('hello') ||
+    clean.includes('hi') ||
+    clean.includes('good morning') ||
+    clean.includes('good afternoon') ||
+    clean.includes('good evening') ||
+    clean.includes('नमस्ते') ||
+    clean.includes('प्रणाम') ||
+    clean.includes('নমস্কাৰ')
+  ) {
+    return {
+      action: 'greeting',
+      response: {
+        en: 'Hello! I am here and ready to help you. What would you like to do today?',
+        hi: 'नमस्ते! मैं आपकी मदद के लिए तैयार हूँ। आज आप क्या करना चाहेंगे?',
+        as: 'নমস্কাৰ! মই আপোনাৰ সহায়ৰ বাবে সাজু আছোঁ। আজি আপুনি কি কৰিব বিচাৰে?',
+      },
+    }
   }
+
+  // Conversational fallback
+  return null
 }
 
 /**
- * Creates a configured SpeechRecognition instance wrapped with safe lifecycle management.
+ * Creates a configured SpeechRecognition instance wrapped with safe lifecycle management,
+ * auto-silence watchdog, and deduplication.
  */
 export function createSpeechRecognizer({
   language = 'en-IN',
@@ -584,14 +613,32 @@ export function createSpeechRecognizer({
   recognition.interimResults = interimResults
   recognition.maxAlternatives = 1
 
-  let isRunning = false
+  let status = 'idle'
+  let silenceTimer = null
+  let hasReceivedFinal = false
+
+  const resetSilenceTimer = () => {
+    if (silenceTimer) clearTimeout(silenceTimer)
+    silenceTimer = setTimeout(() => {
+      if (status === 'listening') {
+        try {
+          recognition.stop()
+        } catch {
+          // Ignored
+        }
+      }
+    }, 9000)
+  }
 
   recognition.onstart = () => {
-    isRunning = true
+    status = 'listening'
+    hasReceivedFinal = false
+    resetSilenceTimer()
     onStart?.()
   }
 
   recognition.onresult = (event) => {
+    resetSilenceTimer()
     let interimTranscript = ''
     let finalTranscript = ''
 
@@ -605,15 +652,35 @@ export function createSpeechRecognizer({
       }
     }
 
-    onResult?.({
-      finalTranscript: finalTranscript.trim(),
-      interimTranscript: interimTranscript.trim(),
-      rawEvent: event,
-    })
+    const cleanFinal = finalTranscript.trim()
+    const cleanInterim = interimTranscript.trim()
+
+    if (cleanFinal && !hasReceivedFinal) {
+      hasReceivedFinal = true
+      if (silenceTimer) clearTimeout(silenceTimer)
+      // Stop recognition immediately upon final result so mic doesn't pick up speaker response
+      try {
+        recognition.stop()
+      } catch {
+        // Ignored
+      }
+      onResult?.({
+        finalTranscript: cleanFinal,
+        interimTranscript: '',
+        rawEvent: event,
+      })
+    } else if (cleanInterim && !hasReceivedFinal) {
+      onResult?.({
+        finalTranscript: '',
+        interimTranscript: cleanInterim,
+        rawEvent: event,
+      })
+    }
   }
 
   recognition.onerror = (event) => {
-    isRunning = false
+    if (silenceTimer) clearTimeout(silenceTimer)
+    status = 'idle'
     if (event.error === 'aborted') {
       return
     }
@@ -621,23 +688,29 @@ export function createSpeechRecognizer({
   }
 
   recognition.onend = () => {
-    isRunning = false
+    if (silenceTimer) clearTimeout(silenceTimer)
+    status = 'idle'
     onEnd?.()
   }
 
   return {
     start: () => {
-      if (isRunning) return
+      if (status === 'listening' || status === 'starting') return
+      status = 'starting'
+      hasReceivedFinal = false
       try {
         recognition.start()
       } catch (err) {
+        status = 'idle'
         if (err?.name !== 'InvalidStateError') {
           onError?.(err)
         }
       }
     },
     stop: () => {
-      if (!isRunning) return
+      if (status === 'idle' || status === 'stopping') return
+      status = 'stopping'
+      if (silenceTimer) clearTimeout(silenceTimer)
       try {
         recognition.stop()
       } catch {
@@ -645,14 +718,16 @@ export function createSpeechRecognizer({
       }
     },
     abort: () => {
+      if (silenceTimer) clearTimeout(silenceTimer)
       try {
         recognition.abort()
       } catch {
         // Ignored
       }
-      isRunning = false
+      status = 'idle'
     },
-    isRunning: () => isRunning,
+    isRunning: () => status === 'listening' || status === 'starting',
+    getState: () => status,
     setLanguage: (newLang) => {
       recognition.lang = normalizeLanguageCode(newLang)
     },

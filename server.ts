@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { GoogleGenAI, Type } from '@google/genai';
 import {
   MemoryRecord,
   MemoryPermissionRecord,
@@ -32,6 +33,9 @@ const app = express();
 
 app.use(cors());
 app.use(express.json({ limit: '20mb' }));
+
+// In-Memory cache for Gemini AI performance analyses
+const aiAnalysisCache = new Map<string, { timestamp: number; data: any }>();
 
 // ============================================================
 // In-Memory Data Models & Seed Data
@@ -85,6 +89,14 @@ interface CaregiverLinkRecord {
   created_at: string;
 }
 
+interface CaregiverReportPermissionRecord {
+  id: number;
+  elderly_id: number;
+  caregiver_id: number;
+  report_access_granted: boolean;
+  updated_at: string;
+}
+
 // Global In-Memory Stores
 let nextUserId = 3;
 let nextSessionId = 30;
@@ -92,8 +104,19 @@ let nextMemoryId = 6;
 let nextReminderId = 5;
 let nextLinkId = 2;
 let nextPermissionId = 2;
+let nextReportPermissionId = 2;
 let nextAuditLogId = 2;
 let nextSearchHistoryId = 2;
+
+const caregiverReportPermissions: CaregiverReportPermissionRecord[] = [
+  {
+    id: 1,
+    elderly_id: 1,
+    caregiver_id: 2,
+    report_access_granted: true,
+    updated_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+  },
+];
 
 const users: UserRecord[] = [
   {
@@ -1685,6 +1708,195 @@ app.delete('/caregiver-links/:id', authenticateToken, (req: AuthRequest, res) =>
 // Cognitive Progress Insights Engine & Endpoints
 // ============================================================
 
+// ============================================================
+// Supported Cognitive Games Registry & Recommendations
+// ============================================================
+
+const SUPPORTED_GAMES: Record<
+  string,
+  {
+    gameId: string;
+    difficulties: string[];
+    defaultDifficulty: string;
+    description: string;
+  }
+> = {
+  'Memory Match': {
+    gameId: 'memory-match',
+    difficulties: ['Standard'],
+    defaultDifficulty: 'Standard',
+    description: 'Visual card pair recall to exercise short-term visual memory.',
+  },
+  'Sequence Memory': {
+    gameId: 'sequence-memory',
+    difficulties: ['Easy', 'Medium', 'Hard'],
+    defaultDifficulty: 'Easy',
+    description: 'Flashing sequence retention to strengthen working memory and focus.',
+  },
+  'Object Recall': {
+    gameId: 'object-recall',
+    difficulties: ['Easy', 'Medium', 'Hard'],
+    defaultDifficulty: 'Easy',
+    description: 'Item identification and recall to enhance recognition speed.',
+  },
+  'NER Cultural Recall': {
+    gameId: 'ner-cultural-recall',
+    difficulties: ['Easy'],
+    defaultDifficulty: 'Easy',
+    description: 'Familiar cultural landmark and tradition recall from North East India.',
+  },
+  'Personal Memory Recall': {
+    gameId: 'personal-memory',
+    difficulties: ['Standard'],
+    defaultDifficulty: 'Standard',
+    description: 'Personal life story reflection from your personal Memory Vault.',
+  },
+};
+
+function computeGameRecommendation(userSessions: GameSessionRecord[]) {
+  const candidateGames = ['Sequence Memory', 'Memory Match', 'Object Recall', 'NER Cultural Recall'];
+
+  if (!userSessions || userSessions.length === 0) {
+    return {
+      game: 'Memory Match',
+      gameId: 'memory-match',
+      difficulty: 'Standard',
+      supportedDifficulties: ['Standard'],
+      reason: 'Start with Memory Match to begin building your personalized cognitive activity history.',
+      performance_status: 'New' as const,
+      history_summary: 'No previous sessions recorded in this period.',
+    };
+  }
+
+  // Calculate detailed performance metrics per candidate game
+  const statsByGame: Record<string, any> = {};
+  for (const gName of candidateGames) {
+    const gSessions = userSessions.filter((s) => s.game === gName);
+    const gameInfo = SUPPORTED_GAMES[gName];
+
+    if (gSessions.length === 0) {
+      statsByGame[gName] = {
+        sessions: 0,
+        recentAccuracy: 0,
+        overallAccuracy: 0,
+        averageMistakes: 0,
+        trend: 0,
+        lastDifficulty: gameInfo.defaultDifficulty,
+        recentAtTier: [],
+      };
+      continue;
+    }
+
+    const recent = gSessions.slice(-3);
+    const older = gSessions.slice(0, Math.max(0, gSessions.length - 3));
+    const recentAcc = recent.reduce((a, b) => a + Number(b.accuracy || 0), 0) / recent.length;
+    const overallAcc = gSessions.reduce((a, b) => a + Number(b.accuracy || 0), 0) / gSessions.length;
+    const avgMis = recent.reduce((a, b) => a + Number(b.mistakes || 0), 0) / recent.length;
+    const olderAcc = older.length
+      ? older.reduce((a, b) => a + Number(b.accuracy || 0), 0) / older.length
+      : recentAcc;
+    const trend = recentAcc - olderAcc;
+    const lastDifficulty = gSessions[gSessions.length - 1].difficulty || gameInfo.defaultDifficulty;
+    const tierSessions = gSessions.filter((s) => s.difficulty === lastDifficulty);
+    const recentAtTier = tierSessions.slice(-3);
+
+    statsByGame[gName] = {
+      sessions: gSessions.length,
+      recentAccuracy: Math.round(recentAcc),
+      overallAccuracy: Math.round(overallAcc),
+      averageMistakes: Math.round(avgMis * 10) / 10,
+      trend: Math.round(trend),
+      lastDifficulty,
+      recentAtTier,
+    };
+  }
+
+  // Score candidate games by practice benefit & engagement balance
+  let targetGame = 'Sequence Memory';
+  let highestNeed = -999;
+  for (const gName of candidateGames) {
+    const s = statsByGame[gName];
+    let score = 0;
+    if (s.sessions === 0) score += 65;
+    else if (s.sessions < 3) score += 45;
+    else {
+      score += (100 - s.recentAccuracy) * 0.45;
+      score += s.averageMistakes * 12;
+      if (s.trend < 0) score += Math.abs(s.trend) * 1.8;
+    }
+    if (score > highestNeed) {
+      highestNeed = score;
+      targetGame = gName;
+    }
+  }
+
+  const gameInfo = SUPPORTED_GAMES[targetGame];
+  const summary = statsByGame[targetGame];
+  const supportedDifficulties = gameInfo.difficulties;
+
+  let recommendedDifficulty = summary.lastDifficulty;
+  if (!supportedDifficulties.includes(recommendedDifficulty)) {
+    recommendedDifficulty = gameInfo.defaultDifficulty;
+  }
+
+  let status: 'Improving' | 'Stable' | 'Needs Practice' | 'New' = 'Stable';
+  let reason = '';
+
+  if (summary.sessions === 0) {
+    status = 'New';
+    recommendedDifficulty = gameInfo.defaultDifficulty;
+    reason = `${targetGame} has not been played yet in this period. Starting at ${recommendedDifficulty} level offers an unhurried, engaging start.`;
+  } else if (supportedDifficulties.length === 1) {
+    recommendedDifficulty = supportedDifficulties[0];
+    if (summary.recentAccuracy >= 85) status = 'Improving';
+    else if (summary.recentAccuracy < 65) status = 'Needs Practice';
+    reason = `Your recent accuracy is ${summary.recentAccuracy}% with ${summary.averageMistakes} mistakes per game. Practicing ${targetGame} will continue building cognitive retention.`;
+  } else {
+    // Multi-tier games (e.g., Sequence Memory, Object Recall: Easy, Medium, Hard)
+    const diffIndex = supportedDifficulties.indexOf(recommendedDifficulty);
+    const recentTier = summary.recentAtTier || [];
+    const avgAccAtTier = recentTier.length
+      ? recentTier.reduce((a: number, b: any) => a + Number(b.accuracy || 0), 0) / recentTier.length
+      : summary.recentAccuracy;
+    const avgMisAtTier = recentTier.length
+      ? recentTier.reduce((a: number, b: any) => a + Number(b.mistakes || 0), 0) / recentTier.length
+      : summary.averageMistakes;
+
+    // Rule: Suggest easier levels only when repeated struggles occur (at least 2 sessions with <65% or >=2.5 mistakes). Never react to one bad session!
+    const repeatedStruggles = recentTier.length >= 2 && (avgAccAtTier < 65 || avgMisAtTier >= 2.5);
+
+    // Rule: Increase difficulty only after consistently strong results (at least 3 sessions with >=88% accuracy and <=1.0 mistakes).
+    const consistentlyStrong = recentTier.length >= 3 && avgAccAtTier >= 88 && avgMisAtTier <= 1.0;
+
+    if (repeatedStruggles && diffIndex > 0) {
+      recommendedDifficulty = supportedDifficulties[diffIndex - 1];
+      status = 'Needs Practice';
+      reason = `Across ${recentTier.length} recent sessions at ${supportedDifficulties[diffIndex]} level, accuracy averaged ${Math.round(avgAccAtTier)}%. Stepping to ${recommendedDifficulty} level provides a comfortable pace to restore confidence without strain.`;
+    } else if (consistentlyStrong && diffIndex < supportedDifficulties.length - 1) {
+      recommendedDifficulty = supportedDifficulties[diffIndex + 1];
+      status = 'Improving';
+      reason = `You achieved ${Math.round(avgAccAtTier)}% average accuracy and ${avgMisAtTier} mistakes across ${recentTier.length} consecutive sessions at ${supportedDifficulties[diffIndex]} level. You are ready to advance to ${recommendedDifficulty} level!`;
+    } else {
+      status = summary.trend >= 4 ? 'Improving' : summary.trend <= -4 ? 'Needs Practice' : 'Stable';
+      reason = `Your performance is steady at ${recommendedDifficulty} level (${Math.round(avgAccAtTier)}% recent accuracy, ${avgMisAtTier} mistakes). Maintaining this level preserves steady cognitive rhythm.`;
+    }
+  }
+
+  return {
+    game: targetGame,
+    gameId: gameInfo.gameId,
+    difficulty: recommendedDifficulty,
+    supportedDifficulties,
+    reason,
+    performance_status: status,
+    history_summary: `${summary.sessions} sessions recorded, recent accuracy ${summary.recentAccuracy}%.`,
+  };
+}
+
+// ============================================================
+// Cognitive Progress Insights Engine
+// ============================================================
+
 function calculateCognitiveProgressInsights(
   userId: number,
   period: string = '30d',
@@ -1736,6 +1948,10 @@ function calculateCognitiveProgressInsights(
     ? Math.round(
         validTimes.reduce((acc, s) => acc + Number(s.time), 0) / validTimes.length
       )
+    : 0;
+
+  const personalBestAccuracy = totalCompleted
+    ? Math.max(...periodSessions.map((s) => Number(s.accuracy || 0)))
     : 0;
 
   // Most played game
@@ -2203,8 +2419,13 @@ function calculateCognitiveProgressInsights(
     }
   }
 
+  // Compute adaptive game recommendation based on actual sessions
+  const recommendation = computeGameRecommendation(
+    periodSessions.length > 0 ? periodSessions : userSessions
+  );
+
   const disclaimer =
-    'Cognitive activity trends describe recorded game performance and participation only. They are not a medical assessment or diagnosis. Performance can vary with factors such as fatigue, mood, health and familiarity with an activity. For health concerns, consult a qualified healthcare professional.';
+    'Cognitive activity trends describe recorded game performance and participation only. They are not a medical assessment or diagnosis.';
 
   return {
     period,
@@ -2214,6 +2435,7 @@ function calculateCognitiveProgressInsights(
       avgAccuracy,
       avgMistakes,
       avgTime,
+      personalBestAccuracy,
       mostPlayedGame,
       activeDaysCount,
       daysWithoutActivity,
@@ -2226,7 +2448,107 @@ function calculateCognitiveProgressInsights(
     trendPoints,
     weeklyParticipation,
     insightCards,
+    recommendation,
     disclaimer,
+  };
+}
+
+// ------------------------------------------------------------
+// Fallback Assistive Cognitive Analysis Generator
+// ------------------------------------------------------------
+function generateFallbackAiAnalysis(insights: any, userName: string) {
+  const { overview, baselineComparison, sustainedChanges, gameBreakdown, recommendation } = insights;
+
+  let summary = '';
+  if (overview.totalCompleted === 0) {
+    summary = `Welcome, ${userName}! No completed sessions were recorded in this period. Engaging with gentle cognitive activities helps maintain memory vitality and starts building your personal baseline.`;
+  } else if (!baselineComparison.isReliable) {
+    summary = `Great start, ${userName}! You completed ${overview.totalCompleted} activity sessions with an average accuracy of ${overview.avgAccuracy}%. You are actively establishing your personalized baseline.`;
+  } else if (baselineComparison.overallStatus === 'improving') {
+    summary = `Commendable progress, ${userName}! Your recent average accuracy of ${baselineComparison.recentAccuracy}% shows positive gains over your ${baselineComparison.baselineAccuracy}% baseline (+${baselineComparison.accuracyDiff}%), reflecting focused recall and regular practice.`;
+  } else if (baselineComparison.overallStatus === 'declining') {
+    summary = `Steady engagement recorded, ${userName}. Your recent sessions averaged ${baselineComparison.recentAccuracy}% accuracy compared with your personal baseline of ${baselineComparison.baselineAccuracy}%. Daily performance naturally fluctuates with rest and time of day.`;
+  } else {
+    summary = `Consistent engagement, ${userName}! Your cognitive activities remain solidly in rhythm with your historical baseline of ${baselineComparison.baselineAccuracy}%, averaging ${overview.sessionsPerWeek} sessions per week.`;
+  }
+
+  const strengths: string[] = [];
+  const sortedGames = [...gameBreakdown].sort((a, b) => b.avgAccuracy - a.avgAccuracy);
+  if (sortedGames.length > 0 && sortedGames[0].avgAccuracy >= 80) {
+    strengths.push(
+      `High accuracy in ${sortedGames[0].game} (${sortedGames[0].avgAccuracy}%), showing strong visual pattern recognition.`
+    );
+  }
+  if (overview.avgMistakes <= 1.5 && overview.totalCompleted > 0) {
+    strengths.push(
+      `Thoughtful, deliberate pacing with an average of only ${overview.avgMistakes} mistakes per completed round.`
+    );
+  }
+  if (overview.sessionsPerWeek >= 2) {
+    strengths.push(
+      `Consistent weekly routine (${overview.sessionsPerWeek} sessions/week), which is key for cognitive maintenance.`
+    );
+  }
+  if (strengths.length < 2) {
+    strengths.push('Regular engagement with cognitive activities, supporting healthy mental stimulation.');
+    strengths.push('Willingness to explore different memory exercises at a comfortable pace.');
+  }
+
+  const areasToPractice: string[] = [];
+  const lowerGames = [...gameBreakdown].sort((a, b) => a.avgAccuracy - b.avgAccuracy);
+  if (lowerGames.length > 0 && lowerGames[0].avgAccuracy < 80) {
+    areasToPractice.push(
+      `Take extra time when playing ${lowerGames[0].game}. Pausing for a few moments before tapping helps reduce accidental errors.`
+    );
+  } else {
+    areasToPractice.push('Take relaxed breaths between puzzle stages to maintain steady focus without eye strain.');
+  }
+  if (overview.avgTime > 60) {
+    areasToPractice.push('There is never any rush—continue focusing on accuracy over speed for the best memory benefits.');
+  } else {
+    areasToPractice.push('Maintain regular hydration and daylight when practicing memory games to maximize alertness.');
+  }
+
+  let progressTrends = '';
+  if (!baselineComparison.isReliable) {
+    progressTrends = `Baseline accumulating. ${overview.totalCompleted} session(s) recorded in this period. Once 5 or more sessions are logged, Cognicare compares your recent sessions against your established rhythm.`;
+  } else {
+    progressTrends = `Your recent accuracy is ${baselineComparison.recentAccuracy}% vs. a personal baseline of ${baselineComparison.baselineAccuracy}% (${baselineComparison.accuracyDiff >= 0 ? '+' : ''}${baselineComparison.accuracyDiff}% change). Average mistakes shifted from ${baselineComparison.baselineMistakes} to ${baselineComparison.recentMistakes} per game.`;
+    if (sustainedChanges.length > 0) {
+      progressTrends += ` Observed note: ${sustainedChanges[0].title}.`;
+    }
+  }
+
+  const personalizedPracticePlan = [
+    {
+      day_or_frequency: '2–3 Days a Week',
+      recommended_game: recommendation.game,
+      recommended_difficulty: recommendation.difficulty,
+      focus_tip: 'Play 1 to 2 rounds in the morning when you feel most refreshed.',
+    },
+    {
+      day_or_frequency: 'Midweek Focus',
+      recommended_game: recommendation.game === 'Sequence Memory' ? 'Memory Match' : 'Sequence Memory',
+      recommended_difficulty: recommendation.game === 'Sequence Memory' ? 'Standard' : 'Easy',
+      focus_tip: 'Whisper patterns softly to yourself to activate dual visual and auditory memory pathways.',
+    },
+    {
+      day_or_frequency: 'Weekend Reflection',
+      recommended_game: 'NER Cultural Recall',
+      recommended_difficulty: 'Easy',
+      focus_tip: 'Enjoy the rich cultural memories and traditions at a relaxed, unhurried pace.',
+    },
+  ];
+
+  return {
+    summary,
+    strengths,
+    areas_to_practice: areasToPractice,
+    progress_trends: progressTrends,
+    personalized_practice_plan: personalizedPracticePlan,
+    is_ai_powered: false,
+    model: 'assistive-clinical-engine',
+    generated_at: new Date().toISOString(),
   };
 }
 
@@ -2247,9 +2569,202 @@ app.get('/cognitive-insights', authenticateToken, (req: AuthRequest, res) => {
 });
 
 // ------------------------------------------------------------
+// POST /cognitive-insights/ai-analysis — Gemini AI Performance Analysis
+// ------------------------------------------------------------
+app.post('/cognitive-insights/ai-analysis', authenticateToken, async (req: AuthRequest, res) => {
+  const user = req.user!;
+  const { period = '30d', game, difficulty } = req.body || {};
+  const validPeriods = ['7d', '30d', '90d', 'all'];
+  const sanitizedPeriod = validPeriods.includes(period) ? period : '30d';
+
+  const insights = calculateCognitiveProgressInsights(user.id, sanitizedPeriod, game, difficulty);
+
+  // Check in-memory cache
+  const cacheKey = `${user.id}_${sanitizedPeriod}_${insights.overview.totalCompleted}_${insights.overview.avgAccuracy}_${insights.recommendation.game}_${insights.recommendation.difficulty}`;
+  if (aiAnalysisCache.has(cacheKey)) {
+    const cached = aiAnalysisCache.get(cacheKey)!;
+    if (Date.now() - cached.timestamp < 3600000) {
+      return res.json({
+        ...cached.data,
+        cached: true,
+      });
+    }
+  }
+
+  let aiResult = null;
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (apiKey) {
+    try {
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          },
+        },
+      });
+
+      const prompt = `You are a clinical cognitive wellness analyst for the NeuroCare elder-care platform.
+Analyze the actual gameplay performance metrics for an older adult named ${user.full_name || 'User'} over the ${sanitizedPeriod === '7d' ? 'last 7 days' : sanitizedPeriod === '30d' ? 'last 30 days' : sanitizedPeriod === '90d' ? 'last 90 days' : 'all recorded history'}:
+- Total Completed Game Sessions: ${insights.overview.totalCompleted}
+- Overall Average Accuracy: ${insights.overview.avgAccuracy}%
+- Average Mistakes Per Session: ${insights.overview.avgMistakes}
+- Average Completion Duration: ${insights.overview.avgTime > 0 ? `${insights.overview.avgTime}s` : 'not recorded'}
+- Personal Best Accuracy: ${insights.overview.personalBestAccuracy}%
+- Weekly Participation: ${insights.overview.sessionsPerWeek} sessions/week across ${insights.overview.activeDaysCount} active days
+- Most Played Activity: ${insights.overview.mostPlayedGame}
+- Baseline Status: ${
+        insights.baselineComparison.isReliable
+          ? `Baseline accuracy ${insights.baselineComparison.baselineAccuracy}%, Recent accuracy ${insights.baselineComparison.recentAccuracy}% (${insights.baselineComparison.accuracyDiff >= 0 ? '+' : ''}${insights.baselineComparison.accuracyDiff}%), Status: ${insights.baselineComparison.overallStatus}`
+          : 'Baseline accumulating (fewer than 5 sessions in window)'
+      }
+- Sustained Changes: ${JSON.stringify(insights.sustainedChanges.map((c: any) => ({ title: c.title, magnitude: c.magnitude })))}
+- Activity Breakdown: ${JSON.stringify(insights.gameBreakdown.map((g: any) => ({ game: g.game, sessions: g.sessionCount, avgAcc: g.avgAccuracy, avgMis: g.avgMistakes })))}
+- Difficulty Breakdown: ${JSON.stringify(insights.difficultyBreakdown.map((d: any) => ({ difficulty: d.difficulty, sessions: d.sessionCount, avgAcc: d.avgAccuracy })))}
+- Algorithmic Recommendation: ${insights.recommendation.game} at ${insights.recommendation.difficulty} (${insights.recommendation.reason})
+
+Requirements:
+1. summary: A warm, clear, elder-friendly 2-3 sentence overview of their engagement and cognitive rhythm.
+2. strengths: Array of 2-4 specific cognitive strengths based directly on their recorded scores (e.g. pattern recognition, patient pace).
+3. areas_to_practice: Array of 1-3 gentle, constructive areas to focus on without frustration or alarm.
+4. progress_trends: Clear explanation comparing recent performance with their baseline and sustained changes.
+5. personalized_practice_plan: Array of 3 realistic, gentle scheduled sessions for the week ahead (day_or_frequency, recommended_game, recommended_difficulty, focus_tip).
+Never invent sessions, diagnose medical conditions, or use clinical jargon.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              summary: { type: Type.STRING },
+              strengths: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
+              areas_to_practice: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+              },
+              progress_trends: { type: Type.STRING },
+              personalized_practice_plan: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    day_or_frequency: { type: Type.STRING },
+                    recommended_game: { type: Type.STRING },
+                    recommended_difficulty: { type: Type.STRING },
+                    focus_tip: { type: Type.STRING },
+                  },
+                  required: ['day_or_frequency', 'recommended_game', 'recommended_difficulty', 'focus_tip'],
+                },
+              },
+            },
+            required: ['summary', 'strengths', 'areas_to_practice', 'progress_trends', 'personalized_practice_plan'],
+          },
+        },
+      });
+
+      const parsed = JSON.parse(response.text || '{}');
+      if (parsed.summary && Array.isArray(parsed.strengths)) {
+        aiResult = {
+          ...parsed,
+          is_ai_powered: true,
+          model: 'gemini-3.8-flash',
+          generated_at: new Date().toISOString(),
+        };
+      }
+    } catch (err: any) {
+      console.warn('[Gemini AI Analysis] Fallback activated due to API error:', err?.message || err);
+    }
+  }
+
+  // Graceful rule-based fallback if Gemini API key is missing or failed
+  if (!aiResult) {
+    aiResult = generateFallbackAiAnalysis(insights, user.full_name);
+  }
+
+  aiAnalysisCache.set(cacheKey, { timestamp: Date.now(), data: aiResult });
+  res.json(aiResult);
+});
+
+// ------------------------------------------------------------
+// Caregiver Report Permissions Endpoints
+// ------------------------------------------------------------
+app.get('/caregiver-report-permissions', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  if (user.role !== 'elderly') {
+    return res.status(403).json({ detail: 'Only elderly users manage progress report permissions.' });
+  }
+
+  const approvedLinks = caregiverLinks.filter(
+    (l) => l.elderly_id === user.id && l.status === 'approved'
+  );
+
+  const permissions = approvedLinks.map((l) => {
+    const caregiver = users.find((u) => u.id === l.caregiver_id);
+    const perm = caregiverReportPermissions.find(
+      (p) => p.elderly_id === user.id && p.caregiver_id === l.caregiver_id
+    );
+
+    return {
+      linkId: l.id,
+      caregiverId: l.caregiver_id,
+      caregiverName: caregiver?.full_name || 'Caregiver',
+      caregiverEmail: caregiver?.email || '',
+      reportAccessGranted: perm ? perm.report_access_granted : true,
+      updatedAt: perm?.updated_at || l.created_at,
+    };
+  });
+
+  res.json({ permissions });
+});
+
+app.post('/caregiver-report-permissions', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  if (user.role !== 'elderly') {
+    return res.status(403).json({ detail: 'Only elderly users manage progress report permissions.' });
+  }
+
+  const { caregiverId, accessGranted } = req.body;
+  if (!caregiverId) {
+    return res.status(400).json({ detail: 'caregiverId is required.' });
+  }
+
+  let perm = caregiverReportPermissions.find(
+    (p) => p.elderly_id === user.id && p.caregiver_id === Number(caregiverId)
+  );
+
+  if (!perm) {
+    perm = {
+      id: nextReportPermissionId++,
+      elderly_id: user.id,
+      caregiver_id: Number(caregiverId),
+      report_access_granted: accessGranted !== undefined ? Boolean(accessGranted) : true,
+      updated_at: new Date().toISOString(),
+    };
+    caregiverReportPermissions.push(perm);
+  } else {
+    perm.report_access_granted = Boolean(accessGranted);
+    perm.updated_at = new Date().toISOString();
+  }
+
+  res.json({
+    message: perm.report_access_granted
+      ? 'Caregiver progress report sharing enabled.'
+      : 'Caregiver progress report sharing paused.',
+    permission: perm,
+  });
+});
+
+// ------------------------------------------------------------
 // GET /caregiver-links/:id/progress-report — Caregiver Progress Report
 // ------------------------------------------------------------
-app.get('/caregiver-links/:id/progress-report', authenticateToken, (req: AuthRequest, res) => {
+app.get('/caregiver-links/:id/progress-report', authenticateToken, async (req: AuthRequest, res) => {
   const user = req.user!;
 
   if (user.role !== 'caregiver') {
@@ -2276,6 +2791,17 @@ app.get('/caregiver-links/:id/progress-report', authenticateToken, (req: AuthReq
     });
   }
 
+  // Check consent permission
+  const perm = caregiverReportPermissions.find(
+    (p) => p.elderly_id === elderly.id && p.caregiver_id === user.id
+  );
+  if (perm && !perm.report_access_granted) {
+    return res.status(403).json({
+      detail: 'Access to the cognitive progress report has not been granted by the user.',
+      accessGranted: false,
+    });
+  }
+
   const period = typeof req.query.period === 'string' ? req.query.period : '30d';
   const game = typeof req.query.game === 'string' ? req.query.game : undefined;
   const difficulty = typeof req.query.difficulty === 'string' ? req.query.difficulty : undefined;
@@ -2283,8 +2809,8 @@ app.get('/caregiver-links/:id/progress-report', authenticateToken, (req: AuthReq
   const sanitizedPeriod = validPeriods.includes(period) ? period : '30d';
 
   const insights = calculateCognitiveProgressInsights(elderly.id, sanitizedPeriod, game, difficulty);
+  const aiAnalysis = generateFallbackAiAnalysis(insights, elderly.full_name);
 
-  // Generate clear caregiver plain-language summary
   let statusSummary = 'is broadly stable';
   if (insights.baselineComparison.overallStatus === 'improving') {
     statusSummary = 'is showing positive progress';
@@ -2308,6 +2834,32 @@ app.get('/caregiver-links/:id/progress-report', authenticateToken, (req: AuthReq
     },
     reporting_period: sanitizedPeriod,
     plain_language_summary: plainLanguageSummary,
+    ai_analysis: aiAnalysis,
+    ...insights,
+  });
+});
+
+// ------------------------------------------------------------
+// GET /my-progress-report — Shareable/Printable Report for Elderly User
+// ------------------------------------------------------------
+app.get('/my-progress-report', authenticateToken, async (req: AuthRequest, res) => {
+  const user = req.user!;
+  const period = typeof req.query.period === 'string' ? req.query.period : '30d';
+  const validPeriods = ['7d', '30d', '90d', 'all'];
+  const sanitizedPeriod = validPeriods.includes(period) ? period : '30d';
+
+  const insights = calculateCognitiveProgressInsights(user.id, sanitizedPeriod);
+  const aiAnalysis = generateFallbackAiAnalysis(insights, user.full_name);
+
+  res.json({
+    user: {
+      id: user.id,
+      full_name: user.full_name,
+      email: user.email,
+      role: user.role,
+    },
+    reporting_period: sanitizedPeriod,
+    ai_analysis: aiAnalysis,
     ...insights,
   });
 });
@@ -2556,18 +3108,352 @@ app.get('/recommendation', authenticateToken, (req: AuthRequest, res) => {
   const recommended_difficulty = chooseDifficulty(recommended_game, selected);
   const reason = buildReason(recommended_game, recommended_difficulty, selected);
 
+  const rec = computeGameRecommendation(userSessions);
+
   res.json({
     recommendation: {
-      game: recommended_game,
-      difficulty: recommended_difficulty,
-      reason,
-      performance_status: selected.performance_status,
+      game: rec.game,
+      gameId: rec.gameId,
+      difficulty: rec.difficulty,
+      supportedDifficulties: rec.supportedDifficulties,
+      reason: rec.reason,
+      performance_status: rec.performance_status,
     },
     based_on_sessions: userSessions.length,
-    engine: 'rule-based-v3',
+    engine: 'adaptive-cognitive-v4',
     personalization: 'performance-based',
     confidence: selected.confidence,
     game_summaries: summaries,
+  });
+});
+
+// ============================================================
+// Voice Companion AI Conversational Endpoint
+// ============================================================
+
+app.post('/voice-companion/chat', async (req: Request, res: Response) => {
+  const { message = '', language = 'en-IN' } = req.body || {};
+  const cleanMessage = String(message).trim();
+
+  if (!cleanMessage) {
+    return res.status(400).json({ detail: 'Message cannot be empty.' });
+  }
+
+  const langCode = String(language).toLowerCase();
+  const shortLang = langCode.startsWith('hi') ? 'hi' : langCode.startsWith('as') ? 'as' : 'en';
+
+  // Check optional auth for personalized greeting
+  let userName = '';
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const token = authHeader.split(' ')[1];
+      const decoded: any = jwt.verify(token, JWT_SECRET);
+      if (decoded?.user_id) {
+        const found = users.find((u) => u.id === decoded.user_id);
+        if (found) userName = found.full_name;
+      }
+    } catch {
+      // Ignore invalid token in optional context
+    }
+  }
+
+  // Check for navigation commands first
+  const lower = cleanMessage.toLowerCase();
+  let navTarget: { targetPage: string; gameId?: string; reply: Record<string, string> } | null = null;
+
+  if (
+    lower.includes('memory match') ||
+    lower.includes('card match') ||
+    lower.includes('कार्ड मैच') ||
+    lower.includes('মেমৰি মেচ')
+  ) {
+    navTarget = {
+      targetPage: 'games',
+      gameId: 'memory-match',
+      reply: {
+        en: 'Opening Memory Match card pair activity.',
+        hi: 'मेमोरी मैच कार्ड गेम शुरू किया जा रहा है।',
+        as: 'মেমৰি মেচ কাৰ্ড খেল খোলা হৈছে।',
+      },
+    };
+  } else if (
+    lower.includes('sequence memory') ||
+    lower.includes('सीक्वेंस') ||
+    lower.includes('क्रम स्मृति') ||
+    lower.includes('ক্ৰম স্মৃতি')
+  ) {
+    navTarget = {
+      targetPage: 'games',
+      gameId: 'sequence-memory',
+      reply: {
+        en: 'Starting Sequence Memory pattern exercise.',
+        hi: 'सीक्वेंस मेमोरी खेल शुरू किया जा रहा है।',
+        as: 'ক্ৰম স্মৃতি খেল আৰম্ভ কৰা হৈছে।',
+      },
+    };
+  } else if (
+    lower.includes('object recall') ||
+    lower.includes('वस्तु स्मरण') ||
+    lower.includes('ऑब्जेक्ट') ||
+    lower.includes('বস্তু মনত')
+  ) {
+    navTarget = {
+      targetPage: 'games',
+      gameId: 'object-recall',
+      reply: {
+        en: 'Opening Object Recall recognition game.',
+        hi: 'ऑब्जेक्ट रिकॉल खेल खोला जा रहा है।',
+        as: 'বস্তু মনত পেলোৱা খেল খোলা হৈছে।',
+      },
+    };
+  } else if (
+    lower.includes('cultural recall') ||
+    lower.includes('सांस्कृतिक') ||
+    lower.includes('नॉर्थ ईस्ट') ||
+    lower.includes('সাংস্কৃতিক')
+  ) {
+    navTarget = {
+      targetPage: 'games',
+      gameId: 'ner-cultural-recall',
+      reply: {
+        en: 'Opening Cultural Recall of North East India traditions.',
+        hi: 'पूर्वोत्तर भारत की सांस्कृतिक यादों का खेल शुरू किया जा रहा है।',
+        as: 'উত্তৰ-পূব ভাৰতৰ সাংস্কৃতিক স্মৃতিৰ খেল খোলা হৈছে।',
+      },
+    };
+  } else if (
+    lower.includes('personal memory') ||
+    lower.includes('व्यक्तिगत याद') ||
+    lower.includes('ব্যক্তিগত স্মৃতি')
+  ) {
+    navTarget = {
+      targetPage: 'games',
+      gameId: 'personal-memory',
+      reply: {
+        en: 'Opening your personal Memory Recall reflections.',
+        hi: 'आपकी व्यक्तिगत यादों का खेल खोला जा रहा है।',
+        as: 'আপোনাৰ व्यक्तिगत স্মৃতিৰ খেল খোলা হৈছে।',
+      },
+    };
+  } else if (
+    lower.includes('home') ||
+    lower.includes('dashboard') ||
+    lower.includes('होम') ||
+    lower.includes('मुख्य पृष्ठ') ||
+    lower.includes('মুখ্য পৃষ্ঠা')
+  ) {
+    navTarget = {
+      targetPage: 'dashboard',
+      reply: {
+        en: 'Taking you to the Home Dashboard.',
+        hi: 'आपको मुख्य डैशबोर्ड पर ले जाया जा रहा है।',
+        as: 'আপোনাক মুখ্য ডেচবৰ্ডলৈ লৈ যোৱা হৈছে।',
+      },
+    };
+  } else if (
+    lower.includes('game') ||
+    lower.includes('play') ||
+    lower.includes('खेल') ||
+    lower.includes('खेलो') ||
+    lower.includes('খেল')
+  ) {
+    navTarget = {
+      targetPage: 'games',
+      reply: {
+        en: 'Opening your cognitive activities and games.',
+        hi: 'आपके संज्ञानात्मक खेल खोले जा रहे हैं।',
+        as: 'আপোনাৰ কগনিটিভ খেলসমূহ খোলা হৈছে।',
+      },
+    };
+  } else if (
+    lower.includes('progress') ||
+    lower.includes('performance') ||
+    lower.includes('score') ||
+    lower.includes('प्रगति') ||
+    lower.includes('प्रदर्शन') ||
+    lower.includes('অগ্ৰগতি') ||
+    lower.includes('প্ৰদৰ্শন')
+  ) {
+    navTarget = {
+      targetPage: 'performance',
+      reply: {
+        en: 'Opening your cognitive progress insights and trend charts.',
+        hi: 'आपकी प्रगति रिपोर्ट और चार्ट खोले जा रहे हैं।',
+        as: 'আপোনাৰ অগ্ৰগতি আৰু প্ৰদৰ্শন ৰিপৰ্ট খোলা হৈছে।',
+      },
+    };
+  } else if (
+    lower.includes('memories') ||
+    lower.includes('memory vault') ||
+    lower.includes('यादें') ||
+    lower.includes('पुराणी यादें') ||
+    lower.includes('স্মৃতি')
+  ) {
+    navTarget = {
+      targetPage: 'memories',
+      reply: {
+        en: 'Opening your personal Memory Vault.',
+        hi: 'आपकी यादों का खजाना खोला जा रहा है।',
+        as: 'আপোনাৰ স্মৃতি ভঁৰাল খোলা হৈছে।',
+      },
+    };
+  } else if (
+    lower.includes('reminder') ||
+    lower.includes('medicine') ||
+    lower.includes('रिमाइंडर') ||
+    lower.includes('दवा') ||
+    lower.includes('ৰিমাইণ্ডাৰ') ||
+    lower.includes('ঔষধ')
+  ) {
+    navTarget = {
+      targetPage: 'reminders',
+      reply: {
+        en: 'Opening your daily reminders and schedule.',
+        hi: 'आपके दैनिक रिमाइंडर और समय-सारणी खोली जा रही है।',
+        as: 'আপোনাৰ দৈনন্দিন ৰিমাইণ্ডাৰসমূহ খোলা হৈছে।',
+      },
+    };
+  } else if (
+    lower.includes('caregiver') ||
+    lower.includes('केयरगिवर') ||
+    lower.includes('কেয়াৰগিভাৰ')
+  ) {
+    navTarget = {
+      targetPage: 'caregiver',
+      reply: {
+        en: 'Opening Caregiver Dashboard.',
+        hi: 'केयरगिवर डैशबोर्ड खोला जा रहा है।',
+        as: 'কেয়াৰগিভাৰ ডেচবৰ্ড খোলা হৈছে।',
+      },
+    };
+  }
+
+  if (navTarget) {
+    const replyText = navTarget.reply[shortLang] || navTarget.reply.en;
+    return res.json({
+      action: 'navigate',
+      targetPage: navTarget.targetPage,
+      gameId: navTarget.gameId || null,
+      reply: replyText,
+      is_ai_powered: false,
+    });
+  }
+
+  // Conversational response via Gemini or Assistive Engine
+  const apiKey = process.env.GEMINI_API_KEY;
+  let replyText = '';
+  let isAi = false;
+
+  if (apiKey) {
+    try {
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          },
+        },
+      });
+
+      const langPrompt =
+        shortLang === 'hi'
+          ? 'in conversational, elder-friendly Hindi (Devanagari script)'
+          : shortLang === 'as'
+          ? 'in conversational, elder-friendly Assamese (Bengali/Assamese script)'
+          : 'in warm, simple, elder-friendly English';
+
+      const prompt = `You are Cognicare Voice Companion, a gentle, kind, and supportive digital assistant for an older adult named ${userName || 'friend'} in Northeast India.
+The user said: "${cleanMessage}".
+Reply directly ${langPrompt}.
+Guidelines:
+- Keep the response to exactly 1 or 2 calm, encouraging sentences.
+- Speak naturally so it sounds clear and compassionate when read aloud via speech synthesis.
+- Never use markdown formatting (no asterisks, no bullets, no headers, no quotes).
+- Do not use emojis or technical jargon.
+- If they ask for help, explain gently that they can ask you to open games, show their progress, look at memories, or check reminders.`;
+
+      const geminiRes = await ai.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: prompt,
+      });
+
+      const raw = geminiRes.text?.trim();
+      if (raw) {
+        replyText = raw.replace(/[*#_`]/g, '').trim();
+        isAi = true;
+      }
+    } catch (err: any) {
+      console.warn('[Voice Companion AI] Gemini chat fallback:', err?.message || err);
+    }
+  }
+
+  // Fallback conversational responses
+  if (!replyText) {
+    if (
+      lower.includes('hello') ||
+      lower.includes('hi') ||
+      lower.includes('नमस्ते') ||
+      lower.includes('নমস্কাৰ') ||
+      lower.includes('morning')
+    ) {
+      replyText =
+        shortLang === 'hi'
+          ? `नमस्ते ${userName ? userName + ' ' : ''}! आज आपका दिन कैसा जा रहा है? मैं आपके साथ हूँ।`
+          : shortLang === 'as'
+          ? `নমস্কাৰ ${userName ? userName + ' ' : ''}! আজি আপোনাৰ দিনটো কেনে চলিছে? মই আপোনাৰ সহায়ৰ বাবে সাজু আছোঁ।`
+          : `Hello ${userName ? userName : 'there'}! How is your day going? I am right here with you.`;
+    } else if (
+      lower.includes('how are you') ||
+      lower.includes('कैसे हो') ||
+      lower.includes('कहा हो') ||
+      lower.includes('কেনে আছ')
+    ) {
+      replyText =
+        shortLang === 'hi'
+          ? 'मैं बहुत अच्छा हूँ और आपकी मदद के लिए हमेशा तैयार हूँ। आप आज कैसा महसूस कर रहे हैं?'
+          : shortLang === 'as'
+          ? 'মই ভালে আছোঁ আৰু আপোনাক সহায় কৰিবলৈ সাজু। আপুনি আজি কেনে অনুভৱ কৰিছে?'
+          : 'I am doing wonderful, thank you for asking. How are you feeling today?';
+    } else if (
+      lower.includes('thank') ||
+      lower.includes('धन्यवाद') ||
+      lower.includes('शुक्रिया') ||
+      lower.includes('ধন্যবাদ')
+    ) {
+      replyText =
+        shortLang === 'hi'
+          ? 'आपका बहुत स्वागत है। मुझे आपकी सहायता करके हमेशा खुशी होती है।'
+          : shortLang === 'as'
+          ? 'আপোনাক বহুত ধন্যবাদ। আপোনাৰ সহায় কৰিবলৈ পাই মই সদায় আনন্দিত।'
+          : 'You are very welcome. It is always my pleasure to assist you.';
+    } else if (
+      lower.includes('who are you') ||
+      lower.includes('who are') ||
+      lower.includes('तुम कौन') ||
+      lower.includes('आप कौन') ||
+      lower.includes('আপুনি কোন')
+    ) {
+      replyText =
+        shortLang === 'hi'
+          ? 'मैं कॉग्निकेयर का आवाज सहायक हूँ। मैं आपको खेल शुरू करने, यादें देखने और रिमाइंडर में मदद करता हूँ।'
+          : shortLang === 'as'
+          ? 'মই Cognicare কণ্ঠ সংগী। মই আপোনাক খেল খেলা, স্মৃতি চোৱা আৰু ৰিমাইণ্ডাৰত সহায় কৰোঁ।'
+          : 'I am your Cognicare Voice Companion. I can help you play memory games, view your progress, explore memories, or check reminders.';
+    } else {
+      replyText =
+        shortLang === 'hi'
+          ? 'मैं आपकी बात समझ रहा हूँ। आप मुझसे खेल खेलने, अपनी प्रगति देखने या यादें खोलने के लिए कह सकते हैं।'
+          : shortLang === 'as'
+          ? 'মই আপোনাৰ কথা বুজি পাইছোঁ। আপুনি মোক খেল আৰম্ভ কৰিবলৈ, অগ্ৰগতি চাবলৈ বা স্মৃতি খুলিবলৈ ক’ব পাৰে।'
+          : 'I hear you. You can ask me to play a memory game, show your progress, view your memories, or check your reminders.';
+    }
+  }
+
+  res.json({
+    reply: replyText,
+    action: 'chat',
+    is_ai_powered: isAi,
   });
 });
 

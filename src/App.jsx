@@ -468,7 +468,9 @@ function App() {
   } else if (page === 'performance') {
     content = (
       <PerformanceDashboard
+        user={currentUser}
         text={currentText.performancePage}
+        allText={currentText}
         language={languageCode}
         readAloudLabel={
           currentText.readAloud
@@ -479,6 +481,9 @@ function App() {
         onBack={() =>
           setPage('dashboard')
         }
+        onPlayGame={(gameId, difficulty) => {
+          openGames(gameId, difficulty)
+        }}
       />
     )
   } else if (page === 'caregiver') {
