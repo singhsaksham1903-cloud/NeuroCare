@@ -926,3 +926,43 @@ body {
       rgba(255, 255, 255, 0.90);
   }
 }
+
+/* ============================================
+   Photo Timeline Chip Button Style
+   ============================================ */
+
+.memory-filter-chip-btn--timeline {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  min-height: 42px !important;
+  padding: 8px 16px !important;
+  border-radius: 12px !important;
+  font-size: 0.92rem !important;
+  font-weight: 750 !important;
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%) !important;
+  border: 1.5px solid #a78bfa !important;
+  color: #5b21b6 !important;
+  box-shadow: 0 2px 6px rgba(109, 40, 217, 0.12) !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.memory-filter-chip-btn--timeline:hover {
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%) !important;
+  border-color: #8b5cf6 !important;
+  color: #4c1d95 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.22) !important;
+}
+
+.memory-filter-chip-btn--timeline:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 1px 3px rgba(109, 40, 217, 0.15) !important;
+}
+
+.memory-filter-chip-btn--timeline:focus-visible {
+  outline: 3px solid #8b5cf6 !important;
+  outline-offset: 2px !important;
+}

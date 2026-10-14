@@ -834,13 +834,15 @@ function App() {
             </button>
             <button
               type="button"
-              className="memory-filter-chip-btn"
+              className="memory-filter-chip-btn memory-filter-chip-btn--timeline"
               onClick={(e) => {
                 e.stopPropagation()
                 setMemoryInitialTab('timeline')
                 setPage('memories')
+                window.scrollTo({ top: 0, behavior: 'smooth' })
               }}
-              style={{ fontSize: '0.85rem', padding: '6px 12px', minHeight: '38px', background: '#f5f3ff', borderColor: '#ddd6fe', color: '#5b21b6' }}
+              title={currentText.memoriesPage?.tabTimeline || 'Photo Timeline'}
+              aria-label={currentText.memoriesPage?.tabTimeline || 'Photo Timeline'}
             >
               ⏳ {currentText.memoriesPage?.tabTimeline || 'Photo Timeline'}
             </button>

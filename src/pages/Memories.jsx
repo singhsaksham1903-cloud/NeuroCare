@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -173,6 +174,20 @@ export default function Memories({
     this_year: [],
     older: [],
   })
+  const [timelineData, setTimelineData] = useState({
+    groups: { today: [], this_week: [], this_month: [], this_year: [], older: [] },
+    by_year: {},
+    all_photos: [],
+  })
+  const [timelineViewMode, setTimelineViewMode] = useState('photos') // 'photos' | 'eras'
+  const [selectedYearFilter, setSelectedYearFilter] = useState('All')
+  const [slideshowIndex, setSlideshowIndex] = useState(null)
+  const [prevInitialTab, setPrevInitialTab] = useState(initialTab)
+
+  if (initialTab !== prevInitialTab) {
+    setPrevInitialTab(initialTab)
+    setCurrentTab(initialTab)
+  }
 
   const [form, setForm] = useState(EMPTY_FORM)
   const [editingId, setEditingId] = useState(null)
@@ -202,6 +217,7 @@ export default function Memories({
 
   // Speech Narration State
   const [speakingMemoryId, setSpeakingMemoryId] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
 
   // Voice Modals & MediaRecorder
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false)
@@ -236,8 +252,13 @@ export default function Memories({
   const loadTimeline = useCallback(async () => {
     try {
       const data = await apiGet('/memories-timeline')
-      if (data && data.groups) {
-        setTimelineGroups(data.groups)
+      if (data) {
+        if (data.groups) setTimelineGroups(data.groups)
+        setTimelineData({
+          groups: data.groups || {},
+          by_year: data.by_year || {},
+          all_photos: data.all_photos || [],
+        })
       }
     } catch (err) {
       console.warn('Could not load timeline', err)
@@ -451,19 +472,43 @@ export default function Memories({
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // Delete
-  const handleDelete = async (memoryId) => {
-    if (!window.confirm(text.deleteConfirm)) return
+  // Delete memory
+  const handleDelete = async (memoryId, e) => {
+    e?.stopPropagation()
+    if (deletingId) return
     try {
+      setDeletingId(memoryId)
       setError('')
-      await apiDelete(`/memories/${memoryId}`)
+
+      // Optimistically remove from view for instant response
+      setMemories((prev) => prev.filter((m) => m.id !== memoryId))
+      setSearchResults((prev) => prev.filter((r) => r.id !== memoryId && r.memory?.id !== memoryId))
+      setTimelineGroups((prev) => {
+        if (!prev) return prev
+        const clean = (arr) => (arr || []).filter((item) => item.id !== memoryId)
+        return {
+          today: clean(prev.today),
+          this_week: clean(prev.this_week),
+          this_month: clean(prev.this_month),
+          this_year: clean(prev.this_year),
+          older: clean(prev.older),
+        }
+      })
+
       if (editingId === memoryId) resetForm()
       if (activeMemory?.id === memoryId) setActiveMemory(null)
-      setMessage(text.deleteSuccess)
-      await loadMemories()
-      await loadTimeline()
+
+      await apiDelete(`/memories/${memoryId}`)
+      setMessage(text.deleteSuccess || 'Memory deleted successfully')
+
+      // Refresh list and timeline to keep everything in sync
+      await Promise.all([loadMemories(), loadTimeline()])
     } catch (err) {
-      setError(err.message || text.deleteError)
+      setError(err.message || text.deleteError || 'Failed to delete memory.')
+      // Restore state on failure
+      await loadMemories()
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -571,6 +616,74 @@ export default function Memories({
     return true
   })
 
+  // Extract and sort all photos across all memories chronologically
+  const allTimelinePhotos = useMemo(() => {
+    if (timelineData.all_photos && timelineData.all_photos.length > 0) {
+      return timelineData.all_photos
+    }
+    const list = []
+    memories.forEach((m) => {
+      const photos = m.images && m.images.length > 0 ? m.images : (m.imageData ? [m.imageData] : [])
+      photos.forEach((photoUrl, pIdx) => {
+        list.push({
+          id: `${m.id}-photo-${pIdx}`,
+          memoryId: m.id,
+          photoUrl,
+          photoIndex: pIdx,
+          totalPhotos: photos.length,
+          title: m.title,
+          description: m.description,
+          category: m.category,
+          mood: m.mood,
+          location: m.location,
+          memoryDate: m.memoryDate || m.created_at,
+          created_at: m.created_at,
+        })
+      })
+    })
+    return list.sort((a, b) => {
+      const dateA = a.memoryDate ? new Date(a.memoryDate).getTime() : new Date(a.created_at).getTime()
+      const dateB = b.memoryDate ? new Date(b.memoryDate).getTime() : new Date(b.created_at).getTime()
+      return dateB - dateA
+    })
+  }, [timelineData.all_photos, memories])
+
+  const timelineYears = useMemo(() => {
+    const set = new Set()
+    allTimelinePhotos.forEach((p) => {
+      const dateStr = p.memoryDate || p.created_at
+      if (dateStr) {
+        set.add(new Date(dateStr).getFullYear().toString())
+      }
+    })
+    return Array.from(set).sort((a, b) => Number(b) - Number(a))
+  }, [allTimelinePhotos])
+
+  const filteredTimelinePhotos = useMemo(() => {
+    if (selectedYearFilter === 'All') return allTimelinePhotos
+    return allTimelinePhotos.filter((p) => {
+      const dateStr = p.memoryDate || p.created_at
+      if (!dateStr) return false
+      return new Date(dateStr).getFullYear().toString() === selectedYearFilter
+    })
+  }, [allTimelinePhotos, selectedYearFilter])
+
+  // Keyboard navigation for photo slideshow
+  useEffect(() => {
+    if (slideshowIndex === null) return
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSlideshowIndex(null)
+      } else if (e.key === 'ArrowLeft') {
+        setSlideshowIndex((idx) => (idx > 0 ? idx - 1 : allTimelinePhotos.length - 1))
+      } else if (e.key === 'ArrowRight') {
+        setSlideshowIndex((idx) => (idx < allTimelinePhotos.length - 1 ? idx + 1 : 0))
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [slideshowIndex, allTimelinePhotos.length])
+
   const categoriesList = [
     'General', 'Family', 'Friends', 'Travel', 'Celebration',
     'Childhood', 'Birthday', 'Wedding', 'Festival', 'Medical',
@@ -647,7 +760,7 @@ export default function Memories({
             }}
           >
             <span aria-hidden="true">⏳</span>
-            {text.tabTimeline || 'Photo Timeline'}
+            {text.tabTimeline || 'Photo Timeline'} ({allTimelinePhotos.length})
           </button>
           <button
             type="button"
@@ -1051,9 +1164,12 @@ export default function Memories({
                           <button
                             type="button"
                             className="saved-memory-action-button saved-memory-action-button--danger"
-                            onClick={() => handleDelete(memory.id)}
+                            onClick={(e) => handleDelete(memory.id, e)}
+                            disabled={deletingId === memory.id}
+                            title={text.delete || 'Delete memory'}
+                            aria-label={text.delete || 'Delete memory'}
                           >
-                            🗑️ {text.delete}
+                            {deletingId === memory.id ? '⏳ Deleting...' : `🗑️ ${text.delete}`}
                           </button>
                         </div>
                       </div>
@@ -1070,108 +1186,372 @@ export default function Memories({
             ======================================================== */}
         {currentTab === 'timeline' && (
           <div className="memory-timeline-container">
-            <div style={{ textAlign: 'center', marginBottom: 24 }}>
-              <h2>⏳ {text.tabTimeline || 'Photo Memory Timeline'}</h2>
-              <p style={{ color: '#6b7280' }}>
-                Chronologically grouped moments through your life journey.
-              </p>
+            {/* Header & Controls */}
+            <div className="timeline-header-container">
+              <div className="timeline-title-block">
+                <div className="timeline-badge-pill">
+                  <span>📸 {allTimelinePhotos.length} {allTimelinePhotos.length === 1 ? 'Photograph' : 'Photographs'}</span>
+                  {timelineYears.length > 0 && (
+                    <span className="timeline-badge-years">
+                      • {timelineYears[timelineYears.length - 1]} — {timelineYears[0]}
+                    </span>
+                  )}
+                </div>
+                <h2>⏳ {text.tabTimeline || 'Photo Memory Timeline'}</h2>
+                <p>
+                  All your treasured photographs gathered together according to their timeline, from your earliest memories to the present day.
+                </p>
+              </div>
+
+              <div className="timeline-actions-bar">
+                <div className="timeline-view-modes">
+                  <button
+                    type="button"
+                    className={`timeline-mode-btn ${timelineViewMode === 'photos' ? 'timeline-mode-btn--active' : ''}`}
+                    onClick={() => setTimelineViewMode('photos')}
+                  >
+                    <span>🖼️ All Photos Stream</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`timeline-mode-btn ${timelineViewMode === 'eras' ? 'timeline-mode-btn--active' : ''}`}
+                    onClick={() => setTimelineViewMode('eras')}
+                  >
+                    <span>📅 Grouped by Eras</span>
+                  </button>
+                </div>
+
+                {allTimelinePhotos.length > 0 && (
+                  <button
+                    type="button"
+                    className="timeline-slideshow-start-btn"
+                    onClick={() => setSlideshowIndex(0)}
+                    title="Open Fullscreen Slideshow"
+                    aria-label="Open Fullscreen Slideshow"
+                  >
+                    <span>🎬 Start Fullscreen Slideshow</span>
+                  </button>
+                )}
+              </div>
             </div>
 
-            {[
-              { key: 'today', label: text.timelineToday || 'Today', icon: '☀️' },
-              { key: 'this_week', label: text.timelineWeek || 'This Week', icon: '🗓️' },
-              { key: 'this_month', label: text.timelineMonth || 'This Month', icon: '🌿' },
-              { key: 'this_year', label: text.timelineYear || 'This Year', icon: '🌸' },
-              { key: 'older', label: text.timelineOlder || 'Older Cherished Memories', icon: '🕰️' },
-            ].map(({ key, label, icon }) => {
-              const items = timelineGroups[key] || []
-              if (items.length === 0) return null
+            {/* Year Filters */}
+            {timelineYears.length > 1 && timelineViewMode === 'photos' && (
+              <div className="timeline-year-filter-row">
+                <span className="timeline-filter-label">Timeline Year:</span>
+                <button
+                  type="button"
+                  className={`timeline-year-chip ${selectedYearFilter === 'All' ? 'timeline-year-chip--active' : ''}`}
+                  onClick={() => setSelectedYearFilter('All')}
+                >
+                  All ({allTimelinePhotos.length})
+                </button>
+                {timelineYears.map((year) => {
+                  const count = allTimelinePhotos.filter(
+                    (p) => new Date(p.memoryDate || p.created_at).getFullYear().toString() === year
+                  ).length
+                  return (
+                    <button
+                      key={year}
+                      type="button"
+                      className={`timeline-year-chip ${selectedYearFilter === year ? 'timeline-year-chip--active' : ''}`}
+                      onClick={() => setSelectedYearFilter(year)}
+                    >
+                      {year} ({count})
+                    </button>
+                  )
+                })}
+              </div>
+            )}
 
-              return (
-                <section key={key} className="memory-timeline-group">
-                  <div className="memory-timeline-group-header">
-                    <span style={{ fontSize: '1.4rem' }}>{icon}</span>
-                    <h3 className="memory-timeline-group-title">
-                      {label} ({items.length})
-                    </h3>
-                    <div className="memory-timeline-group-line" />
-                  </div>
+            {/* Empty State */}
+            {allTimelinePhotos.length === 0 ? (
+              <div className="memory-empty">
+                <div className="memory-empty-icon">
+                  <MemoryIcon />
+                </div>
+                <h3>No Photos Added Yet</h3>
+                <p>When you take or upload photos with your memories, they will all appear here arranged chronologically along your timeline.</p>
+                <button
+                  type="button"
+                  className="memory-submit-btn"
+                  style={{ marginTop: 14, minHeight: 44, padding: '8px 20px', width: 'auto' }}
+                  onClick={() => setCurrentTab('all')}
+                >
+                  ➕ Add a Memory with Photos
+                </button>
+              </div>
+            ) : timelineViewMode === 'photos' ? (
+              /* VIEW MODE 1: ALL PHOTOS STREAM (Chronological Grid) */
+              <div className="timeline-photos-stream-grid">
+                {filteredTimelinePhotos.map((item, idx) => {
+                  const memoryObj = memories.find((m) => m.id === item.memoryId) || {
+                    id: item.memoryId,
+                    title: item.title,
+                    description: item.description,
+                    imageData: item.photoUrl,
+                    images: [item.photoUrl],
+                    memoryDate: item.memoryDate,
+                    location: item.location,
+                    category: item.category,
+                    mood: item.mood,
+                  }
+                  return (
+                    <article
+                      key={item.id}
+                      className="timeline-photo-card"
+                      onClick={() => setSlideshowIndex(idx)}
+                      title="Click to view fullscreen in slideshow"
+                    >
+                      <div className="timeline-photo-wrapper">
+                        <img
+                          src={item.photoUrl}
+                          alt={item.title}
+                          className="timeline-photo-img"
+                          loading="lazy"
+                        />
+                        <div className="timeline-photo-overlay">
+                          <span className="timeline-photo-date-pill">
+                            📅 {item.memoryDate ? new Date(item.memoryDate).toLocaleDateString() : 'Memory'}
+                          </span>
+                          {item.totalPhotos > 1 && (
+                            <span className="timeline-photo-count-pill">
+                              Photo {item.photoIndex + 1}/{item.totalPhotos}
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
-                  <div className="memory-timeline-grid">
-                    {items.map((memory) => (
-                      <article
-                        key={memory.id}
-                        className="saved-memory-card"
-                        onClick={() => handleOpenDetails(memory)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <div className="saved-memory-card-visual" style={{ height: 180 }}>
-                          {memory.imageData || (memory.images && memory.images[0]) ? (
-                            <img
-                              src={memory.imageData || memory.images[0]}
-                              alt={memory.title}
-                              className="saved-memory-card-image"
-                            />
-                          ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#bd6d59' }}>
-                              <MemoryIcon />
-                            </div>
+                      <div className="timeline-photo-info">
+                        <div className="timeline-photo-tags">
+                          <span className="saved-memory-category">{item.category}</span>
+                          {item.mood && (
+                            <span className="memory-mood-pill">
+                              {text.moods?.[item.mood] || item.mood}
+                            </span>
                           )}
                         </div>
 
-                        <div className="saved-memory-card-body">
-                          <div className="memory-card-top-badges">
-                            <span className="saved-memory-category">{memory.category}</span>
-                            {memory.mood && (
-                              <span className="memory-mood-pill">
-                                {text.moods?.[memory.mood] || memory.mood}
-                              </span>
-                            )}
-                            <button
-                              type="button"
-                              className="memory-fav-btn"
-                              onClick={(e) => handleToggleFavorite(memory.id, e)}
-                            >
-                              {memory.isFavorite ? '⭐' : '☆'}
-                            </button>
-                          </div>
+                        <h3 className="timeline-photo-title">{item.title}</h3>
+                        <p className="timeline-photo-desc">{item.description}</p>
 
-                          <h3>{memory.title}</h3>
-                          <p style={{ fontSize: '0.92rem' }}>
-                            {memory.description.slice(0, 110)}
-                            {memory.description.length > 110 ? '...' : ''}
-                          </p>
-
-                          <div className="saved-memory-meta">
-                            {memory.memoryDate ? (
-                              <time>📅 {new Date(memory.memoryDate).toLocaleDateString()}</time>
-                            ) : null}
-                            {memory.location && <span>📍 {memory.location}</span>}
-                          </div>
-
-                          <div className="saved-memory-card-actions" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              type="button"
-                              className="memory-card-narrate-btn"
-                              onClick={() => narrateMemory(memory)}
-                            >
-                              <span>{speakingMemoryId === memory.id ? '⏹️ Stop' : '🔊 Listen'}</span>
-                            </button>
-                            <button
-                              type="button"
-                              className="saved-memory-action-button"
-                              onClick={() => handleOpenDetails(memory)}
-                            >
-                              📖 Details
-                            </button>
-                          </div>
+                        <div className="timeline-photo-footer">
+                          {item.location ? (
+                            <span className="timeline-photo-location">
+                              📍 {item.location}
+                            </span>
+                          ) : <span />}
+                          <button
+                            type="button"
+                            className="memory-card-narrate-btn"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              narrateMemory(memoryObj)
+                            }}
+                          >
+                            <span>{speakingMemoryId === memoryObj.id ? '⏹️' : '🔊'} Listen</span>
+                          </button>
                         </div>
-                      </article>
-                    ))}
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            ) : (
+              /* VIEW MODE 2: GROUPED BY ERAS */
+              <div className="memory-timeline-groups-container">
+                {[
+                  { key: 'today', label: text.timelineToday || 'Today', icon: '☀️' },
+                  { key: 'this_week', label: text.timelineWeek || 'This Week', icon: '🗓️' },
+                  { key: 'this_month', label: text.timelineMonth || 'This Month', icon: '🌿' },
+                  { key: 'this_year', label: text.timelineYear || 'This Year', icon: '🌸' },
+                  { key: 'older', label: text.timelineOlder || 'Older Cherished Memories', icon: '🕰️' },
+                ].map(({ key, label, icon }) => {
+                  const items = timelineGroups[key] || []
+                  if (items.length === 0) return null
+
+                  return (
+                    <section key={key} className="memory-timeline-group">
+                      <div className="memory-timeline-group-header">
+                        <span style={{ fontSize: '1.4rem' }}>{icon}</span>
+                        <h3 className="memory-timeline-group-title">
+                          {label} ({items.length})
+                        </h3>
+                        <div className="memory-timeline-group-line" />
+                      </div>
+
+                      <div className="memory-timeline-grid">
+                        {items.map((memory) => (
+                          <article
+                            key={memory.id}
+                            className="saved-memory-card"
+                            onClick={() => handleOpenDetails(memory)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div className="saved-memory-card-visual" style={{ height: 180 }}>
+                              {memory.imageData || (memory.images && memory.images[0]) ? (
+                                <img
+                                  src={memory.imageData || memory.images[0]}
+                                  alt={memory.title}
+                                  className="saved-memory-card-image"
+                                />
+                              ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#bd6d59' }}>
+                                  <MemoryIcon />
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="saved-memory-card-body">
+                              <div className="memory-card-top-badges">
+                                <span className="saved-memory-category">{memory.category}</span>
+                                {memory.mood && (
+                                  <span className="memory-mood-pill">
+                                    {text.moods?.[memory.mood] || memory.mood}
+                                  </span>
+                                )}
+                                <button
+                                  type="button"
+                                  className="memory-fav-btn"
+                                  onClick={(e) => handleToggleFavorite(memory.id, e)}
+                                >
+                                  {memory.isFavorite ? '⭐' : '☆'}
+                                </button>
+                              </div>
+
+                              <h3>{memory.title}</h3>
+                              <p style={{ fontSize: '0.92rem' }}>
+                                {memory.description.slice(0, 110)}
+                                {memory.description.length > 110 ? '...' : ''}
+                              </p>
+
+                              <div className="saved-memory-meta">
+                                {memory.memoryDate ? (
+                                  <time>📅 {new Date(memory.memoryDate).toLocaleDateString()}</time>
+                                ) : null}
+                                {memory.location && <span>📍 {memory.location}</span>}
+                              </div>
+
+                              <div className="saved-memory-card-actions" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  type="button"
+                                  className="memory-card-narrate-btn"
+                                  onClick={() => narrateMemory(memory)}
+                                >
+                                  <span>{speakingMemoryId === memory.id ? '⏹️ Stop' : '🔊 Listen'}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="saved-memory-action-button"
+                                  onClick={() => handleOpenDetails(memory)}
+                                >
+                                  📖 Details
+                                </button>
+                              </div>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* FULLSCREEN PHOTO SLIDESHOW MODAL */}
+            {slideshowIndex !== null && allTimelinePhotos[slideshowIndex] && (
+              <div
+                className="timeline-slideshow-modal"
+                onClick={() => setSlideshowIndex(null)}
+              >
+                <div
+                  className="timeline-slideshow-content"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="timeline-slideshow-header">
+                    <div className="timeline-slideshow-indicator">
+                      <span>📸 Photo {slideshowIndex + 1} of {allTimelinePhotos.length}</span>
+                      <span className="timeline-slideshow-header-date">
+                        📅 {new Date(allTimelinePhotos[slideshowIndex].memoryDate).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="timeline-slideshow-close"
+                      onClick={() => setSlideshowIndex(null)}
+                      title="Close Slideshow (Esc)"
+                      aria-label="Close Slideshow"
+                    >
+                      ✕
+                    </button>
                   </div>
-                </section>
-              )
-            })}
+
+                  <div className="timeline-slideshow-stage">
+                    <button
+                      type="button"
+                      className="timeline-slideshow-nav-btn timeline-slideshow-nav-btn--prev"
+                      onClick={() => setSlideshowIndex((idx) => (idx > 0 ? idx - 1 : allTimelinePhotos.length - 1))}
+                      title="Previous Photo (Left Arrow)"
+                      aria-label="Previous Photo"
+                    >
+                      ◀
+                    </button>
+
+                    <div className="timeline-slideshow-img-container">
+                      <img
+                        src={allTimelinePhotos[slideshowIndex].photoUrl}
+                        alt={allTimelinePhotos[slideshowIndex].title}
+                        className="timeline-slideshow-img"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      className="timeline-slideshow-nav-btn timeline-slideshow-nav-btn--next"
+                      onClick={() => setSlideshowIndex((idx) => (idx < allTimelinePhotos.length - 1 ? idx + 1 : 0))}
+                      title="Next Photo (Right Arrow)"
+                      aria-label="Next Photo"
+                    >
+                      ▶
+                    </button>
+                  </div>
+
+                  <div className="timeline-slideshow-caption">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                      <div>
+                        <h3 style={{ margin: '0 0 4px', fontSize: '1.35rem', color: '#111827' }}>
+                          {allTimelinePhotos[slideshowIndex].title}
+                        </h3>
+                        {allTimelinePhotos[slideshowIndex].location && (
+                          <span style={{ fontSize: '0.9rem', color: '#047857', fontWeight: 600 }}>
+                            📍 {allTimelinePhotos[slideshowIndex].location}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="memory-card-narrate-btn"
+                        style={{ padding: '8px 18px', minHeight: 44, fontSize: '0.95rem' }}
+                        onClick={() => {
+                          const currentItem = allTimelinePhotos[slideshowIndex]
+                          const mem = memories.find((m) => m.id === currentItem.memoryId) || {
+                            id: currentItem.memoryId,
+                            title: currentItem.title,
+                            description: currentItem.description,
+                          }
+                          narrateMemory(mem)
+                        }}
+                      >
+                        <span>{speakingMemoryId === allTimelinePhotos[slideshowIndex].memoryId ? '⏹️ Stop Narration' : '🔊 Listen to Story'}</span>
+                      </button>
+                    </div>
+                    <p style={{ marginTop: 10, color: '#374151', fontSize: '1rem', lineHeight: 1.6 }}>
+                      {allTimelinePhotos[slideshowIndex].description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

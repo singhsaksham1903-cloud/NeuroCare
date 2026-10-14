@@ -14,6 +14,13 @@ import {
   semanticSearchMemories,
   findRelatedMemories
 } from './src/server/memoryVaultEngine';
+import {
+  SEED_PHOTO_SHILLONG,
+  SEED_PHOTO_JAIPUR,
+  SEED_PHOTO_TULSI,
+  SEED_PHOTO_WEDDING,
+  SEED_PHOTO_BIRTHDAY
+} from './src/server/seedImages';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -400,8 +407,8 @@ const rawSeedMemories = [
     time: '11:00',
     location: 'Shillong, Meghalaya',
     mood: 'Peaceful',
-    image_data: null,
-    images: [] as string[],
+    image_data: SEED_PHOTO_SHILLONG,
+    images: [SEED_PHOTO_SHILLONG],
     audio_data: null,
     audio_duration: null,
     is_favorite: true,
@@ -418,8 +425,8 @@ const rawSeedMemories = [
     time: '19:30',
     location: 'Jaipur, Rajasthan',
     mood: 'Joyful',
-    image_data: null,
-    images: [] as string[],
+    image_data: SEED_PHOTO_JAIPUR,
+    images: [SEED_PHOTO_JAIPUR],
     audio_data: null,
     audio_duration: null,
     is_favorite: true,
@@ -436,8 +443,8 @@ const rawSeedMemories = [
     time: '07:30',
     location: 'Home Verandah, Guwahati',
     mood: 'Grateful',
-    image_data: null,
-    images: [] as string[],
+    image_data: SEED_PHOTO_TULSI,
+    images: [SEED_PHOTO_TULSI],
     audio_data: null,
     audio_duration: null,
     is_favorite: false,
@@ -454,8 +461,8 @@ const rawSeedMemories = [
     time: '16:00',
     location: 'Guwahati, Assam',
     mood: 'Loving',
-    image_data: null,
-    images: [] as string[],
+    image_data: SEED_PHOTO_WEDDING,
+    images: [SEED_PHOTO_WEDDING],
     audio_data: null,
     audio_duration: null,
     is_favorite: true,
@@ -472,8 +479,8 @@ const rawSeedMemories = [
     time: '17:00',
     location: 'Family Home, Guwahati',
     mood: 'Joyful',
-    image_data: null,
-    images: [] as string[],
+    image_data: SEED_PHOTO_BIRTHDAY,
+    images: [SEED_PHOTO_BIRTHDAY],
     audio_data: null,
     audio_duration: null,
     is_favorite: false,
@@ -1055,6 +1062,9 @@ app.get('/memories-timeline', authenticateToken, (req: AuthRequest, res) => {
     older: [],
   };
 
+  const byYear: Record<string, any[]> = {};
+  const allPhotos: any[] = [];
+
   for (const m of userMemories) {
     const memTime = m.memory_date ? new Date(m.memory_date).getTime() : new Date(m.created_at).getTime();
     const serialized = serializeMemory(m);
@@ -1070,11 +1080,40 @@ app.get('/memories-timeline', authenticateToken, (req: AuthRequest, res) => {
     } else {
       groups.older.push(serialized);
     }
+
+    const dateStr = m.memory_date || m.created_at;
+    const year = dateStr ? new Date(dateStr).getFullYear().toString() : 'Earlier';
+    if (!byYear[year]) byYear[year] = [];
+    byYear[year].push(serialized);
+
+    const photos = serialized.images && serialized.images.length > 0
+      ? serialized.images
+      : (serialized.imageData ? [serialized.imageData] : []);
+
+    photos.forEach((photoUrl: string, pIdx: number) => {
+      allPhotos.push({
+        id: `${m.id}-photo-${pIdx}`,
+        memoryId: m.id,
+        photoUrl,
+        photoIndex: pIdx,
+        totalPhotos: photos.length,
+        title: m.title,
+        description: m.description,
+        category: m.category,
+        mood: m.mood,
+        location: m.location,
+        memoryDate: m.memory_date,
+        time: m.time,
+        created_at: m.created_at,
+      });
+    });
   }
 
   res.json({
     total: userMemories.length,
     groups,
+    by_year: byYear,
+    all_photos: allPhotos,
   });
 });
 
