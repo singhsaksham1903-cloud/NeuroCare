@@ -312,6 +312,12 @@ function CaregiverDashboard({
   const [sessions, setSessions] = useState([])
   const [memoryCount, setMemoryCount] = useState(0)
   const [reminders, setReminders] = useState([])
+  const [elderlyMemories, setElderlyMemories] = useState([])
+  const [memoryPermission, setMemoryPermission] = useState({
+    access_granted: true,
+    emergency_mode_enabled: false,
+    can_view: true,
+  })
 
   const [linkedElderly, setLinkedElderly] =
     useState(null)
@@ -336,6 +342,7 @@ function CaregiverDashboard({
         setSessions([])
         setMemoryCount(0)
         setReminders([])
+        setElderlyMemories([])
         setLinkedElderly(null)
 
         setError(
@@ -366,6 +373,7 @@ function CaregiverDashboard({
         setSessions([])
         setMemoryCount(0)
         setReminders([])
+        setElderlyMemories([])
         setLinkedElderly(null)
 
         return
@@ -388,7 +396,6 @@ function CaregiverDashboard({
 
       setMemoryCount(
         linkedData.memory_count ??
-        linkedData.memories ??
         0,
       )
 
@@ -396,6 +403,15 @@ function CaregiverDashboard({
         linkedData.reminders ||
         [],
       )
+
+      setElderlyMemories(
+        linkedData.memories ||
+        [],
+      )
+
+      if (linkedData.memory_permission) {
+        setMemoryPermission(linkedData.memory_permission)
+      }
     } catch (err) {
       setError(
         err.message ||
@@ -1240,6 +1256,72 @@ function CaregiverDashboard({
                 </div>
               )}
 
+            </section>
+
+
+            {/* Memory Vault Section */}
+            <section className="caregiver-panel">
+              <div className="caregiver-section-heading">
+                <div>
+                  <span className="caregiver-section-label">
+                    AI Personal Memory Vault
+                  </span>
+                  <h2>
+                    {linkedElderly.full_name}&apos;s Memories
+                  </h2>
+                </div>
+                {memoryPermission.emergency_mode_enabled && (
+                  <span style={{ padding: '6px 12px', borderRadius: 10, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontWeight: 800, fontSize: '0.85rem' }}>
+                    🚨 Emergency Mode Active
+                  </span>
+                )}
+              </div>
+
+              {!memoryPermission.can_view ? (
+                <div className="caregiver-empty caregiver-empty--small" style={{ background: '#fef7f5', borderColor: '#fed7aa' }}>
+                  <span style={{ fontSize: '2rem' }}>🔒</span>
+                  <h3 style={{ color: '#9a3412', marginTop: 8 }}>Memory Vault is Private</h3>
+                  <p style={{ color: '#7c2d12', maxWidth: 480, margin: '6px auto 0' }}>
+                    {linkedElderly.full_name} has not granted sharing access for their memories. They can grant permission anytime from their Memory Vault privacy settings.
+                  </p>
+                </div>
+              ) : elderlyMemories.length === 0 ? (
+                <div className="caregiver-empty caregiver-empty--small">
+                  <p>No memories have been recorded yet.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px', marginTop: '16px' }}>
+                  {elderlyMemories.map((mem) => (
+                    <article key={mem.id} style={{ background: '#ffffff', borderRadius: 16, border: '1px solid #e5e7eb', padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.04)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, padding: '3px 8px', borderRadius: 6, background: '#f3e8ff', color: '#6b21a8' }}>
+                          {mem.category}
+                        </span>
+                        {mem.mood && (
+                          <span style={{ fontSize: '0.8rem', color: '#b45309' }}>
+                            {mem.mood}
+                          </span>
+                        )}
+                      </div>
+                      <h4 style={{ fontSize: '1.05rem', margin: '4px 0', color: '#111827' }}>{mem.title}</h4>
+                      <p style={{ fontSize: '0.88rem', color: '#4b5563', lineHeight: 1.5, margin: 0 }}>
+                        {mem.description.slice(0, 120)}
+                        {mem.description.length > 120 ? '...' : ''}
+                      </p>
+                      {mem.aiSummary && (
+                        <div style={{ fontSize: '0.82rem', color: '#9f1239', background: '#fff1f2', padding: '6px 10px', borderRadius: 8 }}>
+                          ✨ {mem.aiSummary}
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: '#6b7280', marginTop: 'auto', paddingTop: '8px' }}>
+                        <span>{mem.memoryDate ? new Date(mem.memoryDate).toLocaleDateString() : 'No date'}</span>
+                        {mem.location && <span>📍 {mem.location}</span>}
+                        {mem.audioData && <span>🎙️ Voice Note</span>}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
             </section>
 
 

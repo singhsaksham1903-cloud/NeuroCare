@@ -167,9 +167,51 @@ const translations = {
 
         memoriesPage: {
             backToDashboard: 'Back to Dashboard',
-            memoriesTitle: 'Memories',
+            memoriesTitle: 'AI Personal Memory Vault',
             memoriesDescription:
-                'Save important moments, stories, and people you want to remember.',
+                'Preserve your stories, voice recordings, and photo memories with intelligent recall.',
+            vaultTitle: 'AI Personal Memory Vault',
+            vaultSubtitle: 'Elder-friendly memory preservation with semantic recall and voice narration.',
+            tabAll: 'All Memories',
+            tabTimeline: 'Photo Timeline',
+            tabSearch: 'Semantic Search',
+            tabPermissions: 'Caregiver Sharing & Privacy',
+            quickAdd: 'Add Memory',
+            voiceAdd: 'Voice Record',
+            searchPlaceholder: 'Search naturally: "Trip to Shillong", "My daughter\'s wedding", "Diwali"...',
+            voiceSearchButton: 'Voice Search',
+            listenAloud: 'Listen Aloud',
+            stopNarration: 'Stop Listening',
+            favorite: 'Favorite',
+            unfavorite: 'Unfavorite',
+            playAudio: 'Play Recording',
+            pauseAudio: 'Pause Recording',
+            photoGallery: 'Photo Gallery',
+            detectedPeople: 'People in Story',
+            detectedLocations: 'Locations',
+            detectedEvents: 'Events',
+            aiSummaryLabel: 'AI Story Reflection',
+            relatedMemories: 'You May Also Remember',
+            moodLabel: 'Mood / Emotion',
+            timeLabel: 'Time of Day',
+            locationLabel: 'Location (optional)',
+            audioNoteLabel: 'Voice Note / Narration',
+            timelineToday: 'Today',
+            timelineWeek: 'This Week',
+            timelineMonth: 'This Month',
+            timelineYear: 'This Year',
+            timelineOlder: 'Older Memories',
+            caregiverAccessTitle: 'Caregiver Access & Privacy Control',
+            caregiverAccessDesc: 'Caregivers can only view your Memory Vault when you grant explicit permission here.',
+            grantAccessLabel: 'Allow caregiver to view your Memory Vault',
+            emergencyModeLabel: 'Emergency Mode (allow urgent access if needed)',
+            auditLogTitle: 'Access Audit Logs',
+            auditLogEmpty: 'No caregiver views recorded yet.',
+            viewDetails: 'View Story',
+            closeModal: 'Close',
+            recordAudioNote: 'Record Voice Note',
+            stopRecordingAudio: 'Stop Audio',
+            audioRecordedNotice: 'Voice note recorded successfully',
 
             editMemory: 'Edit Memory',
             addMemory: 'Add a Memory',
@@ -180,9 +222,9 @@ const translations = {
             memoryDate: 'Memory Date',
 
             titlePlaceholder:
-                'e.g. Family trip to Agra',
+                'e.g. Family trip to Shillong tea gardens',
             descriptionPlaceholder:
-                'Write about this memory...',
+                'Write or speak your story. We will organize people, places, and memories automatically...',
 
             saving: 'Saving...',
             updateMemory: 'Update Memory',
@@ -191,7 +233,7 @@ const translations = {
 
             savedMemories: 'Saved Memories',
             savedMemoriesDescription:
-                'Your memories are stored securely in your account.',
+                'Your memories are stored securely in your private account.',
 
             memory: 'memory',
             memoriesPlural: 'memories',
@@ -215,7 +257,7 @@ const translations = {
                 'Could not delete the memory.',
 
             saveSuccess:
-                'Memory saved successfully.',
+                'Memory saved successfully with AI organization.',
             updateSuccess:
                 'Memory updated successfully.',
             deleteSuccess:
@@ -231,7 +273,21 @@ const translations = {
                 Travel: 'Travel',
                 Celebration: 'Celebration',
                 Childhood: 'Childhood',
+                Birthday: 'Birthday',
+                Wedding: 'Wedding',
+                Festival: 'Festival',
+                Medical: 'Medical',
+                'Daily Activity': 'Daily Activity',
                 Other: 'Other',
+            },
+            moods: {
+                Joyful: 'Joyful 😊',
+                Peaceful: 'Peaceful 🌿',
+                Nostalgic: 'Nostalgic 🕰️',
+                Grateful: 'Grateful 🙏',
+                Loving: 'Loving ❤️',
+                Energetic: 'Energetic ⚡',
+                Reflective: 'Reflective 💭',
             },
         },
 
@@ -995,9 +1051,51 @@ const translations = {
 
         memoriesPage: {
             backToDashboard: 'डैशबोर्ड पर वापस जाएँ',
-            memoriesTitle: 'यादें',
+            memoriesTitle: 'एआई पर्सनल मेमोरी वॉल्ट',
             memoriesDescription:
-                'महत्वपूर्ण पल, कहानियाँ और वे लोग सहेजें जिन्हें आप याद रखना चाहते हैं।',
+                'अपनी प्रिय कहानियों, आवाज रिकॉर्डिंग और तस्वीरों को एआई सहायता से सहेजें।',
+            vaultTitle: 'एआई पर्सनल मेमोरी वॉल्ट',
+            vaultSubtitle: 'बोलकर या लिखकर अपनी यादें सहेजें और कभी भी आसानी से ढूंढें।',
+            tabAll: 'सभी यादें',
+            tabTimeline: 'फोटो टाइमलाइन',
+            tabSearch: 'एआई खोज',
+            tabPermissions: 'देखभालकर्ता साझाकरण व गोपनीयता',
+            quickAdd: 'याद जोड़ें',
+            voiceAdd: 'बोलकर जोड़ें',
+            searchPlaceholder: 'अपनी भाषा में खोजें: "शिलांग यात्रा", "बेटी की शादी", "दिवाली"...',
+            voiceSearchButton: 'आवाज से खोजें',
+            listenAloud: 'सुनें (आवाज)',
+            stopNarration: 'रोकें',
+            favorite: 'पसंदीदा',
+            unfavorite: 'पसंदीदा से हटाएँ',
+            playAudio: 'रिकॉर्डिंग सुनें',
+            pauseAudio: 'रिकॉर्डिंग रोकें',
+            photoGallery: 'फोटो गैलरी',
+            detectedPeople: 'कहानी में शामिल लोग',
+            detectedLocations: 'स्थान',
+            detectedEvents: 'उत्सव व कार्यक्रम',
+            aiSummaryLabel: 'एआई कहानी का सार',
+            relatedMemories: 'आपको यह भी याद आ सकता है',
+            moodLabel: 'भावना / मूड',
+            timeLabel: 'समय',
+            locationLabel: 'स्थान (वैकल्पिक)',
+            audioNoteLabel: 'आवाज रिकॉर्डिंग / विवरण',
+            timelineToday: 'आज',
+            timelineWeek: 'इस सप्ताह',
+            timelineMonth: 'इस महीने',
+            timelineYear: 'इस साल',
+            timelineOlder: 'पुरानी यादें',
+            caregiverAccessTitle: 'देखभालकर्ता पहुंच और गोपनीयता नियंत्रण',
+            caregiverAccessDesc: 'देखभालकर्ता आपकी यादें केवल तभी देख सकते हैं जब आप यहाँ स्पष्ट अनुमति देते हैं।',
+            grantAccessLabel: 'देखभालकर्ता को मेमोरी वॉल्ट देखने की अनुमति दें',
+            emergencyModeLabel: 'आपातकालीन मोड (आवश्यकता पड़ने पर आपातकालीन पहुंच)',
+            auditLogTitle: 'पहुंच का इतिहास (ऑडिट लॉग)',
+            auditLogEmpty: 'अभी तक कोई देखभालकर्ता गतिविधि दर्ज नहीं है।',
+            viewDetails: 'कहानी पढ़ें',
+            closeModal: 'बंद करें',
+            recordAudioNote: 'आवाज रिकॉर्ड करें',
+            stopRecordingAudio: 'ऑडियो रोकें',
+            audioRecordedNotice: 'आवाज सफलतापूर्वक रिकॉर्ड की गई',
 
             editMemory: 'याद संपादित करें',
             addMemory: 'एक याद जोड़ें',
@@ -1008,9 +1106,9 @@ const translations = {
             memoryDate: 'याद की तारीख',
 
             titlePlaceholder:
-                'जैसे: आगरा की पारिवारिक यात्रा',
+                'जैसे: शिलांग के चाय बागानों की पारिवारिक यात्रा',
             descriptionPlaceholder:
-                'इस याद के बारे में लिखें...',
+                'अपनी कहानी लिखें या बोलें। एआई अपने आप लोगों, स्थानों और यादों को व्यवस्थित करेगा...',
 
             saving: 'सहेजा जा रहा है...',
             updateMemory: 'याद अपडेट करें',
@@ -1019,7 +1117,7 @@ const translations = {
 
             savedMemories: 'सहेजी गई यादें',
             savedMemoriesDescription:
-                'आपकी यादें आपके खाते में सुरक्षित रूप से संग्रहीत हैं।',
+                'आपकी यादें आपके निजी खाते में पूरी तरह सुरक्षित हैं।',
 
             memory: 'याद',
             memoriesPlural: 'यादें',
@@ -1044,7 +1142,7 @@ const translations = {
                 'याद हटाई नहीं जा सकी।',
 
             saveSuccess:
-                'याद सफलतापूर्वक सहेजी गई।',
+                'याद एआई संगठन के साथ सफलतापूर्वक सहेजी गई।',
             updateSuccess:
                 'याद सफलतापूर्वक अपडेट की गई।',
             deleteSuccess:
@@ -1060,7 +1158,21 @@ const translations = {
                 Travel: 'यात्रा',
                 Celebration: 'उत्सव',
                 Childhood: 'बचपन',
+                Birthday: 'जन्मदिन',
+                Wedding: 'शादी',
+                Festival: 'त्योहार',
+                Medical: 'स्वास्थ्य',
+                'Daily Activity': 'दैनिक गतिविधि',
                 Other: 'अन्य',
+            },
+            moods: {
+                Joyful: 'प्रसन्न 😊',
+                Peaceful: 'शांत 🌿',
+                Nostalgic: 'पुरानी यादें 🕰️',
+                Grateful: 'कृतज्ञ 🙏',
+                Loving: 'स्नेहपूर्ण ❤️',
+                Energetic: 'उत्साही ⚡',
+                Reflective: 'चिंतनशील 💭',
             },
         },
 
@@ -1841,9 +1953,51 @@ const translations = {
         memoriesPage: {
             backToDashboard:
                 'ডেশ্বব’ৰ্ডলৈ উভতি যাওক',
-            memoriesTitle: 'স্মৃতিসমূহ',
+            memoriesTitle: 'এআই ব্যক্তিগত স্মৃতি ভঁৰাল',
             memoriesDescription:
-                'গুৰুত্বপূৰ্ণ মুহূৰ্ত, কাহিনী আৰু আপুনি মনত ৰাখিব বিচৰা মানুহবোৰ সংৰক্ষণ কৰক।',
+                'আপোনাৰ মৰমৰ কাহিনী, কণ্ঠ ৰেকৰ্ডিং আৰু ফটো স্মৃতিসমূহ এআই সহায়তাত সুৰক্ষিতভাৱে সংৰক্ষণ কৰক।',
+            vaultTitle: 'এআই ব্যক্তিগত স্মৃতি ভঁৰাল',
+            vaultSubtitle: 'কণ্ঠ আৰু ছবিৰ জৰিয়তে স্মৃতি সংৰক্ষণ আৰু সহজ সন্ধান।',
+            tabAll: 'সকলো স্মৃতি',
+            tabTimeline: 'ফটো টাইমলাইন',
+            tabSearch: 'এআই সন্ধান',
+            tabPermissions: 'তত্ত্বাৱধায়কৰ ভাগ-বতৰা আৰু গোপনীয়তা',
+            quickAdd: 'স্মৃতি যোগ কৰক',
+            voiceAdd: 'কণ্ঠৰে যোগ কৰক',
+            searchPlaceholder: 'প্ৰাকৃতিকভাৱে সন্ধান কৰক: "শ্বিলং ভ্ৰমণ", "জীয়াৰীৰ বিবাহ", "বিহু"...',
+            voiceSearchButton: 'কণ্ঠৰে সন্ধান',
+            listenAloud: 'শুনক (কণ্ঠস্বৰ)',
+            stopNarration: 'বন্ধ কৰক',
+            favorite: 'প্ৰিয়',
+            unfavorite: 'প্ৰিয়ৰ পৰা আঁতৰাওক',
+            playAudio: 'ৰেকৰ্ডিং শুনক',
+            pauseAudio: 'ৰেকৰ্ডিং বন্ধ কৰক',
+            photoGallery: 'ফটো গেলাৰী',
+            detectedPeople: 'কাহিনীত থকা লোকসকল',
+            detectedLocations: 'স্থানসমূহ',
+            detectedEvents: 'উৎসৱ আৰু অনুষ্ঠান',
+            aiSummaryLabel: 'এআই কাহিনীৰ সাৰাংশ',
+            relatedMemories: 'আপোনাৰ এইবোৰো মনত পৰিব পাৰে',
+            moodLabel: 'অনুভূতি / মেজাজ',
+            timeLabel: 'সময়',
+            locationLabel: 'স্থান (ঐচ্ছিক)',
+            audioNoteLabel: 'কণ্ঠ ৰেকৰ্ডিং / টোকা',
+            timelineToday: 'আজি',
+            timelineWeek: 'এই সপ্তাহ',
+            timelineMonth: 'এই মাহ',
+            timelineYear: 'এই বছৰ',
+            timelineOlder: 'পুৰণি স্মৃতিসমূহ',
+            caregiverAccessTitle: 'তত্ত্বাৱধায়কৰ প্ৰৱেশাধিকাৰ আৰু গোপনীয়তা',
+            caregiverAccessDesc: 'আপুনি ইয়াত স্পষ্ট অনুমতি দিলেহে তত্ত্বাৱধায়কে আপোনাৰ স্মৃতি ভঁৰাল চাব পাৰিব।',
+            grantAccessLabel: 'তত্ত্বাৱধায়কক স্মৃতি ভঁৰাল চোৱাৰ অনুমতি দিয়ক',
+            emergencyModeLabel: 'জৰুৰীকালীন অৱস্থা (প্ৰয়োজনত জৰুৰী প্ৰৱেশাধিকাৰ)',
+            auditLogTitle: 'প্ৰৱেশৰ ইতিহাস (অডিট লগ)',
+            auditLogEmpty: 'এতিয়ালৈকে কোনো তত্ত্বাৱধায়কৰ কাৰ্যকলাপ লিপিবদ্ধ হোৱা নাই।',
+            viewDetails: 'কাহিনী পঢ়ক',
+            closeModal: 'বন্ধ কৰক',
+            recordAudioNote: 'কণ্ঠ ৰেকৰ্ড কৰক',
+            stopRecordingAudio: 'অডিঅ’ বন্ধ কৰক',
+            audioRecordedNotice: 'কণ্ঠ সফলতাৰে ৰেকৰ্ড কৰা হ’ল',
 
             editMemory: 'স্মৃতি সম্পাদনা কৰক',
             addMemory: 'এটা স্মৃতি যোগ কৰক',
@@ -1854,9 +2008,9 @@ const translations = {
             memoryDate: 'স্মৃতিৰ তাৰিখ',
 
             titlePlaceholder:
-                'যেনে: আগ্ৰালৈ পৰিয়ালৰ ভ্ৰমণ',
+                'যেনে: শ্বিলঙৰ চাহ বাগিচালৈ পৰিয়ালৰ ভ্ৰমণ',
             descriptionPlaceholder:
-                'এই স্মৃতিৰ বিষয়ে লিখক...',
+                'আপোনাৰ কাহিনী লিখক বা কওক। এআইয়ে মানুহ, স্থান আৰু স্মৃতিসমূহ স্বয়ংক্ৰিয়ভাৱে সজাই তুলিব...',
 
             saving: 'সংৰক্ষণ হৈ আছে...',
             updateMemory: 'স্মৃতি আপডেট কৰক',
@@ -1865,7 +2019,7 @@ const translations = {
 
             savedMemories: 'সংৰক্ষিত স্মৃতিসমূহ',
             savedMemoriesDescription:
-                'আপোনাৰ স্মৃতিসমূহ আপোনাৰ একাউণ্টত সুৰক্ষিতভাৱে সংৰক্ষণ কৰা হয়।',
+                'আপোনাৰ স্মৃতিসমূহ আপোনাৰ ব্যক্তিগত একাউণ্টত সম্পূৰ্ণ সুৰক্ষিত।',
 
             memory: 'স্মৃতি',
             memoriesPlural: 'স্মৃতিসমূহ',
@@ -1891,7 +2045,7 @@ const translations = {
                 'স্মৃতি মচি পেলাব পৰা নগ’ল।',
 
             saveSuccess:
-                'স্মৃতি সফলভাৱে সংৰক্ষণ কৰা হ’ল।',
+                'স্মৃতি এআই সংগঠনৰ সৈতে সফলভাৱে সংৰক্ষণ কৰা হ’ল।',
             updateSuccess:
                 'স্মৃতি সফলভাৱে আপডেট কৰা হ’ল।',
             deleteSuccess:
@@ -1907,7 +2061,21 @@ const translations = {
                 Travel: 'ভ্ৰমণ',
                 Celebration: 'উদযাপন',
                 Childhood: 'শৈশৱ',
+                Birthday: 'জন্মদিন',
+                Wedding: 'বিবাহ',
+                Festival: 'উৎসৱ',
+                Medical: 'চিকিৎসা',
+                'Daily Activity': 'দৈনন্দিন কাৰ্য',
                 Other: 'অন্যান্য',
+            },
+            moods: {
+                Joyful: 'আনন্দিত 😊',
+                Peaceful: 'শান্ত 🌿',
+                Nostalgic: 'পুৰণি সোঁৱৰণী 🕰️',
+                Grateful: 'কৃতজ্ঞ 🙏',
+                Loving: 'মৰমিয়াল ❤️',
+                Energetic: 'উৎসাহী ⚡',
+                Reflective: 'চিন্তাশীল 💭',
             },
         },
 

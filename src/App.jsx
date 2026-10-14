@@ -189,6 +189,8 @@ function App() {
     setRecommendedDifficulty,
   ] = useState(null)
 
+  const [memoryInitialTab, setMemoryInitialTab] = useState('all')
+
   // ==========================================
   // Current date/time
   // ==========================================
@@ -526,9 +528,11 @@ function App() {
         stopReadingLabel={
           currentText.stopReading
         }
-        onBack={() =>
+        initialTab={memoryInitialTab}
+        onBack={() => {
+          setMemoryInitialTab('all')
           setPage('dashboard')
-        }
+        }}
       />
     )
   } else if (page === 'reminders') {
@@ -797,23 +801,63 @@ function App() {
         />
 
 
-        {/* Memories */}
+        {/* Memories (AI Memory Vault) */}
 
         <DashboardCard
           icon="/illustrations/memories.svg"
           title={
-            currentText.memories
+            currentText.memoriesPage?.vaultTitle || currentText.memories
           }
           description={
-            currentText.memoriesDescription
+            currentText.memoriesPage?.vaultSubtitle || currentText.memoriesDescription
           }
           buttonLabel={
             currentText.openMemories
           }
-          onClick={() =>
+          onClick={() => {
+            setMemoryInitialTab('all')
             setPage('memories')
-          }
-        />
+          }}
+        >
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', margin: '14px 0 16px' }}>
+            <button
+              type="button"
+              className="memory-filter-chip-btn"
+              onClick={(e) => {
+                e.stopPropagation()
+                setMemoryInitialTab('search')
+                setPage('memories')
+              }}
+              style={{ fontSize: '0.85rem', padding: '6px 12px', minHeight: '38px', background: '#fdf2ee', borderColor: '#f8d2c7', color: '#9a5e50' }}
+            >
+              🔍 {currentText.memoriesPage?.tabSearch || 'Semantic Search'}
+            </button>
+            <button
+              type="button"
+              className="memory-filter-chip-btn"
+              onClick={(e) => {
+                e.stopPropagation()
+                setMemoryInitialTab('timeline')
+                setPage('memories')
+              }}
+              style={{ fontSize: '0.85rem', padding: '6px 12px', minHeight: '38px', background: '#f5f3ff', borderColor: '#ddd6fe', color: '#5b21b6' }}
+            >
+              ⏳ {currentText.memoriesPage?.tabTimeline || 'Photo Timeline'}
+            </button>
+            <button
+              type="button"
+              className="memory-filter-chip-btn"
+              onClick={(e) => {
+                e.stopPropagation()
+                setMemoryInitialTab('all')
+                setPage('memories')
+              }}
+              style={{ fontSize: '0.85rem', padding: '6px 12px', minHeight: '38px', background: '#ecfdf5', borderColor: '#a7f3d0', color: '#065f46' }}
+            >
+              🎙️ {currentText.memoriesPage?.voiceAdd || 'Voice Story'}
+            </button>
+          </div>
+        </DashboardCard>
 
 
         {/* Reminders */}

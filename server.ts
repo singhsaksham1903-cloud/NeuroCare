@@ -5,6 +5,15 @@ import bcrypt from 'bcryptjs';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import {
+  MemoryRecord,
+  MemoryPermissionRecord,
+  MemoryAuditLogRecord,
+  MemorySearchHistoryRecord,
+  organizeMemoryWithAI,
+  semanticSearchMemories,
+  findRelatedMemories
+} from './src/server/memoryVaultEngine';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,18 +58,6 @@ interface GameSessionRecord {
   created_at: string;
 }
 
-interface MemoryRecord {
-  id: number;
-  user_id: number;
-  title: string;
-  description: string;
-  category: string;
-  memory_date: string | null;
-  image_data: string | null;
-  client_mutation_id?: string | null;
-  created_at: string;
-}
-
 interface ReminderRecord {
   id: number;
   user_id: number;
@@ -84,9 +81,12 @@ interface CaregiverLinkRecord {
 // Global In-Memory Stores
 let nextUserId = 3;
 let nextSessionId = 30;
-let nextMemoryId = 5;
+let nextMemoryId = 6;
 let nextReminderId = 5;
 let nextLinkId = 2;
+let nextPermissionId = 2;
+let nextAuditLogId = 2;
+let nextSearchHistoryId = 2;
 
 const users: UserRecord[] = [
   {
@@ -389,36 +389,154 @@ const gameSessions: GameSessionRecord[] = [
   },
 ];
 
-const memories: MemoryRecord[] = [
+const rawSeedMemories = [
   {
     id: 1,
     user_id: 1,
     title: 'Family Trip to Shillong',
-    description: 'We visited the beautiful hills and tea gardens together with Priya and Rohan in 1985.',
+    description: 'We visited the beautiful hills and tea gardens together with Priya and Rohan in 1985. The mountain air was so crisp and pleasant.',
     category: 'Travel',
     memory_date: '1985-05-15',
+    time: '11:00',
+    location: 'Shillong, Meghalaya',
+    mood: 'Peaceful',
     image_data: null,
+    images: [] as string[],
+    audio_data: null,
+    audio_duration: null,
+    is_favorite: true,
     created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 20 * 86400000).toISOString(),
   },
   {
     id: 2,
     user_id: 1,
     title: 'Diwali in Jaipur',
-    description: 'Lighting clay diyas and making fresh besan laddus with my mother.',
-    category: 'Celebration',
+    description: 'Lighting clay diyas and making fresh besan laddus with my mother. The entire courtyard was glowing with warm golden lights.',
+    category: 'Festival',
     memory_date: '1992-11-04',
+    time: '19:30',
+    location: 'Jaipur, Rajasthan',
+    mood: 'Joyful',
     image_data: null,
+    images: [] as string[],
+    audio_data: null,
+    audio_duration: null,
+    is_favorite: true,
     created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 15 * 86400000).toISOString(),
   },
   {
     id: 3,
     user_id: 1,
     title: 'Our Home Garden Tulsi',
-    description: 'Planting sacred Tulsi and jasmine flowers in the verandah.',
-    category: 'Home',
+    description: 'Planting sacred Tulsi and fragrant jasmine flowers in the verandah. Morning sunshine and fresh dew make every day serene.',
+    category: 'Daily Activity',
     memory_date: '2005-08-10',
+    time: '07:30',
+    location: 'Home Verandah, Guwahati',
+    mood: 'Grateful',
     image_data: null,
+    images: [] as string[],
+    audio_data: null,
+    audio_duration: null,
+    is_favorite: false,
     created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+  },
+  {
+    id: 4,
+    user_id: 1,
+    title: "Granddaughter Priya's Wedding",
+    description: 'My daughter Priya’s daughter got married in Guwahati. Traditional Assamese Biya with golden Mekhela Sador, relatives singing, and blessings from everyone.',
+    category: 'Wedding',
+    memory_date: '2024-02-18',
+    time: '16:00',
+    location: 'Guwahati, Assam',
+    mood: 'Loving',
+    image_data: null,
+    images: [] as string[],
+    audio_data: null,
+    audio_duration: null,
+    is_favorite: true,
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+  {
+    id: 5,
+    user_id: 1,
+    title: "Rahul's 5th Birthday Celebration",
+    description: 'Celebrating little grandson Rahul turning 5 years old. We cut a chocolate cake, sang birthday songs together, and he wore a festive red cap.',
+    category: 'Birthday',
+    memory_date: '2023-09-12',
+    time: '17:00',
+    location: 'Family Home, Guwahati',
+    mood: 'Joyful',
+    image_data: null,
+    images: [] as string[],
+    audio_data: null,
+    audio_duration: null,
+    is_favorite: false,
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+];
+
+const memories: MemoryRecord[] = rawSeedMemories.map((raw) => {
+  const analyzed = organizeMemoryWithAI({
+    title: raw.title,
+    description: raw.description,
+    category: raw.category,
+    memoryDate: raw.memory_date,
+    time: raw.time,
+    location: raw.location,
+    mood: raw.mood,
+  });
+  return {
+    ...raw,
+    title: analyzed.title,
+    category: analyzed.category,
+    mood: analyzed.mood,
+    location: raw.location || analyzed.location,
+    tags: analyzed.tags,
+    people: analyzed.people,
+    locations: analyzed.locations,
+    events: analyzed.events,
+    ai_summary: analyzed.ai_summary,
+    embedding: analyzed.embedding,
+  };
+});
+
+const memoryPermissions: MemoryPermissionRecord[] = [
+  {
+    id: 1,
+    elderly_id: 1,
+    caregiver_id: 2,
+    access_granted: true,
+    emergency_mode_enabled: false,
+    updated_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+  },
+];
+
+const memoryAuditLogs: MemoryAuditLogRecord[] = [
+  {
+    id: 1,
+    elderly_id: 1,
+    caregiver_id: 2,
+    caregiver_name: 'Dr. Ananya Sharma',
+    action: 'VIEW_MEMORIES',
+    details: 'Reviewed memory vault timeline during weekly cognitive check-in',
+    timestamp: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+];
+
+const memorySearchHistory: MemorySearchHistoryRecord[] = [
+  {
+    id: 1,
+    user_id: 1,
+    query: 'Trip to Shillong',
+    result_count: 1,
+    timestamp: new Date(Date.now() - 86400000).toISOString(),
   },
 ];
 
@@ -670,25 +788,58 @@ app.get('/game-sessions', authenticateToken, (req: AuthRequest, res) => {
 });
 
 // ============================================================
-// Memories Endpoints (/memories)
+// AI-Assisted Personal Memory Vault Endpoints (/memories)
 // ============================================================
 
 function serializeMemory(item: MemoryRecord) {
+  const images = item.images && item.images.length > 0
+    ? item.images
+    : item.image_data
+      ? [item.image_data]
+      : [];
+
   return {
     id: item.id,
     title: item.title,
     description: item.description,
     category: item.category,
     memoryDate: item.memory_date,
-    imageData: item.image_data,
+    time: item.time || null,
+    location: item.location || null,
+    mood: item.mood || 'Joyful',
+    imageData: item.image_data || (images[0] ?? null),
+    images,
+    audioData: item.audio_data || null,
+    audioDuration: item.audio_duration ?? null,
+    tags: item.tags || [],
+    people: item.people || [],
+    locations: item.locations || [],
+    events: item.events || [],
+    aiSummary: item.ai_summary || '',
+    isFavorite: item.is_favorite ?? false,
     clientMutationId: item.client_mutation_id ?? null,
     created_at: item.created_at,
+    updated_at: item.updated_at || item.created_at,
   };
 }
 
 app.post('/memories', authenticateToken, (req: AuthRequest, res) => {
   const user = req.user!;
-  const { title, description, category, memoryDate, imageData, clientMutationId } = req.body;
+  const {
+    title,
+    description,
+    category,
+    memoryDate,
+    time,
+    location,
+    mood,
+    imageData,
+    images,
+    audioData,
+    audioDuration,
+    isFavorite,
+    clientMutationId
+  } = req.body;
 
   if (clientMutationId) {
     const existing = memories.find(
@@ -703,31 +854,93 @@ app.post('/memories', authenticateToken, (req: AuthRequest, res) => {
     }
   }
 
+  // Run AI Organization Pipeline
+  const analyzed = organizeMemoryWithAI({
+    title,
+    description: description || '',
+    category,
+    memoryDate,
+    time,
+    location,
+    mood,
+  });
+
+  const photoList: string[] = Array.isArray(images) && images.length > 0
+    ? images
+    : imageData
+      ? [imageData]
+      : [];
+
+  const nowIso = new Date().toISOString();
+
   const newMemory: MemoryRecord = {
     id: nextMemoryId++,
     user_id: user.id,
-    title: title || 'Untitled Memory',
+    title: analyzed.title,
     description: description || '',
-    category: category || 'General',
+    category: analyzed.category,
     memory_date: memoryDate || null,
-    image_data: imageData || null,
+    time: time || null,
+    location: location || analyzed.location,
+    mood: analyzed.mood,
+    image_data: photoList[0] || null,
+    images: photoList,
+    audio_data: audioData || null,
+    audio_duration: audioDuration ? Number(audioDuration) : null,
+    tags: analyzed.tags,
+    people: analyzed.people,
+    locations: analyzed.locations,
+    events: analyzed.events,
+    ai_summary: analyzed.ai_summary,
+    embedding: analyzed.embedding,
+    is_favorite: Boolean(isFavorite),
     client_mutation_id: clientMutationId || null,
-    created_at: new Date().toISOString(),
+    created_at: nowIso,
+    updated_at: nowIso,
   };
 
   memories.unshift(newMemory);
 
   res.status(201).json({
-    message: 'Memory saved successfully',
+    message: 'Memory saved successfully with AI organization',
     memory: serializeMemory(newMemory),
   });
 });
 
 app.get('/memories', authenticateToken, (req: AuthRequest, res) => {
   const user = req.user!;
-  const userMemories = memories
-    .filter((m) => m.user_id === user.id)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  let userMemories = memories.filter((m) => m.user_id === user.id);
+
+  const { category, mood, favorite, search } = req.query;
+
+  // Semantic search via GET ?search=
+  if (search && typeof search === 'string' && search.trim()) {
+    const searchRes = semanticSearchMemories(search.trim(), userMemories);
+    return res.json({
+      count: searchRes.results.length,
+      query: search,
+      extracted_entities: searchRes.extracted_entities,
+      memories: searchRes.results.map((r) => ({
+        ...serializeMemory(r.memory),
+        semanticScore: r.score,
+        relevanceReason: r.relevance_reason,
+      })),
+    });
+  }
+
+  if (category && category !== 'All') {
+    userMemories = userMemories.filter((m) => m.category === category);
+  }
+
+  if (mood && mood !== 'All') {
+    userMemories = userMemories.filter((m) => m.mood === mood);
+  }
+
+  if (favorite === 'true') {
+    userMemories = userMemories.filter((m) => m.is_favorite);
+  }
+
+  userMemories.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   res.json({
     count: userMemories.length,
@@ -735,6 +948,230 @@ app.get('/memories', authenticateToken, (req: AuthRequest, res) => {
   });
 });
 
+// Single memory details
+app.get('/memories/:id', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  const memoryId = Number(req.params.id);
+  const memory = memories.find((m) => m.id === memoryId && m.user_id === user.id);
+
+  if (!memory) {
+    return res.status(404).json({ detail: 'Memory not found' });
+  }
+
+  const userMemories = memories.filter((m) => m.user_id === user.id);
+  const related = findRelatedMemories(memory, userMemories, 3);
+
+  res.json({
+    memory: serializeMemory(memory),
+    related: related.map((r) => ({
+      ...serializeMemory(r.memory),
+      similarityScore: r.score,
+      reason: r.reason,
+    })),
+  });
+});
+
+// Natural Language & Semantic Search
+app.post('/memories/search', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  const { query } = req.body;
+  const userMemories = memories.filter((m) => m.user_id === user.id);
+
+  const searchRes = semanticSearchMemories(query || '', userMemories);
+
+  if (query && query.trim()) {
+    memorySearchHistory.unshift({
+      id: nextSearchHistoryId++,
+      user_id: user.id,
+      query: query.trim(),
+      result_count: searchRes.results.length,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  res.json({
+    query: searchRes.query,
+    extracted_entities: searchRes.extracted_entities,
+    count: searchRes.results.length,
+    results: searchRes.results.map((r) => ({
+      ...serializeMemory(r.memory),
+      semanticScore: r.score,
+      relevanceReason: r.relevance_reason,
+    })),
+  });
+});
+
+// Related Memories
+app.get('/memories/:id/related', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  const memoryId = Number(req.params.id);
+  const memory = memories.find((m) => m.id === memoryId && m.user_id === user.id);
+
+  if (!memory) {
+    return res.status(404).json({ detail: 'Memory not found' });
+  }
+
+  const userMemories = memories.filter((m) => m.user_id === user.id);
+  const related = findRelatedMemories(memory, userMemories, 3);
+
+  res.json({
+    memoryId,
+    related: related.map((r) => ({
+      ...serializeMemory(r.memory),
+      similarityScore: r.score,
+      reason: r.reason,
+    })),
+  });
+});
+
+// Timeline View
+app.get('/memories-timeline', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  const userMemories = memories
+    .filter((m) => m.user_id === user.id)
+    .sort((a, b) => {
+      const dateA = a.memory_date ? new Date(a.memory_date).getTime() : new Date(a.created_at).getTime();
+      const dateB = b.memory_date ? new Date(b.memory_date).getTime() : new Date(b.created_at).getTime();
+      return dateB - dateA;
+    });
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfWeek = startOfToday - 7 * 86400000;
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const startOfYear = new Date(now.getFullYear(), 0, 1).getTime();
+
+  const groups: {
+    today: any[];
+    this_week: any[];
+    this_month: any[];
+    this_year: any[];
+    older: any[];
+  } = {
+    today: [],
+    this_week: [],
+    this_month: [],
+    this_year: [],
+    older: [],
+  };
+
+  for (const m of userMemories) {
+    const memTime = m.memory_date ? new Date(m.memory_date).getTime() : new Date(m.created_at).getTime();
+    const serialized = serializeMemory(m);
+
+    if (memTime >= startOfToday) {
+      groups.today.push(serialized);
+    } else if (memTime >= startOfWeek) {
+      groups.this_week.push(serialized);
+    } else if (memTime >= startOfMonth) {
+      groups.this_month.push(serialized);
+    } else if (memTime >= startOfYear) {
+      groups.this_year.push(serialized);
+    } else {
+      groups.older.push(serialized);
+    }
+  }
+
+  res.json({
+    total: userMemories.length,
+    groups,
+  });
+});
+
+// Toggle favorite
+app.post('/memories/:id/favorite', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  const memoryId = Number(req.params.id);
+  const memory = memories.find((m) => m.id === memoryId && m.user_id === user.id);
+
+  if (!memory) {
+    return res.status(404).json({ detail: 'Memory not found' });
+  }
+
+  memory.is_favorite = !memory.is_favorite;
+  memory.updated_at = new Date().toISOString();
+
+  res.json({
+    message: memory.is_favorite ? 'Memory added to favorites' : 'Memory removed from favorites',
+    isFavorite: memory.is_favorite,
+    memory: serializeMemory(memory),
+  });
+});
+
+// Caregiver Sharing & Permissions
+app.get('/memories-permissions', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  if (user.role !== 'elderly') {
+    return res.status(403).json({ detail: 'Only elderly users manage memory permissions.' });
+  }
+
+  const links = caregiverLinks.filter((l) => l.elderly_id === user.id && l.status === 'approved');
+  const result = links.map((l) => {
+    const caregiver = users.find((u) => u.id === l.caregiver_id);
+    const perm = memoryPermissions.find((p) => p.elderly_id === user.id && p.caregiver_id === l.caregiver_id);
+    return {
+      linkId: l.id,
+      caregiverId: l.caregiver_id,
+      caregiverName: caregiver?.full_name || 'Caregiver',
+      caregiverEmail: caregiver?.email || '',
+      accessGranted: perm ? perm.access_granted : true,
+      emergencyModeEnabled: perm ? perm.emergency_mode_enabled : false,
+      updatedAt: perm?.updated_at || l.created_at,
+    };
+  });
+
+  res.json({ permissions: result });
+});
+
+app.post('/memories-permissions', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  if (user.role !== 'elderly') {
+    return res.status(403).json({ detail: 'Only elderly users manage memory permissions.' });
+  }
+
+  const { caregiverId, accessGranted, emergencyModeEnabled } = req.body;
+  if (!caregiverId) {
+    return res.status(400).json({ detail: 'caregiverId is required.' });
+  }
+
+  let perm = memoryPermissions.find(
+    (p) => p.elderly_id === user.id && p.caregiver_id === Number(caregiverId)
+  );
+
+  if (!perm) {
+    perm = {
+      id: nextPermissionId++,
+      elderly_id: user.id,
+      caregiver_id: Number(caregiverId),
+      access_granted: accessGranted !== undefined ? Boolean(accessGranted) : true,
+      emergency_mode_enabled: emergencyModeEnabled !== undefined ? Boolean(emergencyModeEnabled) : false,
+      updated_at: new Date().toISOString(),
+    };
+    memoryPermissions.push(perm);
+  } else {
+    if (accessGranted !== undefined) perm.access_granted = Boolean(accessGranted);
+    if (emergencyModeEnabled !== undefined) perm.emergency_mode_enabled = Boolean(emergencyModeEnabled);
+    perm.updated_at = new Date().toISOString();
+  }
+
+  res.json({
+    message: 'Memory permissions updated successfully.',
+    permission: perm,
+  });
+});
+
+// Audit Logs
+app.get('/memories-audit-logs', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  const logs = memoryAuditLogs
+    .filter((l) => l.elderly_id === user.id || l.caregiver_id === user.id)
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, 30);
+
+  res.json({ count: logs.length, logs });
+});
+
+// Update Memory
 app.put('/memories/:id', authenticateToken, (req: AuthRequest, res) => {
   const user = req.user!;
   const memoryId = Number(req.params.id);
@@ -744,7 +1181,21 @@ app.put('/memories/:id', authenticateToken, (req: AuthRequest, res) => {
     return res.status(404).json({ detail: 'Memory not found' });
   }
 
-  const { title, description, category, memoryDate, imageData, clientMutationId } = req.body;
+  const {
+    title,
+    description,
+    category,
+    memoryDate,
+    time,
+    location,
+    mood,
+    imageData,
+    images,
+    audioData,
+    audioDuration,
+    isFavorite,
+    clientMutationId
+  } = req.body;
 
   if (clientMutationId && memory.client_mutation_id === clientMutationId) {
     return res.json({
@@ -754,12 +1205,48 @@ app.put('/memories/:id', authenticateToken, (req: AuthRequest, res) => {
     });
   }
 
-  if (title !== undefined) memory.title = title;
+  if (description !== undefined || title !== undefined) {
+    const analyzed = organizeMemoryWithAI({
+      title: title ?? memory.title,
+      description: description ?? memory.description,
+      category: category ?? memory.category,
+      memoryDate: memoryDate ?? memory.memory_date,
+      time: time ?? memory.time,
+      location: location ?? memory.location,
+      mood: mood ?? memory.mood,
+    });
+    memory.title = analyzed.title;
+    memory.category = analyzed.category;
+    memory.mood = analyzed.mood;
+    memory.location = location ?? analyzed.location;
+    memory.tags = analyzed.tags;
+    memory.people = analyzed.people;
+    memory.locations = analyzed.locations;
+    memory.events = analyzed.events;
+    memory.ai_summary = analyzed.ai_summary;
+    memory.embedding = analyzed.embedding;
+  }
+
   if (description !== undefined) memory.description = description;
-  if (category !== undefined) memory.category = category;
   if (memoryDate !== undefined) memory.memory_date = memoryDate;
-  if (imageData !== undefined) memory.image_data = imageData;
+  if (time !== undefined) memory.time = time;
+  if (location !== undefined) memory.location = location;
+  if (mood !== undefined) memory.mood = mood;
+  if (imageData !== undefined) {
+    memory.image_data = imageData;
+    if (imageData && (!memory.images || memory.images.length === 0)) {
+      memory.images = [imageData];
+    }
+  }
+  if (images !== undefined && Array.isArray(images)) {
+    memory.images = images;
+    memory.image_data = images[0] || null;
+  }
+  if (audioData !== undefined) memory.audio_data = audioData;
+  if (audioDuration !== undefined) memory.audio_duration = audioDuration ? Number(audioDuration) : null;
+  if (isFavorite !== undefined) memory.is_favorite = Boolean(isFavorite);
   if (clientMutationId !== undefined) memory.client_mutation_id = clientMutationId;
+  memory.updated_at = new Date().toISOString();
 
   res.json({
     message: 'Memory updated successfully',
@@ -1054,12 +1541,86 @@ app.get('/caregiver-links/:id/data', authenticateToken, (req: AuthRequest, res) 
       completed: r.completed,
     }));
 
+  const perm = memoryPermissions.find(
+    (p) => p.elderly_id === elderly.id && p.caregiver_id === user.id
+  );
+  const memoryAccessGranted = perm ? (perm.access_granted || perm.emergency_mode_enabled) : true;
+  let accessibleMemories: any[] = [];
+  if (memoryAccessGranted) {
+    accessibleMemories = memories
+      .filter((m) => m.user_id === elderly.id)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 10)
+      .map(serializeMemory);
+  }
+
   res.json({
     link: { id: link.id, status: link.status },
     elderly_user: { id: elderly.id, full_name: elderly.full_name },
     sessions,
     memory_count,
+    memory_permission: {
+      access_granted: perm ? perm.access_granted : true,
+      emergency_mode_enabled: perm ? perm.emergency_mode_enabled : false,
+      can_view: memoryAccessGranted,
+    },
+    memories: accessibleMemories,
     reminders: remindersData,
+  });
+});
+
+app.get('/caregiver-links/:id/memories', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  if (user.role !== 'caregiver') {
+    return res.status(403).json({ detail: 'Only caregiver accounts can access linked elderly memories.' });
+  }
+
+  const linkId = Number(req.params.id);
+  const link = caregiverLinks.find(
+    (l) => l.id === linkId && l.caregiver_id === user.id && l.status === 'approved'
+  );
+
+  if (!link) {
+    return res.status(404).json({ detail: 'Approved caregiver link not found.' });
+  }
+
+  const elderly = users.find((u) => u.id === link.elderly_id && u.is_active);
+  if (!elderly) {
+    return res.status(404).json({ detail: 'Linked elderly user was not found.' });
+  }
+
+  const perm = memoryPermissions.find(
+    (p) => p.elderly_id === elderly.id && p.caregiver_id === user.id
+  );
+  const isAllowed = perm ? (perm.access_granted || perm.emergency_mode_enabled) : true;
+
+  if (!isAllowed) {
+    return res.status(403).json({
+      detail: 'Access to Memory Vault has been kept private by the user.',
+      accessGranted: false,
+    });
+  }
+
+  // Audit Log Entry
+  memoryAuditLogs.unshift({
+    id: nextAuditLogId++,
+    elderly_id: elderly.id,
+    caregiver_id: user.id,
+    caregiver_name: user.full_name,
+    action: perm?.emergency_mode_enabled && !perm.access_granted ? 'EMERGENCY_ACCESS' : 'VIEW_MEMORIES',
+    details: 'Viewed Memory Vault stories and photos via Caregiver Dashboard',
+    timestamp: new Date().toISOString(),
+  });
+
+  const elderlyMemories = memories
+    .filter((m) => m.user_id === elderly.id)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  res.json({
+    count: elderlyMemories.length,
+    elderly_name: elderly.full_name,
+    emergency_mode: perm?.emergency_mode_enabled ?? false,
+    memories: elderlyMemories.map(serializeMemory),
   });
 });
 
@@ -1981,7 +2542,7 @@ async function startServer() {
   if (!isProduction) {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, allowedHosts: true },
       appType: 'spa',
     });
 
