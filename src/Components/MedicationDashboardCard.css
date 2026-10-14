@@ -1,0 +1,225 @@
+/* ============================================================
+   Medication Dashboard Card Styling
+   ============================================================ */
+
+.med-dashboard-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  border-top: 5px solid #0d9488;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.med-dashboard-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 32px rgba(13, 148, 136, 0.15);
+}
+
+.med-dash-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.med-dash-pending-badge {
+  background-color: #fee2e2;
+  color: #991b1b;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  border: 1px solid #fecaca;
+}
+
+.med-dash-completed-badge {
+  background-color: #d1fae5;
+  color: #065f46;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  border: 1px solid #a7f3d0;
+}
+
+.med-dash-snapshot {
+  margin: 12px 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.med-dash-stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f0fdfa;
+  border: 1px solid #ccfbf1;
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+
+.med-dash-stat-label {
+  font-size: 0.88rem;
+  color: #0f766e;
+  font-weight: 600;
+  display: block;
+}
+
+.med-dash-stat-value {
+  font-size: 1.05rem;
+  color: #134e4a;
+}
+
+.med-dash-adherence-pill {
+  background-color: #ffffff;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+/* Next Upcoming Reminder */
+.med-dash-next-reminder {
+  background: linear-gradient(135deg, #e0f2fe 0%, #f0fdfa 100%);
+  border: 1.5px solid #bae6fd;
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.med-dash-next-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 170px;
+}
+
+.med-dash-next-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0284c7;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.med-dash-next-title {
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.med-dash-next-sub {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 0.88rem;
+}
+
+.med-dash-time-tag {
+  font-weight: 700;
+  color: #b45309;
+}
+
+.med-dash-food-tag {
+  color: #065f46;
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.med-dash-quick-taken-btn {
+  background-color: #0d9488;
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3);
+  transition: all 0.15s ease;
+  min-height: 40px;
+}
+
+.med-dash-quick-taken-btn:hover:not(:disabled) {
+  background-color: #0f766e;
+  transform: translateY(-1px);
+}
+
+.med-dash-all-done-banner {
+  background-color: #ecfdf5;
+  border: 1px dashed #6ee7b7;
+  color: #065f46;
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.med-dash-empty-banner {
+  background-color: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  font-size: 0.92rem;
+  padding: 10px 14px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.med-dash-feedback {
+  background-color: #dcfce7;
+  border: 1px solid #86efac;
+  color: #166534;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-align: center;
+  animation: medAlertFadeIn 0.2s ease;
+}
+
+/* Actions Row */
+.med-dash-actions-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: auto;
+}
+
+.med-dash-open-btn {
+  flex: 1;
+}
+
+.med-dash-add-quick-btn {
+  background-color: #f0fdfa;
+  border: 2px solid #0d9488;
+  color: #0d9488;
+  font-weight: 700;
+  font-size: 0.95rem;
+  min-height: 48px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.med-dash-add-quick-btn:hover {
+  background-color: #0d9488;
+  color: #ffffff;
+}

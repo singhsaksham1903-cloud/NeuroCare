@@ -1,0 +1,293 @@
+/* ============================================================
+   Medication Reminder Alert Overlay & Accessible Dialog
+   ============================================================ */
+
+.med-alert-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: medAlertFadeIn 0.25s ease-out;
+}
+
+@keyframes medAlertFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.med-alert-card {
+  background: #ffffff;
+  border-radius: 28px;
+  box-shadow: 0 25px 50px -12px rgba(14, 116, 144, 0.35), 0 0 0 1px rgba(14, 165, 233, 0.2);
+  width: 100%;
+  max-width: 540px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  border-top: 8px solid #0e9488;
+}
+
+/* Header */
+.med-alert-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.med-alert-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f0fdfa;
+  border: 1.5px solid #99f6e4;
+  color: #0f766e;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.med-alert-icon {
+  font-size: 1.3rem;
+  animation: medBellRing 2s ease infinite;
+  display: inline-block;
+  transform-origin: top center;
+}
+
+@keyframes medBellRing {
+  0%, 100% { transform: rotate(0); }
+  10%, 30% { transform: rotate(12deg); }
+  20%, 40% { transform: rotate(-12deg); }
+  50% { transform: rotate(0); }
+}
+
+/* Body */
+.med-alert-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  background: linear-gradient(135deg, #f0fdfa 0%, #f8fafc 100%);
+  padding: 24px;
+  border-radius: 20px;
+  border: 1.5px solid #ccfbf1;
+}
+
+.med-alert-avatar {
+  font-size: 3rem;
+  line-height: 1;
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 18px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.med-alert-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.med-alert-name {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.med-alert-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.med-alert-dosage {
+  background: #0284c7;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 4px 12px;
+  border-radius: 8px;
+}
+
+.med-alert-type {
+  background: #e2e8f0;
+  color: #334155;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.med-alert-time {
+  background: #fef3c7;
+  color: #92400e;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.med-alert-instruction {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #065f46;
+  font-size: 1.1rem;
+  margin-top: 4px;
+}
+
+.med-alert-inst-icon {
+  font-size: 1.2rem;
+}
+
+.med-alert-purpose {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+  color: #64748b;
+}
+
+/* Actions */
+.med-alert-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.med-alert-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 14px 24px;
+  border-radius: 16px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  border: 2px solid transparent;
+}
+
+.med-alert-btn:focus-visible {
+  outline: 4px solid #0284c7;
+  outline-offset: 2px;
+}
+
+/* Taken Button - Big and prominent */
+.med-alert-btn--taken {
+  background-color: #0d9488;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.4);
+}
+
+.med-alert-btn--taken:hover:not(:disabled) {
+  background-color: #0f766e;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(13, 148, 136, 0.45);
+}
+
+/* Snooze Button */
+.med-alert-btn--snooze {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border-color: #bae6fd;
+}
+
+.med-alert-btn--snooze:hover:not(:disabled) {
+  background-color: #bae6fd;
+  color: #0c4a6e;
+}
+
+/* Snooze expansion */
+.med-alert-snooze-options {
+  background-color: #f8fafc;
+  border: 2px solid #cbd5e1;
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.med-alert-snooze-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.med-alert-snooze-btns {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.med-alert-snooze-opt {
+  flex: 1;
+  min-height: 48px;
+  background-color: #ffffff;
+  border: 2px solid #0284c7;
+  color: #0284c7;
+  font-weight: 700;
+  font-size: 1.05rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.med-alert-snooze-opt:hover {
+  background-color: #0284c7;
+  color: #ffffff;
+}
+
+.med-alert-snooze-cancel {
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  color: #64748b;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+/* Skip Button */
+.med-alert-btn--skip {
+  background-color: transparent;
+  color: #64748b;
+  border: 2px solid #e2e8f0;
+  font-size: 1.05rem;
+  min-height: 48px;
+}
+
+.med-alert-btn--skip:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .med-alert-overlay,
+  .med-alert-icon,
+  .med-alert-btn {
+    animation: none !important;
+    transition: none !important;
+  }
+}

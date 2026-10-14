@@ -1,0 +1,279 @@
+/* ============================================================
+   Medication Reminder Modal (High-Contrast, Accessible Elder UI)
+   ============================================================ */
+
+.med-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 9999;
+  animation: medFadeIn 0.25s ease-out;
+}
+
+@keyframes medFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.med-modal-container {
+  background: #ffffff;
+  border-radius: 28px;
+  max-width: 540px;
+  width: 100%;
+  box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35);
+  border: 3px solid #2dd4bf;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: medSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes medSlideUp {
+  from {
+    transform: translateY(20px) scale(0.96);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.med-modal-header {
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  color: #ffffff;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.med-modal-icon-badge {
+  font-size: 2.2rem;
+  background: rgba(255, 255, 255, 0.2);
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.med-modal-eyebrow {
+  display: block;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: #ccfbf1;
+  margin-bottom: 4px;
+}
+
+.med-modal-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.med-modal-body {
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.med-modal-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.med-modal-detail-card {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.med-modal-detail-card--highlight {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.med-modal-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.med-modal-value {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.med-modal-purpose-banner {
+  background: #fefce8;
+  border: 1.5px solid #fef08a;
+  border-radius: 16px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #854d0e;
+  font-size: 1rem;
+}
+
+.med-modal-purpose-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.med-modal-purpose-banner p {
+  margin: 0;
+}
+
+.med-modal-gentle-tip {
+  font-size: 1rem;
+  color: #475569;
+  margin: 0;
+  text-align: center;
+  font-style: italic;
+}
+
+.med-modal-actions {
+  background: #f8fafc;
+  border-top: 1.5px solid #e2e8f0;
+  padding: 20px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.med-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 12px 24px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  font-family: inherit;
+  text-align: center;
+}
+
+.med-btn:focus-visible {
+  outline: 3px solid #0284c7;
+  outline-offset: 3px;
+}
+
+.med-btn--take {
+  background: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+}
+
+.med-btn--take:hover:not(:disabled) {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+.med-btn--snooze {
+  background: #f1f5f9;
+  color: #334155;
+  border: 2px solid #cbd5e1;
+}
+
+.med-btn--snooze:hover:not(:disabled) {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.med-snooze-options-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  padding: 12px 14px;
+  border-radius: 16px;
+}
+
+.med-snooze-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #475569;
+  text-align: center;
+}
+
+.med-snooze-chips {
+  display: flex;
+  gap: 8px;
+}
+
+.med-snooze-chip {
+  flex: 1;
+  min-height: 44px;
+  border: 2px solid #cbd5e1;
+  background: #f8fafc;
+  color: #1e293b;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.med-snooze-chip:hover {
+  background: #e0f2fe;
+  border-color: #38bdf8;
+  color: #0369a1;
+}
+
+.med-btn--skip {
+  background: transparent;
+  color: #64748b;
+  font-size: 1rem;
+  font-weight: 600;
+  min-height: 42px;
+  padding: 6px 16px;
+}
+
+.med-btn--skip:hover:not(:disabled) {
+  color: #dc2626;
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .med-modal-details-grid {
+    grid-template-columns: 1fr;
+  }
+  .med-modal-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .med-modal-overlay,
+  .med-modal-container {
+    animation: none;
+  }
+}

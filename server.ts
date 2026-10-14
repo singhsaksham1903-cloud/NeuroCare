@@ -97,6 +97,48 @@ interface CaregiverReportPermissionRecord {
   updated_at: string;
 }
 
+interface MedicationRecord {
+  id: number;
+  user_id: number;
+  name: string;
+  dosage: string;
+  medicine_type: 'Tablet' | 'Capsule' | 'Syrup' | 'Injection' | 'Drops' | 'Other';
+  purpose: string;
+  frequency: 'Once Daily' | 'Twice Daily' | 'Three Times Daily' | 'Every X Hours' | 'Specific Days of Week' | 'Custom Times';
+  start_date: string;
+  end_date: string | null;
+  reminder_times: string[];
+  food_timing: 'Before Food' | 'After Food' | 'With Food' | 'No Preference';
+  specific_days?: string[];
+  interval_hours?: number | null;
+  is_active: boolean;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface MedicationLogRecord {
+  id: number;
+  user_id: number;
+  medication_id: number;
+  medicine_name: string;
+  dosage: string;
+  scheduled_time: string;
+  status: 'taken' | 'missed' | 'skipped' | 'delayed' | 'snoozed';
+  taken_time: string | null;
+  notes?: string;
+  logged_at: string;
+}
+
+interface MedicationPermissionRecord {
+  id: number;
+  elderly_id: number;
+  caregiver_id: number;
+  access_granted: boolean;
+  missed_alerts_enabled: boolean;
+  updated_at: string;
+}
+
 // Global In-Memory Stores
 let nextUserId = 3;
 let nextSessionId = 30;
@@ -107,6 +149,9 @@ let nextPermissionId = 2;
 let nextReportPermissionId = 2;
 let nextAuditLogId = 2;
 let nextSearchHistoryId = 2;
+let nextMedicationId = 5;
+let nextMedicationLogId = 20;
+let nextMedicationPermissionId = 2;
 
 const caregiverReportPermissions: CaregiverReportPermissionRecord[] = [
   {
@@ -600,6 +645,268 @@ const reminders: ReminderRecord[] = [
     due_datetime: new Date(Date.now() - 2 * 3600000).toISOString(),
     completed: true,
     created_at: new Date(Date.now() - 6 * 86400000).toISOString(),
+  },
+];
+
+const todayDateIso = new Date().toISOString().split('T')[0];
+const yesterdayDateIso = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+const twoDaysAgoDateIso = new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0];
+const threeDaysAgoDateIso = new Date(Date.now() - 3 * 86400000).toISOString().split('T')[0];
+
+const medications: MedicationRecord[] = [
+  {
+    id: 1,
+    user_id: 1,
+    name: 'Telmisartan',
+    dosage: '40 mg',
+    medicine_type: 'Tablet',
+    purpose: 'Blood pressure maintenance',
+    frequency: 'Once Daily',
+    start_date: '2025-01-01',
+    end_date: null,
+    reminder_times: ['08:30'],
+    food_timing: 'After Food',
+    is_active: true,
+    notes: 'Take with warm water after breakfast',
+    created_at: new Date(Date.now() - 60 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 60 * 86400000).toISOString(),
+  },
+  {
+    id: 2,
+    user_id: 1,
+    name: 'Metformin',
+    dosage: '500 mg',
+    medicine_type: 'Tablet',
+    purpose: 'Blood sugar regulation',
+    frequency: 'Twice Daily',
+    start_date: '2025-01-01',
+    end_date: null,
+    reminder_times: ['09:00', '20:30'],
+    food_timing: 'After Food',
+    is_active: true,
+    notes: 'Take after morning and evening meals',
+    created_at: new Date(Date.now() - 60 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 60 * 86400000).toISOString(),
+  },
+  {
+    id: 3,
+    user_id: 1,
+    name: 'Calcium + Vitamin D3',
+    dosage: '500 mg / 250 IU',
+    medicine_type: 'Capsule',
+    purpose: 'Bone density and joint strength',
+    frequency: 'Once Daily',
+    start_date: '2025-01-01',
+    end_date: null,
+    reminder_times: ['13:30'],
+    food_timing: 'After Food',
+    is_active: true,
+    notes: 'Take post-lunch',
+    created_at: new Date(Date.now() - 45 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 45 * 86400000).toISOString(),
+  },
+  {
+    id: 4,
+    user_id: 1,
+    name: 'Carboxymethylcellulose Eye Drops',
+    dosage: '2 drops each eye',
+    medicine_type: 'Drops',
+    purpose: 'Dry eyes and ocular comfort',
+    frequency: 'Twice Daily',
+    start_date: '2025-02-01',
+    end_date: null,
+    reminder_times: ['07:30', '21:30'],
+    food_timing: 'No Preference',
+    is_active: true,
+    notes: 'Rest eyes for 2 minutes after application',
+    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+  },
+];
+
+const medicationPermissions: MedicationPermissionRecord[] = [
+  {
+    id: 1,
+    elderly_id: 1,
+    caregiver_id: 2,
+    access_granted: true,
+    missed_alerts_enabled: true,
+    updated_at: new Date(Date.now() - 25 * 86400000).toISOString(),
+  },
+];
+
+const medicationLogs: MedicationLogRecord[] = [
+  // Today's morning dose taken
+  {
+    id: 1,
+    user_id: 1,
+    medication_id: 1,
+    medicine_name: 'Telmisartan',
+    dosage: '40 mg',
+    scheduled_time: `${todayDateIso}T08:30:00`,
+    status: 'taken',
+    taken_time: `${todayDateIso}T08:34:12`,
+    notes: 'Taken on time with breakfast',
+    logged_at: `${todayDateIso}T08:34:12`,
+  },
+  {
+    id: 2,
+    user_id: 1,
+    medication_id: 4,
+    medicine_name: 'Carboxymethylcellulose Eye Drops',
+    dosage: '2 drops each eye',
+    scheduled_time: `${todayDateIso}T07:30:00`,
+    status: 'taken',
+    taken_time: `${todayDateIso}T07:32:00`,
+    notes: 'Morning drops applied',
+    logged_at: `${todayDateIso}T07:32:00`,
+  },
+  // Yesterday's logs
+  {
+    id: 3,
+    user_id: 1,
+    medication_id: 1,
+    medicine_name: 'Telmisartan',
+    dosage: '40 mg',
+    scheduled_time: `${yesterdayDateIso}T08:30:00`,
+    status: 'taken',
+    taken_time: `${yesterdayDateIso}T08:31:00`,
+    notes: '',
+    logged_at: `${yesterdayDateIso}T08:31:00`,
+  },
+  {
+    id: 4,
+    user_id: 1,
+    medication_id: 2,
+    medicine_name: 'Metformin',
+    dosage: '500 mg',
+    scheduled_time: `${yesterdayDateIso}T09:00:00`,
+    status: 'taken',
+    taken_time: `${yesterdayDateIso}T09:05:00`,
+    notes: '',
+    logged_at: `${yesterdayDateIso}T09:05:00`,
+  },
+  {
+    id: 5,
+    user_id: 1,
+    medication_id: 3,
+    medicine_name: 'Calcium + Vitamin D3',
+    dosage: '500 mg / 250 IU',
+    scheduled_time: `${yesterdayDateIso}T13:30:00`,
+    status: 'taken',
+    taken_time: `${yesterdayDateIso}T13:42:00`,
+    notes: '',
+    logged_at: `${yesterdayDateIso}T13:42:00`,
+  },
+  {
+    id: 6,
+    user_id: 1,
+    medication_id: 2,
+    medicine_name: 'Metformin',
+    dosage: '500 mg',
+    scheduled_time: `${yesterdayDateIso}T20:30:00`,
+    status: 'taken',
+    taken_time: `${yesterdayDateIso}T20:35:00`,
+    notes: '',
+    logged_at: `${yesterdayDateIso}T20:35:00`,
+  },
+  // 2 days ago: one missed
+  {
+    id: 7,
+    user_id: 1,
+    medication_id: 1,
+    medicine_name: 'Telmisartan',
+    dosage: '40 mg',
+    scheduled_time: `${twoDaysAgoDateIso}T08:30:00`,
+    status: 'taken',
+    taken_time: `${twoDaysAgoDateIso}T08:35:00`,
+    notes: '',
+    logged_at: `${twoDaysAgoDateIso}T08:35:00`,
+  },
+  {
+    id: 8,
+    user_id: 1,
+    medication_id: 2,
+    medicine_name: 'Metformin',
+    dosage: '500 mg',
+    scheduled_time: `${twoDaysAgoDateIso}T09:00:00`,
+    status: 'taken',
+    taken_time: `${twoDaysAgoDateIso}T09:10:00`,
+    notes: '',
+    logged_at: `${twoDaysAgoDateIso}T09:10:00`,
+  },
+  {
+    id: 9,
+    user_id: 1,
+    medication_id: 3,
+    medicine_name: 'Calcium + Vitamin D3',
+    dosage: '500 mg / 250 IU',
+    scheduled_time: `${twoDaysAgoDateIso}T13:30:00`,
+    status: 'missed',
+    taken_time: null,
+    notes: 'Out visiting family temple',
+    logged_at: `${twoDaysAgoDateIso}T17:00:00`,
+  },
+  {
+    id: 10,
+    user_id: 1,
+    medication_id: 2,
+    medicine_name: 'Metformin',
+    dosage: '500 mg',
+    scheduled_time: `${twoDaysAgoDateIso}T20:30:00`,
+    status: 'taken',
+    taken_time: `${twoDaysAgoDateIso}T20:45:00`,
+    notes: '',
+    logged_at: `${twoDaysAgoDateIso}T20:45:00`,
+  },
+  // 3 days ago: all taken
+  {
+    id: 11,
+    user_id: 1,
+    medication_id: 1,
+    medicine_name: 'Telmisartan',
+    dosage: '40 mg',
+    scheduled_time: `${threeDaysAgoDateIso}T08:30:00`,
+    status: 'taken',
+    taken_time: `${threeDaysAgoDateIso}T08:28:00`,
+    notes: '',
+    logged_at: `${threeDaysAgoDateIso}T08:28:00`,
+  },
+  {
+    id: 12,
+    user_id: 1,
+    medication_id: 2,
+    medicine_name: 'Metformin',
+    dosage: '500 mg',
+    scheduled_time: `${threeDaysAgoDateIso}T09:00:00`,
+    status: 'taken',
+    taken_time: `${threeDaysAgoDateIso}T09:02:00`,
+    notes: '',
+    logged_at: `${threeDaysAgoDateIso}T09:02:00`,
+  },
+  {
+    id: 13,
+    user_id: 1,
+    medication_id: 3,
+    medicine_name: 'Calcium + Vitamin D3',
+    dosage: '500 mg / 250 IU',
+    scheduled_time: `${threeDaysAgoDateIso}T13:30:00`,
+    status: 'taken',
+    taken_time: `${threeDaysAgoDateIso}T13:35:00`,
+    notes: '',
+    logged_at: `${threeDaysAgoDateIso}T13:35:00`,
+  },
+  {
+    id: 14,
+    user_id: 1,
+    medication_id: 2,
+    medicine_name: 'Metformin',
+    dosage: '500 mg',
+    scheduled_time: `${threeDaysAgoDateIso}T20:30:00`,
+    status: 'taken',
+    taken_time: `${threeDaysAgoDateIso}T20:31:00`,
+    notes: '',
+    logged_at: `${threeDaysAgoDateIso}T20:31:00`,
   },
 ];
 
@@ -1438,6 +1745,903 @@ app.delete('/reminders/:id', authenticateToken, (req: AuthRequest, res) => {
 
   reminders.splice(index, 1);
   res.json({ message: 'Reminder deleted successfully' });
+});
+
+// ============================================================
+// Medication Reminder System Endpoints (/medications)
+// ============================================================
+
+function serializeMedication(item: MedicationRecord) {
+  return {
+    id: item.id,
+    userId: item.user_id,
+    name: item.name,
+    dosage: item.dosage,
+    medicineType: item.medicine_type,
+    purpose: item.purpose,
+    frequency: item.frequency,
+    startDate: item.start_date,
+    endDate: item.end_date,
+    reminderTimes: item.reminder_times || [],
+    foodTiming: item.food_timing,
+    specificDays: item.specific_days || [],
+    intervalHours: item.interval_hours ?? null,
+    isActive: item.is_active,
+    notes: item.notes || '',
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+  };
+}
+
+function serializeMedicationLog(item: MedicationLogRecord) {
+  return {
+    id: item.id,
+    userId: item.user_id,
+    medicationId: item.medication_id,
+    medicineName: item.medicine_name,
+    dosage: item.dosage,
+    scheduledTime: item.scheduled_time,
+    status: item.status,
+    takenTime: item.taken_time,
+    notes: item.notes || '',
+    logged_at: item.logged_at,
+  };
+}
+
+function checkCaregiverMedicationAccess(caregiverId: number, elderlyId: number): boolean {
+  const link = caregiverLinks.find(
+    (l) => l.caregiver_id === caregiverId && l.elderly_id === elderlyId && l.status === 'approved'
+  );
+  if (!link) return false;
+
+  const perm = medicationPermissions.find(
+    (p) => p.caregiver_id === caregiverId && p.elderly_id === elderlyId
+  );
+  return perm ? perm.access_granted : true;
+}
+
+function getTodayDosesForUser(userId: number, targetDateStr = new Date().toISOString().split('T')[0]) {
+  const targetDate = new Date(`${targetDateStr}T00:00:00`);
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayName = dayNames[targetDate.getDay()];
+  const nowMs = Date.now();
+
+  const userMeds = medications.filter((m) => {
+    if (m.user_id !== userId || !m.is_active) return false;
+    if (m.start_date && m.start_date > targetDateStr) return false;
+    if (m.end_date && m.end_date < targetDateStr) return false;
+    if (m.frequency === 'Specific Days of Week' && m.specific_days && m.specific_days.length > 0) {
+      if (!m.specific_days.includes(dayName)) return false;
+    }
+    return true;
+  });
+
+  const doses: Array<{
+    id: string;
+    medication_id: number;
+    name: string;
+    dosage: string;
+    medicine_type: string;
+    purpose: string;
+    food_timing: string;
+    time: string;
+    scheduled_datetime: string;
+    status: 'taken' | 'missed' | 'skipped' | 'delayed' | 'snoozed' | 'pending';
+    taken_time: string | null;
+    log_id: number | null;
+    notes?: string;
+  }> = [];
+
+  for (const med of userMeds) {
+    const times = med.reminder_times && med.reminder_times.length > 0 ? med.reminder_times : ['09:00'];
+    for (const time of times) {
+      const scheduledDateTime = `${targetDateStr}T${time}:00`;
+      const scheduledMs = new Date(scheduledDateTime).getTime();
+
+      const log = medicationLogs.find(
+        (l) => l.user_id === userId && l.medication_id === med.id && l.scheduled_time.startsWith(`${targetDateStr}T${time}`)
+      );
+
+      let status: 'taken' | 'missed' | 'skipped' | 'delayed' | 'snoozed' | 'pending' = 'pending';
+      let takenTime: string | null = null;
+      let logId: number | null = null;
+      let notes: string | undefined = med.notes;
+
+      if (log) {
+        status = log.status;
+        takenTime = log.taken_time;
+        logId = log.id;
+        if (log.notes) notes = log.notes;
+      } else {
+        if (nowMs - scheduledMs > 90 * 60 * 1000) {
+          status = 'missed';
+        } else {
+          status = 'pending';
+        }
+      }
+
+      doses.push({
+        id: `${med.id}_${time}`,
+        medication_id: med.id,
+        name: med.name,
+        dosage: med.dosage,
+        medicine_type: med.medicine_type,
+        purpose: med.purpose,
+        food_timing: med.food_timing,
+        time,
+        scheduled_datetime: scheduledDateTime,
+        status,
+        taken_time: takenTime,
+        log_id: logId,
+        notes,
+      });
+    }
+  }
+
+  doses.sort((a, b) => a.time.localeCompare(b.time));
+
+  const totalDoses = doses.length;
+  const takenDoses = doses.filter((d) => d.status === 'taken').length;
+  const pendingDoses = doses.filter((d) => d.status === 'pending' || d.status === 'snoozed').length;
+  const missedDoses = doses.filter((d) => d.status === 'missed').length;
+  const skippedDoses = doses.filter((d) => d.status === 'skipped').length;
+
+  const nextDose = doses.find((d) => d.status === 'pending' || d.status === 'snoozed') || null;
+
+  return {
+    date: targetDateStr,
+    total_doses: totalDoses,
+    taken_doses: takenDoses,
+    pending_doses: pendingDoses,
+    missed_doses: missedDoses,
+    skipped_doses: skippedDoses,
+    adherence_percentage: totalDoses > 0 ? Math.round((takenDoses / totalDoses) * 100) : 100,
+    next_dose: nextDose,
+    doses,
+  };
+}
+
+// GET /medications
+app.get('/medications', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  let targetUserId = user.id;
+
+  if (req.query.elderly_id) {
+    const elderlyId = Number(req.query.elderly_id);
+    if (user.role === 'caregiver') {
+      if (!checkCaregiverMedicationAccess(user.id, elderlyId)) {
+        return res.status(403).json({ detail: 'Access to medications has not been authorized by the patient.' });
+      }
+      targetUserId = elderlyId;
+    } else if (elderlyId !== user.id) {
+      return res.status(403).json({ detail: 'Unauthorized access.' });
+    }
+  }
+
+  let list = medications.filter((m) => m.user_id === targetUserId);
+  if (req.query.active_only === 'true') {
+    list = list.filter((m) => m.is_active);
+  }
+
+  list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  res.json({
+    count: list.length,
+    medications: list.map(serializeMedication),
+  });
+});
+
+// POST /medications
+app.post('/medications', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  let targetUserId = user.id;
+
+  if (req.body.elderly_id) {
+    const elderlyId = Number(req.body.elderly_id);
+    if (user.role === 'caregiver') {
+      if (!checkCaregiverMedicationAccess(user.id, elderlyId)) {
+        return res.status(403).json({ detail: 'Caregiver has not been authorized to manage medications for this user.' });
+      }
+      targetUserId = elderlyId;
+    } else if (elderlyId !== user.id) {
+      return res.status(403).json({ detail: 'Unauthorized operation.' });
+    }
+  }
+
+  const {
+    name,
+    dosage,
+    medicineType,
+    medicine_type,
+    purpose,
+    frequency,
+    startDate,
+    start_date,
+    endDate,
+    end_date,
+    reminderTimes,
+    reminder_times,
+    foodTiming,
+    food_timing,
+    specificDays,
+    specific_days,
+    intervalHours,
+    interval_hours,
+    isActive,
+    is_active,
+    notes,
+  } = req.body;
+
+  if (!name || !dosage) {
+    return res.status(400).json({ detail: 'Medicine name and dosage are required.' });
+  }
+
+  const timesList: string[] = Array.isArray(reminderTimes)
+    ? reminderTimes
+    : Array.isArray(reminder_times)
+    ? reminder_times
+    : ['08:00'];
+
+  const nowIso = new Date().toISOString();
+  const todayStr = nowIso.split('T')[0];
+
+  const newMed: MedicationRecord = {
+    id: nextMedicationId++,
+    user_id: targetUserId,
+    name: String(name).trim(),
+    dosage: String(dosage).trim(),
+    medicine_type: medicineType || medicine_type || 'Tablet',
+    purpose: purpose ? String(purpose).trim() : '',
+    frequency: frequency || 'Once Daily',
+    start_date: startDate || start_date || todayStr,
+    end_date: endDate || end_date || null,
+    reminder_times: timesList.filter((t) => typeof t === 'string' && t.trim().length > 0),
+    food_timing: foodTiming || food_timing || 'After Food',
+    specific_days: specificDays || specific_days || [],
+    interval_hours: intervalHours ?? interval_hours ?? null,
+    is_active: isActive !== undefined ? Boolean(isActive) : is_active !== undefined ? Boolean(is_active) : true,
+    notes: notes || '',
+    created_at: nowIso,
+    updated_at: nowIso,
+  };
+
+  medications.unshift(newMed);
+
+  res.status(201).json({
+    message: 'Medication saved successfully',
+    medication: serializeMedication(newMed),
+  });
+});
+
+// GET /medications/today and GET /medications-today
+app.get(['/medications/today', '/medications-today'], authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  let targetUserId = user.id;
+
+  if (req.query.elderly_id) {
+    const elderlyId = Number(req.query.elderly_id);
+    if (user.role === 'caregiver') {
+      if (!checkCaregiverMedicationAccess(user.id, elderlyId)) {
+        return res.status(403).json({ detail: 'Access to medications has not been authorized.' });
+      }
+      targetUserId = elderlyId;
+    } else if (elderlyId !== user.id) {
+      return res.status(403).json({ detail: 'Unauthorized access.' });
+    }
+  }
+
+  const dateStr = typeof req.query.date === 'string' ? req.query.date : undefined;
+  const summary = getTodayDosesForUser(targetUserId, dateStr);
+
+  res.json(summary);
+});
+
+// GET /medications/history
+app.get('/medications/history', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  let targetUserId = user.id;
+
+  if (req.query.elderly_id) {
+    const elderlyId = Number(req.query.elderly_id);
+    if (user.role === 'caregiver') {
+      if (!checkCaregiverMedicationAccess(user.id, elderlyId)) {
+        return res.status(403).json({ detail: 'Access to medication history has not been authorized.' });
+      }
+      targetUserId = elderlyId;
+    } else if (elderlyId !== user.id) {
+      return res.status(403).json({ detail: 'Unauthorized access.' });
+    }
+  }
+
+  let logs = medicationLogs.filter((l) => l.user_id === targetUserId);
+
+  const { period = '30d', status = 'all', medication_id } = req.query;
+  const now = Date.now();
+
+  if (period === '7d') {
+    logs = logs.filter((l) => now - new Date(l.scheduled_time).getTime() <= 7 * 86400000);
+  } else if (period === '30d') {
+    logs = logs.filter((l) => now - new Date(l.scheduled_time).getTime() <= 30 * 86400000);
+  }
+
+  if (status && status !== 'all') {
+    logs = logs.filter((l) => l.status === status);
+  }
+
+  if (medication_id) {
+    logs = logs.filter((l) => l.medication_id === Number(medication_id));
+  }
+
+  logs.sort((a, b) => new Date(b.scheduled_time).getTime() - new Date(a.scheduled_time).getTime());
+
+  const total = logs.length;
+  const taken = logs.filter((l) => l.status === 'taken').length;
+  const missed = logs.filter((l) => l.status === 'missed').length;
+  const skipped = logs.filter((l) => l.status === 'skipped').length;
+  const adherence = total > 0 ? Math.round((taken / total) * 100) : 100;
+
+  res.json({
+    count: logs.length,
+    stats: {
+      total,
+      taken,
+      missed,
+      skipped,
+      adherence_percentage: adherence,
+    },
+    logs: logs.map(serializeMedicationLog),
+  });
+});
+
+// GET /medications/:id
+app.get('/medications/:id', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  const medId = Number(req.params.id);
+  const med = medications.find((m) => m.id === medId);
+
+  if (!med) {
+    return res.status(404).json({ detail: 'Medication not found' });
+  }
+
+  if (med.user_id !== user.id) {
+    if (user.role !== 'caregiver' || !checkCaregiverMedicationAccess(user.id, med.user_id)) {
+      return res.status(403).json({ detail: 'You are not authorized to view this medication.' });
+    }
+  }
+
+  const logs = medicationLogs
+    .filter((l) => l.medication_id === med.id)
+    .sort((a, b) => new Date(b.scheduled_time).getTime() - new Date(a.scheduled_time).getTime())
+    .slice(0, 10);
+
+  res.json({
+    medication: serializeMedication(med),
+    recentLogs: logs.map(serializeMedicationLog),
+  });
+});
+
+// PUT /medications/:id
+app.put('/medications/:id', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  const medId = Number(req.params.id);
+  const med = medications.find((m) => m.id === medId);
+
+  if (!med) {
+    return res.status(404).json({ detail: 'Medication not found' });
+  }
+
+  if (med.user_id !== user.id) {
+    if (user.role !== 'caregiver' || !checkCaregiverMedicationAccess(user.id, med.user_id)) {
+      return res.status(403).json({ detail: 'You are not authorized to update this medication.' });
+    }
+  }
+
+  const b = req.body;
+  if (b.name !== undefined) med.name = String(b.name).trim();
+  if (b.dosage !== undefined) med.dosage = String(b.dosage).trim();
+  if (b.medicineType !== undefined) med.medicine_type = b.medicineType;
+  if (b.medicine_type !== undefined) med.medicine_type = b.medicine_type;
+  if (b.purpose !== undefined) med.purpose = String(b.purpose).trim();
+  if (b.frequency !== undefined) med.frequency = b.frequency;
+  if (b.startDate !== undefined) med.start_date = b.startDate;
+  if (b.start_date !== undefined) med.start_date = b.start_date;
+  if (b.endDate !== undefined) med.end_date = b.endDate;
+  if (b.end_date !== undefined) med.end_date = b.end_date;
+  if (b.reminderTimes !== undefined && Array.isArray(b.reminderTimes)) med.reminder_times = b.reminderTimes;
+  if (b.reminder_times !== undefined && Array.isArray(b.reminder_times)) med.reminder_times = b.reminder_times;
+  if (b.foodTiming !== undefined) med.food_timing = b.foodTiming;
+  if (b.food_timing !== undefined) med.food_timing = b.food_timing;
+  if (b.specificDays !== undefined) med.specific_days = b.specificDays;
+  if (b.specific_days !== undefined) med.specific_days = b.specific_days;
+  if (b.intervalHours !== undefined) med.interval_hours = b.intervalHours;
+  if (b.interval_hours !== undefined) med.interval_hours = b.interval_hours;
+  if (b.isActive !== undefined) med.is_active = Boolean(b.isActive);
+  if (b.is_active !== undefined) med.is_active = Boolean(b.is_active);
+  if (b.notes !== undefined) med.notes = String(b.notes).trim();
+
+  med.updated_at = new Date().toISOString();
+
+  res.json({
+    message: 'Medication updated successfully',
+    medication: serializeMedication(med),
+  });
+});
+
+// DELETE /medications/:id
+app.delete('/medications/:id', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  const medId = Number(req.params.id);
+  const index = medications.findIndex((m) => m.id === medId);
+
+  if (index === -1) {
+    return res.status(404).json({ detail: 'Medication not found' });
+  }
+
+  const med = medications[index];
+  if (med.user_id !== user.id) {
+    if (user.role !== 'caregiver' || !checkCaregiverMedicationAccess(user.id, med.user_id)) {
+      return res.status(403).json({ detail: 'You are not authorized to delete this medication.' });
+    }
+  }
+
+  medications.splice(index, 1);
+  res.json({ message: 'Medication deleted successfully' });
+});
+
+// POST /medications/:id/taken
+app.post('/medications/:id/taken', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  const medId = Number(req.params.id);
+  const med = medications.find((m) => m.id === medId);
+
+  if (!med) {
+    return res.status(404).json({ detail: 'Medication not found' });
+  }
+
+  if (med.user_id !== user.id) {
+    if (user.role !== 'caregiver' || !checkCaregiverMedicationAccess(user.id, med.user_id)) {
+      return res.status(403).json({ detail: 'You are not authorized to mark this medication as taken.' });
+    }
+  }
+
+  const { scheduled_time, notes, time } = req.body || {};
+  const todayStr = new Date().toISOString().split('T')[0];
+  const targetTime = time || med.reminder_times[0] || '09:00';
+  const targetScheduled = scheduled_time || `${todayStr}T${targetTime}:00`;
+  const nowIso = new Date().toISOString();
+
+  let log = medicationLogs.find(
+    (l) => l.user_id === med.user_id && l.medication_id === med.id && l.scheduled_time.startsWith(targetScheduled.substring(0, 16))
+  );
+
+  if (log) {
+    log.status = 'taken';
+    log.taken_time = nowIso;
+    if (notes) log.notes = notes;
+    log.logged_at = nowIso;
+  } else {
+    log = {
+      id: nextMedicationLogId++,
+      user_id: med.user_id,
+      medication_id: med.id,
+      medicine_name: med.name,
+      dosage: med.dosage,
+      scheduled_time: targetScheduled,
+      status: 'taken',
+      taken_time: nowIso,
+      notes: notes || '',
+      logged_at: nowIso,
+    };
+    medicationLogs.unshift(log);
+  }
+
+  const todaySummary = getTodayDosesForUser(med.user_id, todayStr);
+
+  res.json({
+    message: `${med.name} marked as taken successfully.`,
+    log: serializeMedicationLog(log),
+    today_summary: todaySummary,
+  });
+});
+
+// POST /medications/:id/skip
+app.post('/medications/:id/skip', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  const medId = Number(req.params.id);
+  const med = medications.find((m) => m.id === medId);
+
+  if (!med) {
+    return res.status(404).json({ detail: 'Medication not found' });
+  }
+
+  if (med.user_id !== user.id) {
+    if (user.role !== 'caregiver' || !checkCaregiverMedicationAccess(user.id, med.user_id)) {
+      return res.status(403).json({ detail: 'You are not authorized to skip this medication.' });
+    }
+  }
+
+  const { scheduled_time, reason, time } = req.body || {};
+  const todayStr = new Date().toISOString().split('T')[0];
+  const targetTime = time || med.reminder_times[0] || '09:00';
+  const targetScheduled = scheduled_time || `${todayStr}T${targetTime}:00`;
+  const nowIso = new Date().toISOString();
+
+  let log = medicationLogs.find(
+    (l) => l.user_id === med.user_id && l.medication_id === med.id && l.scheduled_time.startsWith(targetScheduled.substring(0, 16))
+  );
+
+  if (log) {
+    log.status = 'skipped';
+    log.taken_time = null;
+    log.notes = reason || 'Skipped by user';
+    log.logged_at = nowIso;
+  } else {
+    log = {
+      id: nextMedicationLogId++,
+      user_id: med.user_id,
+      medication_id: med.id,
+      medicine_name: med.name,
+      dosage: med.dosage,
+      scheduled_time: targetScheduled,
+      status: 'skipped',
+      taken_time: null,
+      notes: reason || 'Skipped by user',
+      logged_at: nowIso,
+    };
+    medicationLogs.unshift(log);
+  }
+
+  const todaySummary = getTodayDosesForUser(med.user_id, todayStr);
+
+  res.json({
+    message: `${med.name} marked as skipped.`,
+    log: serializeMedicationLog(log),
+    today_summary: todaySummary,
+  });
+});
+
+// POST /medications/:id/snooze
+app.post('/medications/:id/snooze', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  const medId = Number(req.params.id);
+  const med = medications.find((m) => m.id === medId);
+
+  if (!med) {
+    return res.status(404).json({ detail: 'Medication not found' });
+  }
+
+  const { minutes = 10, scheduled_time, time } = req.body || {};
+  const snoozeMs = Number(minutes) * 60 * 1000;
+  const snoozeUntil = new Date(Date.now() + snoozeMs).toISOString();
+  const todayStr = new Date().toISOString().split('T')[0];
+  const targetTime = time || med.reminder_times[0] || '09:00';
+  const targetScheduled = scheduled_time || `${todayStr}T${targetTime}:00`;
+  const nowIso = new Date().toISOString();
+
+  let log = medicationLogs.find(
+    (l) => l.user_id === med.user_id && l.medication_id === med.id && l.scheduled_time.startsWith(targetScheduled.substring(0, 16))
+  );
+
+  if (log) {
+    log.status = 'snoozed';
+    log.notes = `Snoozed for ${minutes} minutes until ${new Date(snoozeUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    log.logged_at = nowIso;
+  } else {
+    log = {
+      id: nextMedicationLogId++,
+      user_id: med.user_id,
+      medication_id: med.id,
+      medicine_name: med.name,
+      dosage: med.dosage,
+      scheduled_time: targetScheduled,
+      status: 'snoozed',
+      taken_time: null,
+      notes: `Snoozed for ${minutes} minutes until ${new Date(snoozeUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+      logged_at: nowIso,
+    };
+    medicationLogs.unshift(log);
+  }
+
+  res.json({
+    message: `Reminder snoozed for ${minutes} minutes.`,
+    snooze_until: snoozeUntil,
+    log: serializeMedicationLog(log),
+  });
+});
+
+// GET /medication-permissions
+app.get('/medication-permissions', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+
+  if (user.role === 'elderly') {
+    const approvedLinks = caregiverLinks.filter((l) => l.elderly_id === user.id && l.status === 'approved');
+    const result = approvedLinks.map((l) => {
+      const caregiver = users.find((u) => u.id === l.caregiver_id);
+      const perm = medicationPermissions.find((p) => p.elderly_id === user.id && p.caregiver_id === l.caregiver_id);
+      return {
+        linkId: l.id,
+        caregiverId: l.caregiver_id,
+        caregiverName: caregiver?.full_name || 'Caregiver',
+        caregiverEmail: caregiver?.email || '',
+        accessGranted: perm ? perm.access_granted : true,
+        missedAlertsEnabled: perm ? perm.missed_alerts_enabled : true,
+        updatedAt: perm?.updated_at || l.created_at,
+      };
+    });
+    return res.json({ permissions: result });
+  }
+
+  if (user.role === 'caregiver') {
+    const approvedLinks = caregiverLinks.filter((l) => l.caregiver_id === user.id && l.status === 'approved');
+    const result = approvedLinks.map((l) => {
+      const elderly = users.find((u) => u.id === l.elderly_id);
+      const perm = medicationPermissions.find((p) => p.elderly_id === l.elderly_id && p.caregiver_id === user.id);
+      return {
+        linkId: l.id,
+        elderlyId: l.elderly_id,
+        elderlyName: elderly?.full_name || 'Patient',
+        elderlyEmail: elderly?.email || '',
+        accessGranted: perm ? perm.access_granted : true,
+        missedAlertsEnabled: perm ? perm.missed_alerts_enabled : true,
+        updatedAt: perm?.updated_at || l.created_at,
+      };
+    });
+    return res.json({ permissions: result });
+  }
+
+  res.status(403).json({ detail: 'Unsupported user role' });
+});
+
+// POST /medication-permissions
+app.post('/medication-permissions', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  if (user.role !== 'elderly') {
+    return res.status(403).json({ detail: 'Only elderly users can manage caregiver medication permissions.' });
+  }
+
+  const { caregiverId, accessGranted, missedAlertsEnabled } = req.body;
+  if (!caregiverId) {
+    return res.status(400).json({ detail: 'caregiverId is required.' });
+  }
+
+  let perm = medicationPermissions.find(
+    (p) => p.elderly_id === user.id && p.caregiver_id === Number(caregiverId)
+  );
+
+  if (!perm) {
+    perm = {
+      id: nextMedicationPermissionId++,
+      elderly_id: user.id,
+      caregiver_id: Number(caregiverId),
+      access_granted: accessGranted !== undefined ? Boolean(accessGranted) : true,
+      missed_alerts_enabled: missedAlertsEnabled !== undefined ? Boolean(missedAlertsEnabled) : true,
+      updated_at: new Date().toISOString(),
+    };
+    medicationPermissions.push(perm);
+  } else {
+    if (accessGranted !== undefined) perm.access_granted = Boolean(accessGranted);
+    if (missedAlertsEnabled !== undefined) perm.missed_alerts_enabled = Boolean(missedAlertsEnabled);
+    perm.updated_at = new Date().toISOString();
+  }
+
+  res.json({
+    message: 'Medication permissions updated successfully',
+    permission: perm,
+  });
+});
+
+// Caregiver specific medication endpoints
+app.get('/caregiver-links/:id/medications', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  if (user.role !== 'caregiver') {
+    return res.status(403).json({ detail: 'Only caregivers can access linked medication schedule.' });
+  }
+
+  const linkId = Number(req.params.id);
+  const link = caregiverLinks.find((l) => l.id === linkId && l.caregiver_id === user.id && l.status === 'approved');
+  if (!link) {
+    return res.status(404).json({ detail: 'Approved caregiver link not found.' });
+  }
+
+  if (!checkCaregiverMedicationAccess(user.id, link.elderly_id)) {
+    return res.status(403).json({
+      detail: 'Medication access has been restricted by the patient.',
+      accessGranted: false,
+    });
+  }
+
+  const elderly = users.find((u) => u.id === link.elderly_id && u.is_active);
+  const patientMeds = medications.filter((m) => m.user_id === link.elderly_id);
+  const todaySummary = getTodayDosesForUser(link.elderly_id);
+
+  res.json({
+    elderly_id: link.elderly_id,
+    elderly_name: elderly?.full_name || 'Patient',
+    today_summary: todaySummary,
+    medications: patientMeds.map(serializeMedication),
+  });
+});
+
+app.post('/caregiver-links/:id/medications', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  if (user.role !== 'caregiver') {
+    return res.status(403).json({ detail: 'Only caregivers can add medications for linked elderly.' });
+  }
+
+  const linkId = Number(req.params.id);
+  const link = caregiverLinks.find((l) => l.id === linkId && l.caregiver_id === user.id && l.status === 'approved');
+  if (!link) {
+    return res.status(404).json({ detail: 'Approved caregiver link not found.' });
+  }
+
+  if (!checkCaregiverMedicationAccess(user.id, link.elderly_id)) {
+    return res.status(403).json({ detail: 'Medication access has been restricted by the patient.' });
+  }
+
+  const { name, dosage } = req.body;
+  if (!name || !dosage) {
+    return res.status(400).json({ detail: 'Medicine name and dosage are required.' });
+  }
+
+  const nowIso = new Date().toISOString();
+  const timesList: string[] = Array.isArray(req.body.reminderTimes)
+    ? req.body.reminderTimes
+    : Array.isArray(req.body.reminder_times)
+    ? req.body.reminder_times
+    : ['08:00'];
+
+  const newMed: MedicationRecord = {
+    id: nextMedicationId++,
+    user_id: link.elderly_id,
+    name: String(name).trim(),
+    dosage: String(dosage).trim(),
+    medicine_type: req.body.medicineType || req.body.medicine_type || 'Tablet',
+    purpose: req.body.purpose ? String(req.body.purpose).trim() : '',
+    frequency: req.body.frequency || 'Once Daily',
+    start_date: req.body.startDate || req.body.start_date || nowIso.split('T')[0],
+    end_date: req.body.endDate || req.body.end_date || null,
+    reminder_times: timesList.filter((t) => typeof t === 'string' && t.trim().length > 0),
+    food_timing: req.body.foodTiming || req.body.food_timing || 'After Food',
+    specific_days: req.body.specificDays || req.body.specific_days || [],
+    interval_hours: req.body.intervalHours ?? req.body.interval_hours ?? null,
+    is_active: true,
+    notes: req.body.notes || '',
+    created_at: nowIso,
+    updated_at: nowIso,
+  };
+
+  medications.unshift(newMed);
+  res.status(201).json({
+    message: 'Medication added successfully by caregiver.',
+    medication: serializeMedication(newMed),
+  });
+});
+
+app.put('/caregiver-links/:id/medications/:medId', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  if (user.role !== 'caregiver') {
+    return res.status(403).json({ detail: 'Only caregivers can edit medications.' });
+  }
+
+  const linkId = Number(req.params.id);
+  const medId = Number(req.params.medId);
+  const link = caregiverLinks.find((l) => l.id === linkId && l.caregiver_id === user.id && l.status === 'approved');
+  if (!link) {
+    return res.status(404).json({ detail: 'Approved caregiver link not found.' });
+  }
+
+  if (!checkCaregiverMedicationAccess(user.id, link.elderly_id)) {
+    return res.status(403).json({ detail: 'Medication access has been restricted by the patient.' });
+  }
+
+  const med = medications.find((m) => m.id === medId && m.user_id === link.elderly_id);
+  if (!med) {
+    return res.status(404).json({ detail: 'Medication not found for this patient.' });
+  }
+
+  const b = req.body;
+  if (b.name !== undefined) med.name = String(b.name).trim();
+  if (b.dosage !== undefined) med.dosage = String(b.dosage).trim();
+  if (b.medicineType !== undefined) med.medicine_type = b.medicineType;
+  if (b.medicine_type !== undefined) med.medicine_type = b.medicine_type;
+  if (b.purpose !== undefined) med.purpose = String(b.purpose).trim();
+  if (b.frequency !== undefined) med.frequency = b.frequency;
+  if (b.startDate !== undefined) med.start_date = b.startDate;
+  if (b.start_date !== undefined) med.start_date = b.start_date;
+  if (b.endDate !== undefined) med.end_date = b.endDate;
+  if (b.end_date !== undefined) med.end_date = b.end_date;
+  if (b.reminderTimes !== undefined && Array.isArray(b.reminderTimes)) med.reminder_times = b.reminderTimes;
+  if (b.reminder_times !== undefined && Array.isArray(b.reminder_times)) med.reminder_times = b.reminder_times;
+  if (b.foodTiming !== undefined) med.food_timing = b.foodTiming;
+  if (b.food_timing !== undefined) med.food_timing = b.food_timing;
+  if (b.specificDays !== undefined) med.specific_days = b.specificDays;
+  if (b.specific_days !== undefined) med.specific_days = b.specific_days;
+  if (b.intervalHours !== undefined) med.interval_hours = b.intervalHours;
+  if (b.interval_hours !== undefined) med.interval_hours = b.interval_hours;
+  if (b.isActive !== undefined) med.is_active = Boolean(b.isActive);
+  if (b.is_active !== undefined) med.is_active = Boolean(b.is_active);
+  if (b.notes !== undefined) med.notes = String(b.notes).trim();
+
+  med.updated_at = new Date().toISOString();
+
+  res.json({
+    message: 'Medication updated successfully by caregiver.',
+    medication: serializeMedication(med),
+  });
+});
+
+app.get('/caregiver-links/:id/medication-alerts', authenticateToken, (req: AuthRequest, res) => {
+  const user = req.user!;
+  if (user.role !== 'caregiver') {
+    return res.status(403).json({ detail: 'Only caregivers can access medication alerts.' });
+  }
+
+  const linkId = Number(req.params.id);
+  const link = caregiverLinks.find((l) => l.id === linkId && l.caregiver_id === user.id && l.status === 'approved');
+  if (!link) {
+    return res.status(404).json({ detail: 'Approved caregiver link not found.' });
+  }
+
+  const perm = medicationPermissions.find((p) => p.elderly_id === link.elderly_id && p.caregiver_id === user.id);
+  const alertsEnabled = perm ? perm.missed_alerts_enabled : true;
+
+  if (!alertsEnabled) {
+    return res.json({
+      alerts_enabled: false,
+      message: 'Missed medication alerts have not been enabled by the patient.',
+      alerts: [],
+    });
+  }
+
+  const elderly = users.find((u) => u.id === link.elderly_id);
+  const todaySummary = getTodayDosesForUser(link.elderly_id);
+  const missedToday = todaySummary.doses.filter((d) => d.status === 'missed');
+
+  const cutoff = Date.now() - 48 * 3600000;
+  const recentMissedLogs = medicationLogs.filter(
+    (l) => l.user_id === link.elderly_id && l.status === 'missed' && new Date(l.scheduled_time).getTime() >= cutoff
+  );
+
+  const alerts: any[] = [];
+  missedToday.forEach((d) => {
+    alerts.push({
+      id: `alert-today-${d.id}`,
+      type: 'missed_dose',
+      medication_id: d.medication_id,
+      medicine_name: d.name,
+      dosage: d.dosage,
+      scheduled_time: d.scheduled_datetime,
+      severity: 'warning',
+      message: `${elderly?.full_name || 'Patient'} missed scheduled dose of ${d.name} (${d.dosage}) at ${d.time}.`,
+      time: d.time,
+      date: todaySummary.date,
+    });
+  });
+
+  recentMissedLogs.forEach((l) => {
+    if (!alerts.some((a) => a.medication_id === l.medication_id && a.scheduled_time === l.scheduled_time)) {
+      alerts.push({
+        id: `alert-log-${l.id}`,
+        type: 'missed_dose',
+        medication_id: l.medication_id,
+        medicine_name: l.medicine_name,
+        dosage: l.dosage,
+        scheduled_time: l.scheduled_time,
+        severity: 'warning',
+        message: `${elderly?.full_name || 'Patient'} missed scheduled dose of ${l.medicine_name} (${l.dosage}) on ${l.scheduled_time.split('T')[0]}.`,
+        notes: l.notes,
+        date: l.scheduled_time.split('T')[0],
+      });
+    }
+  });
+
+  res.json({
+    alerts_enabled: true,
+    count: alerts.length,
+    elderly_id: link.elderly_id,
+    elderly_name: elderly?.full_name || 'Patient',
+    alerts,
+  });
 });
 
 // ============================================================
@@ -3299,12 +4503,28 @@ app.post('/voice-companion/chat', async (req: Request, res: Response) => {
       },
     };
   } else if (
-    lower.includes('reminder') ||
     lower.includes('medicine') ||
-    lower.includes('रिमाइंडर') ||
+    lower.includes('medication') ||
+    lower.includes('pill') ||
+    lower.includes('dose') ||
     lower.includes('दवा') ||
-    lower.includes('ৰিমাইণ্ডাৰ') ||
-    lower.includes('ঔষধ')
+    lower.includes('औषध') ||
+    lower.includes('ঔষধ') ||
+    lower.includes('দৰব')
+  ) {
+    navTarget = {
+      targetPage: 'medications',
+      reply: {
+        en: 'Opening your medication reminder schedule and medicine cabinet.',
+        hi: 'आपकी दवाइयों की सूची और रिमाइंडर खोले जा रहे हैं।',
+        as: 'আপোনাৰ ঔষধৰ তালিকা আৰু সোঁৱৰণি খোলা হৈছে।',
+      },
+    };
+  } else if (
+    lower.includes('reminder') ||
+    lower.includes('schedule') ||
+    lower.includes('रिमाइंडर') ||
+    lower.includes('ৰিমাইণ্ডাৰ')
   ) {
     navTarget = {
       targetPage: 'reminders',
@@ -3467,7 +4687,7 @@ async function startServer() {
   if (!isProduction) {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
-      server: { middlewareMode: true, allowedHosts: true },
+      server: { middlewareMode: true, allowedHosts: true, hmr: false },
       appType: 'spa',
     });
 

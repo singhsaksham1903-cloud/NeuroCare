@@ -8,10 +8,13 @@ import CaregiverLinks from './pages/CaregiverLinks'
 import RecommendationCard from './pages/RecommendationCard'
 import Memories from './pages/Memories'
 import Reminders from './pages/Reminders'
+import Medications from './pages/Medications'
 
 import UserBar from './pages/UserBar'
 import OfflineStatus from './Components/OfflineStatus'
 import VoiceReadAloud from './Components/VoiceReadAloud'
+import MedicationDashboardCard from './Components/MedicationDashboardCard'
+import MedicationReminderPopup from './Components/MedicationReminderPopup'
 import LanguageSelector from './Components/LanguageSelector'
 import TimeScenery from './Components/TimeScenery'
 import VoiceCompanionWidget from './Components/VoiceCompanion/VoiceCompanionWidget'
@@ -339,6 +342,19 @@ function App() {
     setPage('games')
   }
 
+  // ==========================================
+  // Medication Reminders Navigation
+  // ==========================================
+  const [medicationInitialTab, setMedicationInitialTab] = useState('today')
+  const [openAddMedModalInitially, setOpenAddMedModalInitially] = useState(false)
+  const [, setMedRefreshTrigger] = useState(0)
+
+  const openMedications = (tab = 'today', openAdd = false) => {
+    setMedicationInitialTab(tab)
+    setOpenAddMedModalInitially(openAdd)
+    setPage('medications')
+  }
+
 
   // ==========================================
   // Dashboard information
@@ -554,6 +570,20 @@ function App() {
         onBack={() =>
           setPage('dashboard')
         }
+      />
+    )
+  } else if (page === 'medications') {
+    content = (
+      <Medications
+        user={currentUser}
+        text={currentText}
+        language={languageCode}
+        initialTab={medicationInitialTab}
+        openAddModalInitially={openAddMedModalInitially}
+        onBack={() => {
+          setOpenAddMedModalInitially(false)
+          setPage('dashboard')
+        }}
       />
     )
   } else {
@@ -885,6 +915,14 @@ function App() {
           }
         />
 
+        {/* Medication Reminder System */}
+        <MedicationDashboardCard
+          text={currentText}
+          onOpenMedications={() => openMedications('today')}
+          onAddMedicine={() => openMedications('cabinet', true)}
+          onDoseTaken={() => setMedRefreshTrigger((prev) => prev + 1)}
+        />
+
       </main>
 
 
@@ -903,6 +941,12 @@ function App() {
   return (
     <>
       {content}
+      <MedicationReminderPopup
+        user={currentUser}
+        language={languageCode}
+        text={currentText}
+        onDoseUpdated={() => setMedRefreshTrigger((prev) => prev + 1)}
+      />
       <VoiceCompanionWidget
         language={languageCode}
         onLanguageChange={(newLangCode) => {
@@ -912,6 +956,8 @@ function App() {
         onNavigate={(targetPage, gameId = null) => {
           if (targetPage === 'games') {
             openGames(gameId || null)
+          } else if (targetPage === 'medications') {
+            openMedications('today')
           } else {
             setPage(targetPage)
           }

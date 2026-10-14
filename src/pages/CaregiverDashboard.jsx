@@ -7,7 +7,7 @@ import {
 import './CaregiverDashboard.css'
 import VoiceReadAloud from '../Components/VoiceReadAloud'
 
-import { apiGet } from '../utils/api'
+import { apiGet, apiPost, apiPut, apiDelete } from '../utils/api'
 
 
 // ============================================
@@ -319,6 +319,24 @@ function CaregiverDashboard({
     can_view: true,
   })
 
+  // Caregiver Medication State
+  const [patientMeds, setPatientMeds] = useState([])
+  const [patientMedsSummary, setPatientMedsSummary] = useState(null)
+  const [medicationAlerts, setMedicationAlerts] = useState([])
+  const [medAccessGranted, setMedAccessGranted] = useState(true)
+  const [isCaregiverMedModalOpen, setIsCaregiverMedModalOpen] = useState(false)
+  const [editingPatientMedId, setEditingPatientMedId] = useState(null)
+  const [caregiverMedForm, setCaregiverMedForm] = useState({
+    name: '',
+    dosage: '',
+    medicineType: 'Tablet',
+    purpose: '',
+    frequency: 'Once Daily',
+    startDate: new Date().toISOString().split('T')[0],
+    reminderTimes: ['09:00'],
+    foodTiming: 'After Food',
+  })
+
   const [linkedElderly, setLinkedElderly] = useState(null)
   const [approvedLinkId, setApprovedLinkId] = useState(null)
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
@@ -423,6 +441,32 @@ function CaregiverDashboard({
       if (linkedData.memory_permission) {
         setMemoryPermission(linkedData.memory_permission)
       }
+
+      // Fetch linked elderly medications
+      try {
+        const medsRes = await apiGet(`/caregiver-links/${approvedLink.id}/medications`)
+        setPatientMeds(medsRes.medications || [])
+        setPatientMedsSummary(medsRes.today_summary || null)
+        setMedAccessGranted(true)
+      } catch (medErr) {
+        if (medErr?.status === 403) {
+          setMedAccessGranted(false)
+          setPatientMeds([])
+          setPatientMedsSummary(null)
+        }
+      }
+
+      // Fetch missed medication alerts
+      try {
+        const alertsRes = await apiGet(`/caregiver-links/${approvedLink.id}/medication-alerts`)
+        if (alertsRes.alerts_enabled) {
+          setMedicationAlerts(alertsRes.alerts || [])
+        } else {
+          setMedicationAlerts([])
+        }
+      } catch {
+        setMedicationAlerts([])
+      }
     } catch (err) {
       setError(
         err.message ||
@@ -436,6 +480,73 @@ function CaregiverDashboard({
     text.loadError,
     user,
   ])
+
+  // Caregiver Save Medication Handler
+  const handleCaregiverSaveMed = async (e) => {
+    e.preventDefault()
+    if (!approvedLinkId || !caregiverMedForm.name.trim() || !caregiverMedForm.dosage.trim()) return
+
+    try {
+      if (editingPatientMedId) {
+        await apiPut(`/caregiver-links/${approvedLinkId}/medications/${editingPatientMedId}`, caregiverMedForm)
+      } else {
+        await apiPost(`/caregiver-links/${approvedLinkId}/medications`, caregiverMedForm)
+      }
+      setIsCaregiverMedModalOpen(false)
+      setEditingPatientMedId(null)
+      // Refresh medication data
+      const medsRes = await apiGet(`/caregiver-links/${approvedLinkId}/medications`)
+      setPatientMeds(medsRes.medications || [])
+      setPatientMedsSummary(medsRes.today_summary || null)
+    } catch (err) {
+      console.error('Caregiver save med failed:', err)
+      alert('Could not save medication: ' + (err.message || 'Error'))
+    }
+  }
+
+  const handleOpenAddCaregiverMed = () => {
+    setCaregiverMedForm({
+      name: '',
+      dosage: '',
+      medicineType: 'Tablet',
+      purpose: '',
+      frequency: 'Once Daily',
+      startDate: new Date().toISOString().split('T')[0],
+      reminderTimes: ['09:00'],
+      foodTiming: 'After Food',
+    })
+    setEditingPatientMedId(null)
+    setIsCaregiverMedModalOpen(true)
+  }
+
+  const handleOpenEditCaregiverMed = (med) => {
+    setCaregiverMedForm({
+      name: med.name,
+      dosage: med.dosage,
+      medicineType: med.medicineType || 'Tablet',
+      purpose: med.purpose || '',
+      frequency: med.frequency || 'Once Daily',
+      startDate: med.startDate || new Date().toISOString().split('T')[0],
+      reminderTimes: med.reminderTimes && med.reminderTimes.length > 0 ? med.reminderTimes : ['09:00'],
+      foodTiming: med.foodTiming || 'After Food',
+    })
+    setEditingPatientMedId(med.id)
+    setIsCaregiverMedModalOpen(true)
+  }
+
+  const handleCaregiverDeleteMed = async (medId, medName) => {
+    if (!window.confirm(`Are you sure you want to remove "${medName}" from the patient's schedule?`)) return
+    try {
+      await apiDelete(`/medications/${medId}`)
+      if (approvedLinkId) {
+        const medsRes = await apiGet(`/caregiver-links/${approvedLinkId}/medications`)
+        setPatientMeds(medsRes.medications || [])
+        setPatientMedsSummary(medsRes.today_summary || null)
+      }
+    } catch (err) {
+      console.error('Caregiver delete med failed:', err)
+    }
+  }
 
 
   useEffect(() => {
@@ -1359,6 +1470,212 @@ ${progressReport.disclaimer}`
             </section>
 
 
+            {/* ============================================================
+                Caregiver Medication Schedule & Missed Medication Alerts
+                ============================================================ */}
+            <section className="caregiver-panel">
+              <div className="caregiver-section-heading">
+                <div>
+                  <span className="caregiver-section-label">
+                    💊 Prescriptions & Adherence
+                  </span>
+                  <h2>
+                    {linkedElderly.full_name}&apos;s Medication Schedule
+                  </h2>
+                  <p>
+                    Manage medications, review scheduled reminder times, and monitor daily dose adherence.
+                  </p>
+                </div>
+
+                {medAccessGranted && (
+                  <button
+                    type="button"
+                    className="caregiver-link-button"
+                    onClick={handleOpenAddCaregiverMed}
+                    style={{ background: '#0d9488', color: '#ffffff', border: 'none', padding: '10px 18px', borderRadius: '12px', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    + Add Medicine for Patient
+                  </button>
+                )}
+              </div>
+
+              {/* Missed Medication Alerts Banner */}
+              {medicationAlerts.length > 0 && (
+                <aside
+                  role="alert"
+                  style={{
+                    background: '#fff1f2',
+                    border: '2px solid #fecdd3',
+                    borderRadius: '16px',
+                    padding: '16px 20px',
+                    marginBottom: '20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#be123c', fontWeight: 800, fontSize: '1rem' }}>
+                    <span style={{ fontSize: '1.3rem' }}>⚠️</span>
+                    <span>Missed Medication Alert ({medicationAlerts.length})</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {medicationAlerts.map((alert) => (
+                      <div
+                        key={alert.id}
+                        style={{
+                          background: '#ffffff',
+                          border: '1px solid #fda4af',
+                          borderRadius: '10px',
+                          padding: '10px 14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '12px',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <span style={{ color: '#9f1239', fontWeight: 600, fontSize: '0.95rem' }}>
+                          {alert.message}
+                        </span>
+                        <span style={{ background: '#ffe4e6', color: '#be123c', fontSize: '0.82rem', fontWeight: 700, padding: '3px 8px', borderRadius: '6px' }}>
+                          ⏰ {alert.time}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </aside>
+              )}
+
+              {/* Medication Permission Denied State */}
+              {!medAccessGranted ? (
+                <div
+                  className="caregiver-empty caregiver-empty--small"
+                  style={{ background: '#f8fafc', borderColor: '#cbd5e1' }}
+                >
+                  <span style={{ fontSize: '2.4rem' }}>🔒</span>
+                  <h3 style={{ color: '#334155', marginTop: 8 }}>Medication Schedule Restricted</h3>
+                  <p style={{ color: '#64748b', maxWidth: 520, margin: '6px auto 0', lineHeight: 1.5 }}>
+                    {linkedElderly.full_name} has not authorized caregiver access to their medication records. The patient can grant permission at any time from their Medication Reminders privacy settings.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Today's Adherence Snapshot */}
+                  {patientMedsSummary && (
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                        gap: '14px',
+                        marginBottom: '20px',
+                      }}
+                    >
+                      <div style={{ background: '#f0fdfa', border: '1px solid #ccfbf1', borderRadius: '14px', padding: '14px' }}>
+                        <span style={{ fontSize: '0.85rem', color: '#0f766e', fontWeight: 700 }}>Today&apos;s Adherence</span>
+                        <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#115e59', marginTop: '4px' }}>
+                          {patientMedsSummary.adherence_percentage}%
+                        </div>
+                      </div>
+
+                      <div style={{ background: '#f0fdfa', border: '1px solid #ccfbf1', borderRadius: '14px', padding: '14px' }}>
+                        <span style={{ fontSize: '0.85rem', color: '#0f766e', fontWeight: 700 }}>Doses Taken Today</span>
+                        <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#115e59', marginTop: '4px' }}>
+                          {patientMedsSummary.taken_doses} / {patientMedsSummary.total_doses}
+                        </div>
+                      </div>
+
+                      <div style={{ background: '#f0fdfa', border: '1px solid #ccfbf1', borderRadius: '14px', padding: '14px' }}>
+                        <span style={{ fontSize: '0.85rem', color: '#0f766e', fontWeight: 700 }}>Pending Doses</span>
+                        <div style={{ fontSize: '1.6rem', fontWeight: 800, color: patientMedsSummary.pending_doses > 0 ? '#b45309' : '#059669', marginTop: '4px' }}>
+                          {patientMedsSummary.pending_doses}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Medicines List */}
+                  {patientMeds.length === 0 ? (
+                    <div className="caregiver-empty caregiver-empty--small">
+                      <p>No medications have been recorded for this patient yet.</p>
+                      <button
+                        type="button"
+                        onClick={handleOpenAddCaregiverMed}
+                        style={{ marginTop: '12px', background: '#0d9488', color: '#ffffff', border: 'none', padding: '8px 16px', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        + Add First Medicine
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+                      {patientMeds.map((med) => (
+                        <article
+                          key={med.id}
+                          style={{
+                            background: '#ffffff',
+                            border: '1.5px solid #e2e8f0',
+                            borderRadius: '16px',
+                            padding: '18px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '10px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                            <div>
+                              <h3 style={{ margin: '0 0 4px', fontSize: '1.2rem', color: '#0f172a' }}>{med.name}</h3>
+                              <span style={{ background: '#e0f2fe', color: '#0369a1', fontWeight: 700, fontSize: '0.9rem', padding: '3px 8px', borderRadius: '6px' }}>
+                                {med.dosage}
+                              </span>
+                            </div>
+                            <span style={{ background: '#f1f5f9', color: '#475569', fontSize: '0.85rem', fontWeight: 600, padding: '3px 8px', borderRadius: '6px' }}>
+                              {med.medicineType}
+                            </span>
+                          </div>
+
+                          {med.purpose && (
+                            <p style={{ margin: 0, fontSize: '0.9rem', color: '#475569' }}>
+                              <em>{med.purpose}</em>
+                            </p>
+                          )}
+
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '0.85rem' }}>
+                            <span style={{ background: '#fef3c7', color: '#92400e', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                              ⏰ {(med.reminderTimes || []).join(', ')}
+                            </span>
+                            <span style={{ background: '#ecfdf5', color: '#065f46', padding: '3px 8px', borderRadius: '6px', fontWeight: 600 }}>
+                              🍽️ {med.foodTiming}
+                            </span>
+                            <span style={{ background: '#f8fafc', color: '#64748b', padding: '3px 8px', borderRadius: '6px' }}>
+                              📅 {med.frequency}
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditCaregiverMed(med)}
+                              style={{ flex: 1, padding: '7px 12px', background: '#f0fdfa', border: '1px solid #99f6e4', color: '#0f766e', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              ✏️ Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleCaregiverDeleteMed(med.id, med.name)}
+                              style={{ padding: '7px 12px', background: '#fff1f2', border: '1px solid #fecdd3', color: '#be123c', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              🗑️ Remove
+                            </button>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+
+
             {/* Memory Vault Section */}
             <section className="caregiver-panel">
               <div className="caregiver-section-heading">
@@ -1768,6 +2085,213 @@ ${progressReport.disclaimer}`
                 🖨️ Print / Save PDF
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ----------------------------------------
+          Caregiver Add/Edit Medication Modal
+          ---------------------------------------- */}
+      {isCaregiverMedModalOpen && (
+        <div
+          className="perf-modal-backdrop"
+          onClick={() => setIsCaregiverMedModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="perf-modal-card"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '600px', width: '92%' }}
+          >
+            <div className="perf-modal-header">
+              <div>
+                <span className="perf-modal-tag">Caregiver Authorization Active</span>
+                <h2 className="perf-modal-title">
+                  {editingPatientMedId ? 'Edit Medicine for Patient' : 'Add Medicine for Patient'}
+                </h2>
+                <p className="perf-modal-subtitle">
+                  Patient: {linkedElderly?.full_name || 'Patient'}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="perf-modal-close"
+                onClick={() => setIsCaregiverMedModalOpen(false)}
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCaregiverSaveMed} className="perf-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontWeight: 700, marginBottom: '6px', color: '#1e293b' }}>
+                  Medicine Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Metformin, Amlodipine"
+                  value={caregiverMedForm.name}
+                  onChange={(e) => setCaregiverMedForm((prev) => ({ ...prev, name: e.target.value }))}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontSize: '1rem', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 700, marginBottom: '6px', color: '#1e293b' }}>
+                    Dosage *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 500 mg, 10 ml"
+                    value={caregiverMedForm.dosage}
+                    onChange={(e) => setCaregiverMedForm((prev) => ({ ...prev, dosage: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontSize: '1rem', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontWeight: 700, marginBottom: '6px', color: '#1e293b' }}>
+                    Type
+                  </label>
+                  <select
+                    value={caregiverMedForm.medicineType}
+                    onChange={(e) => setCaregiverMedForm((prev) => ({ ...prev, medicineType: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontSize: '1rem', background: '#fff', boxSizing: 'border-box' }}
+                  >
+                    <option value="Tablet">Tablet</option>
+                    <option value="Capsule">Capsule</option>
+                    <option value="Syrup">Syrup</option>
+                    <option value="Injection">Injection</option>
+                    <option value="Drops">Drops</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontWeight: 700, marginBottom: '6px', color: '#1e293b' }}>
+                  Purpose / Notes
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Blood sugar control, take with warm water"
+                  value={caregiverMedForm.purpose}
+                  onChange={(e) => setCaregiverMedForm((prev) => ({ ...prev, purpose: e.target.value }))}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontSize: '1rem', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 700, marginBottom: '6px', color: '#1e293b' }}>
+                    Frequency
+                  </label>
+                  <select
+                    value={caregiverMedForm.frequency}
+                    onChange={(e) => setCaregiverMedForm((prev) => ({ ...prev, frequency: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontSize: '1rem', background: '#fff', boxSizing: 'border-box' }}
+                  >
+                    <option value="Once Daily">Once Daily</option>
+                    <option value="Twice Daily">Twice Daily</option>
+                    <option value="Three Times Daily">Three Times Daily</option>
+                    <option value="Every X Hours">Every X Hours</option>
+                    <option value="Specific Days of Week">Specific Days of Week</option>
+                    <option value="Custom Times">Custom Times</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontWeight: 700, marginBottom: '6px', color: '#1e293b' }}>
+                    Food Timing
+                  </label>
+                  <select
+                    value={caregiverMedForm.foodTiming}
+                    onChange={(e) => setCaregiverMedForm((prev) => ({ ...prev, foodTiming: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1.5px solid #cbd5e1', fontSize: '1rem', background: '#fff', boxSizing: 'border-box' }}
+                  >
+                    <option value="After Food">After Food</option>
+                    <option value="Before Food">Before Food</option>
+                    <option value="With Food">With Food</option>
+                    <option value="No Preference">No Preference</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontWeight: 700, marginBottom: '6px', color: '#1e293b' }}>
+                  Reminder Time(s)
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {(caregiverMedForm.reminderTimes || ['09:00']).map((time, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <input
+                        type="time"
+                        required
+                        value={time}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          setCaregiverMedForm((prev) => {
+                            const updated = [...(prev.reminderTimes || ['09:00'])]
+                            updated[idx] = val
+                            return { ...prev, reminderTimes: updated }
+                          })
+                        }}
+                        style={{ padding: '8px 12px', borderRadius: '8px', border: '1.5px solid #cbd5e1', fontSize: '1rem' }}
+                      />
+                      {(caregiverMedForm.reminderTimes || []).length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCaregiverMedForm((prev) => ({
+                              ...prev,
+                              reminderTimes: prev.reminderTimes.filter((_, i) => i !== idx),
+                            }))
+                          }}
+                          style={{ padding: '6px 10px', background: '#fff1f2', border: '1px solid #fecdd3', color: '#be123c', borderRadius: '8px', cursor: 'pointer' }}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCaregiverMedForm((prev) => ({
+                        ...prev,
+                        reminderTimes: [...(prev.reminderTimes || ['09:00']), '14:00'],
+                      }))
+                    }}
+                    style={{ alignSelf: 'flex-start', padding: '6px 12px', background: '#f0fdfa', border: '1px solid #99f6e4', color: '#0f766e', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    + Add Another Reminder Time
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '14px', paddingTop: '14px', borderTop: '1px solid #e2e8f0' }}>
+                <button
+                  type="button"
+                  className="perf-btn perf-btn--outline"
+                  onClick={() => setIsCaregiverMedModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="perf-btn perf-btn--primary"
+                  style={{ background: '#0d9488', borderColor: '#0d9488' }}
+                >
+                  {editingPatientMedId ? 'Update Medication' : 'Save Medication'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

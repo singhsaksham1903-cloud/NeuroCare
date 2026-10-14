@@ -1,0 +1,193 @@
+<svg
+  width="600"
+  height="420"
+  viewBox="0 0 600 420"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <linearGradient id="med-bg" x1="0" y1="0" x2="600" y2="420">
+      <stop offset="0%" stop-color="#EBF7FC"/>
+      <stop offset="100%" stop-color="#E8F9F3"/>
+    </linearGradient>
+
+    <linearGradient id="capsule-teal" x1="160" y1="120" x2="340" y2="280">
+      <stop offset="0%" stop-color="#0E9488"/>
+      <stop offset="100%" stop-color="#14B8A6"/>
+    </linearGradient>
+
+    <linearGradient id="capsule-blue" x1="260" y1="120" x2="440" y2="280">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#3B82F6"/>
+    </linearGradient>
+
+    <linearGradient id="bottle-grad" x1="320" y1="100" x2="480" y2="340">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E6F4F9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect
+    width="600"
+    height="420"
+    rx="50"
+    fill="url(#med-bg)"
+  />
+
+  <!-- Decorative circles -->
+  <circle cx="95" cy="100" r="28" fill="#C7ECE8"/>
+  <circle cx="510" cy="95" r="24" fill="#D8EEF8"/>
+  <circle cx="505" cy="330" r="32" fill="#CFEFE6"/>
+
+  <!-- Medicine Bottle -->
+  <rect
+    x="340"
+    y="130"
+    width="140"
+    height="190"
+    rx="28"
+    fill="url(#bottle-grad)"
+    stroke="#0E9488"
+    stroke-width="5"
+  />
+
+  <!-- Bottle Cap -->
+  <rect
+    x="365"
+    y="96"
+    width="90"
+    height="36"
+    rx="12"
+    fill="#0E9488"
+  />
+  <rect
+    x="375"
+    y="104"
+    width="70"
+    height="6"
+    rx="3"
+    fill="#5EEAD4"
+  />
+
+  <!-- Bottle Label -->
+  <rect
+    x="355"
+    y="170"
+    width="110"
+    height="115"
+    rx="14"
+    fill="#FFFFFF"
+    stroke="#CCEDEB"
+    stroke-width="2"
+  />
+
+  <!-- Cross Icon on Label -->
+  <rect
+    x="398"
+    y="195"
+    width="24"
+    height="50"
+    rx="6"
+    fill="#0E9488"
+  />
+  <rect
+    x="385"
+    y="208"
+    width="50"
+    height="24"
+    rx="6"
+    fill="#0E9488"
+  />
+
+  <!-- Text lines on label -->
+  <rect x="375" y="258" width="70" height="6" rx="3" fill="#99D5CE"/>
+  <rect x="385" y="268" width="50" height="5" rx="2.5" fill="#CCE8E5"/>
+
+  <!-- Large Angled Capsule -->
+  <g transform="translate(180, 210) rotate(-35)">
+    <!-- Capsule Left Half (Teal) -->
+    <path
+      d="M-75 -36 C-105 -36 -125 -16 -125 14 C-125 44 -105 64 -75 64 L0 64 L0 -36 Z"
+      fill="url(#capsule-teal)"
+    />
+    <!-- Capsule Right Half (Blue) -->
+    <path
+      d="M0 -36 L75 -36 C105 -36 125 -16 125 14 C125 44 105 64 75 64 L0 64 Z"
+      fill="url(#capsule-blue)"
+    />
+    <!-- Gloss shine -->
+    <path
+      d="M-70 -20 C-90 -20 -105 -5 -105 14"
+      stroke="white"
+      stroke-width="6"
+      stroke-linecap="round"
+      opacity="0.65"
+    />
+    <path
+      d="M5 -20 L70 -20"
+      stroke="white"
+      stroke-width="6"
+      stroke-linecap="round"
+      opacity="0.65"
+    />
+  </g>
+
+  <!-- Round Tablets -->
+  <circle
+    cx="135"
+    cy="295"
+    r="36"
+    fill="#FFFFFF"
+    stroke="#3B82F6"
+    stroke-width="4"
+  />
+  <line
+    x1="110"
+    y1="295"
+    x2="160"
+    y2="295"
+    stroke="#3B82F6"
+    stroke-width="4"
+    stroke-linecap="round"
+  />
+
+  <circle
+    cx="210"
+    cy="335"
+    r="26"
+    fill="#FEF3C7"
+    stroke="#F59E0B"
+    stroke-width="3.5"
+  />
+  <line
+    x1="192"
+    y1="335"
+    x2="228"
+    y2="335"
+    stroke="#F59E0B"
+    stroke-width="3"
+    stroke-linecap="round"
+  />
+
+  <!-- Clock Reminder Indicator -->
+  <g transform="translate(110, 140)">
+    <circle cx="0" cy="0" r="32" fill="#FFFFFF" stroke="#0E9488" stroke-width="4"/>
+    <circle cx="0" cy="0" r="24" fill="#E6F9F6"/>
+    <!-- Clock Hands at 8:00 -->
+    <path d="M0 -15 V0 L-10 6" stroke="#0E9488" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Small alarm bell top -->
+    <circle cx="-16" cy="-24" r="5" fill="#0E9488"/>
+    <circle cx="16" cy="-24" r="5" fill="#0E9488"/>
+  </g>
+
+  <!-- Sparkles -->
+  <path
+    d="M260 90L266 102L278 108L266 114L260 126L254 114L242 108L254 102Z"
+    fill="#14B8A6"
+  />
+  <path
+    d="M500 210L506 220L516 225L506 230L500 240L494 230L484 225L494 220Z"
+    fill="#3B82F6"
+  />
+</svg>
