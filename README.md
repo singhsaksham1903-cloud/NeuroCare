@@ -21,7 +21,7 @@
 ## 🎥 Project Demo
 
 <p align="center">
-  <a href="Cognicare-Care_video_demo.mp4">
+  <a href="Cognicare_NER_demo_video.mp4">
     <strong>▶️ Watch the Cognicare NER Demo Video</strong>
   </a>
 </p>
@@ -695,22 +695,6 @@ The cognitive games dashboard provides access to the available cognitive activit
 
 The caregiver dashboard provides access to caregiver-oriented functionality.
 
-### Adding More Screenshots
-
-To add another screenshot, place the image inside `public/Screenshots/` and add a matching Markdown or HTML image reference.
-
-For example:
-
-```html
-<p align="center">
-  <img src="public/Screenshots/your-screenshot-filename.jpeg"
-       alt="Description of the screenshot"
-       width="900">
-</p>
-```
-
-Replace the example filename with the exact name of the file you commit.
-
 ---
 
 ## 🎯 Hackathon Alignment
@@ -818,7 +802,7 @@ The prototype should not be considered a production-ready medical system without
 The project presentation is available in the repository root, assuming the file has been committed using this exact filename.
 
 <p align="center">
-  <a href="NEUROCARE.pptx.pptx">
+  <a href="Cognicare NER — SRIJAN 2K26 Detailed_Final.pptx">
     <strong>📥 View the NeuroCare Project Presentation</strong>
   </a>
 </p>
