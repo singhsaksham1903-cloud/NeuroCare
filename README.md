@@ -807,7 +807,7 @@ The project presentation is available in the repository root, assuming the file 
   </a>
 </p>
 
-**Presentation file:** `NEUROCARE.pptx.pptx`
+**Presentation file:** `Cognicare NER — SRIJAN 2K26 Detailed_Final.pptx`
 
 If the filename changes, update the link above to match it exactly.
 
